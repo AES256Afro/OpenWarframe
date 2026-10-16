@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.uv-cache/
+dist/
+build/
+*.egg-info/
+
+# Local data (never commit account data)
+data/
+cache/
+*.sqlite
+*.sqlite-journal
+snapshots/
+exports/
+EE.log
+lastData.dat
+
+# Secrets
+.env
+*.secret
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

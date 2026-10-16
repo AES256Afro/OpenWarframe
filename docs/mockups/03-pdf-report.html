@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenWarframe · PDF report (mockup)</title>
+<style>
+  :root{--ink:#1b2130;--muted:#6b7385;--gold:#b58a2e;--cyan:#1f8fa8;--line:#e3e6ee;--paper:#fff;--green:#2f9e63;--amber:#c7891a;--violet:#6a4fd1}
+  *{box-sizing:border-box}
+  body{margin:0;background:#5b6170;font:12px/1.45 "Segoe UI",system-ui,sans-serif;color:var(--ink)}
+  .pages{display:flex;gap:26px;justify-content:center;padding:26px;flex-wrap:wrap}
+  .page{width:595px;height:842px;background:var(--paper);box-shadow:0 14px 40px rgba(0,0,0,.35);position:relative;padding:44px 46px;overflow:hidden}
+  .pn{position:absolute;bottom:22px;right:46px;color:var(--muted);font-size:10px}
+  .pf{position:absolute;bottom:22px;left:46px;color:var(--muted);font-size:10px;letter-spacing:.12em}
+  /* cover */
+  .cover{background:linear-gradient(160deg,#0f1524 0%,#1b2a4a 60%,#0f1524 100%);color:#e6ebf5;display:flex;flex-direction:column}
+  .cover .brand{letter-spacing:.2em;font-size:11px;color:#d9b35b}
+  .cover h1{font-size:36px;margin:120px 0 4px;font-weight:600;line-height:1.1}
+  .cover .sub{color:#aeb8d0;font-size:14px}
+  .cover .ring{margin-top:50px;display:flex;align-items:center;gap:22px}
+  .cover .ring svg{transform:rotate(-90deg)}
+  .cover .big{font-size:40px;font-weight:700;color:#f0d28a;line-height:1}
+  .cover .big small{display:block;font-size:11px;letter-spacing:.2em;color:#aeb8d0;font-weight:400;margin-top:4px}
+  .cover .facts{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-top:40px;font-size:12px;color:#aeb8d0}
+  .cover .facts b{color:#fff;font-weight:600}
+  .cover .date{margin-top:auto;font-size:11px;color:#8e9ab5}
+  /* content page */
+  h2{font-size:18px;margin:0 0 2px;font-weight:600}
+  .lead{color:var(--muted);margin:0 0 16px;font-size:11px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+  .kpi{border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+  .kpi .v{font-size:18px;font-weight:700}
+  .kpi .k{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+  .fc{border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:6px;padding:8px 10px;margin-bottom:8px;display:grid;grid-template-columns:1fr 150px;gap:10px}
+  .fc.g{border-left-color:var(--green)} .fc.v{border-left-color:var(--violet)}
+  .fc b{font-size:12.5px}
+  .fc .s{color:var(--muted);font-size:10.5px;margin-top:2px}
+  .fc .s em{color:var(--ink);font-style:normal;font-weight:500}
+  .fc .parts{display:flex;gap:3px;margin-top:6px}
+  .fc .parts i{flex:1;height:5px;border-radius:2px;background:#e3e6ee}
+  .fc .parts i.y{background:var(--green)}
+  .fc .right{font-size:10.5px;color:var(--muted);border-left:1px dashed var(--line);padding-left:10px}
+  .fc .right b{color:var(--ink);font-size:11px;display:block}
+  h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:16px 0 8px}
+  table{border-collapse:collapse;width:100%;font-size:10.5px}
+  th{text-align:left;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line);padding:4px 6px}
+  td{padding:4px 6px;border-bottom:1px solid #f0f2f7}
+  .tag{font-size:9px;letter-spacing:.08em;text-transform:uppercase;border-radius:3px;padding:1px 5px;background:#eef1f8;color:var(--muted)}
+  .tag.now{background:#e2f6ea;color:var(--green)}
+  .route{display:grid;grid-template-columns:28px 1fr;gap:8px;margin-bottom:9px}
+  .route .n{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:11px}
+  .route b{display:block;font-size:12px}
+  .route p{margin:1px 0 0;color:var(--muted);font-size:10.5px}
+  .map{height:118px;border:1px solid var(--line);border-radius:6px;background:
+      radial-gradient(circle at 12% 55%,#d9b35b 0 4px,transparent 5px),
+      radial-gradient(circle at 30% 40%,#1f8fa8 0 4px,transparent 5px),
+      radial-gradient(circle at 48% 62%,#1f8fa8 0 4px,transparent 5px),
+      radial-gradient(circle at 66% 35%,#6a4fd1 0 4px,transparent 5px),
+      radial-gradient(circle at 84% 58%,#2f9e63 0 4px,transparent 5px),
+      linear-gradient(90deg,transparent 12%,#cfd5e3 12.2%,#cfd5e3 84%,transparent 84.2%) 0 55%/100% 1px no-repeat,
+      #f7f8fb;position:relative;margin:6px 0 12px}
+  .map span{position:absolute;top:72px;font-size:9.5px;color:var(--muted);transform:translateX(-50%)}
+</style>
+</head>
+<body>
+<div class="pages">
+
+  <div class="page cover">
+    <div class="brand">OPENWARFRAME · ACCOUNT REPORT</div>
+    <h1>VoidWanderer</h1>
+    <div class="sub">PC · Orokin Archivists · Tenno since March 2019</div>
+    <div class="ring">
+      <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="50" fill="none" stroke="#2a3a5c" stroke-width="10"/><circle cx="60" cy="60" r="50" fill="none" stroke="#d9b35b" stroke-width="10" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="17"/></svg>
+      <div class="big">MR 23<small>23,700 XP TO 24</small></div>
+    </div>
+    <div class="facts">
+      <div>Items mastered <b>612 / 941</b></div><div>Star chart <b>97%</b> · Steel Path <b>61%</b></div>
+      <div>Blueprints unbuilt <b>143</b></div><div>Relics <b>1,284</b> · Mods <b>2,310</b></div>
+      <div>Play time <b>2,113 h</b></div><div>Quests <b>44 / 47</b></div>
+    </div>
+    <div class="date">Generated 16 October 2026 · data: Public Export 2026-10-07, drop tables 2026-10-07, world state 13:38 · synthetic mockup</div>
+  </div>
+
+  <div class="page">
+    <h2>Foundry backlog</h2>
+    <p class="lead">143 unbuilt items, ordered by how close you are. Sources ranked by estimated time; your own relics and standing are used first.</p>
+    <div class="kpis">
+      <div class="kpi"><div class="v">3</div><div class="k">Ready to claim</div></div>
+      <div class="kpi"><div class="v">9</div><div class="k">Ready to build</div></div>
+      <div class="kpi"><div class="v">41</div><div class="k">Partial parts</div></div>
+      <div class="kpi"><div class="v">90</div><div class="k">Blueprint only</div></div>
+    </div>
+    <div class="fc g"><div><b>Cedo</b> <span class="tag now">claim</span><div class="s">Finished 3 h ago. Worth <em>3,000 mastery</em> once leveled; pairs with your Affinity booster (1 d 6 h left).</div><div class="parts"><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i></div></div><div class="right"><b>Do now</b>Orbiter → Foundry</div></div>
+    <div class="fc"><div><b>Rhino Prime</b> · 3 / 4 parts<div class="s">Missing <em>Chassis</em>. Lith R2 drops it at 10% Radiant. <em>You own 3 Radiant Lith R2</em>. A Lith fissure is live on Tessera (Venus) for 38 more minutes.</div><div class="parts"><i class="y"></i><i class="y"></i><i class="y"></i><i></i></div></div><div class="right"><b>~35 min</b>or 12 platinum on the market</div></div>
+    <div class="fc"><div><b>Wisp Prime</b> · 2 / 4 parts<div class="s">Missing <em>Neuroptics</em> (Neo W1, 11%) and <em>Systems</em> (Axi W2, 2% rare). You own 2 Intact Axi W2; refine to Radiant first (25 Void Traces each).</div><div class="parts"><i class="y"></i><i></i><i class="y"></i><i></i></div></div><div class="right"><b>~3 h 10 min</b>or 180 platinum for the set</div></div>
+    <div class="fc v"><div><b>Voidrig</b> · 3 / 4 parts<div class="s">Missing <em>Weapon Pod</em>. Loid sells the blueprint for 2,000 Necraloid standing. <em>You have 2,350 standing available.</em></div><div class="parts"><i class="y"></i><i class="y"></i><i></i><i class="y"></i></div></div><div class="right"><b>~5 min</b>Necralisk (Deimos) → Loid</div></div>
+    <div class="fc"><div><b>Zymos</b> · blueprint only<div class="s">Short <em>2 Scintillant, 5 Purified Heartwood</em>. Isolation Vault bounties (Deimos) drop Scintillant; Heartwood from Deimos mining.</div><div class="parts"><i class="y"></i><i></i><i></i></div></div><div class="right"><b>~25 min</b>Cambion Drift, Mother → Iso Vault</div></div>
+    <h3>Ready to build (9)</h3>
+    <table><tr><th>Item</th><th>Build time</th><th>Credits</th><th>Mastery</th></tr>
+      <tr><td>Ignis Wraith</td><td>12 h</td><td>15,000</td><td>3,000</td></tr><tr><td>Dread</td><td>12 h</td><td>15,000</td><td>3,000</td></tr><tr><td>Hate</td><td>12 h</td><td>15,000</td><td>3,000</td></tr><tr><td>Nautilus (after Titanium)</td><td>24 h</td><td>25,000</td><td>6,000</td></tr><tr><td>… 5 more</td><td></td><td></td><td></td></tr>
+    </table>
+    <div class="pf">OPENWARFRAME · VOIDWANDERER · 16 OCT 2026</div><div class="pn">4 / 18</div>
+  </div>
+
+  <div class="page">
+    <h2>Where to go next</h2>
+    <p class="lead">A route for tonight that closes the most gaps per minute, using what is live right now.</p>
+    <div class="map"><span style="left:12%">Orbiter</span><span style="left:30%">Tessera · Venus</span><span style="left:48%">Saxis · Eris</span><span style="left:66%">Necralisk · Deimos</span><span style="left:84%">Ur · Uranus</span></div>
+    <div class="route"><div class="n">1</div><div><b>Orbiter: claim Cedo, slot Archon Shards, queue 2 builds</b><p>Cedo is finished; Tauforged Crimson and Azure shards are unslotted; Ignis Wraith and Dread can start now (2 free slots).</p></div></div>
+    <div class="route"><div class="n">2</div><div><b>Tessera (Venus) · Lith Defense fissure · 38 min left</b><p>Bring Lith R2 (Radiant). Target: Rhino Prime Chassis (10%). Take Cedo for affinity; booster active. 5 waves ≈ 7 min per run.</p></div></div>
+    <div class="route"><div class="n">3</div><div><b>Saxis (Eris) · Invasion, Corpus side · run 1 of 3 left</b><p>Reward: Orokin Catalyst blueprint. You have none in stock; it unblocks the Cedo build you just claimed.</p></div></div>
+    <div class="route"><div class="n">4</div><div><b>Necralisk (Deimos) · Loid</b><p>Buy Voidrig Weapon Pod blueprint (2,000 standing). Then Mother → Isolation Vault bounty for 2× Scintillant (Zymos).</p></div></div>
+    <div class="route"><div class="n">5</div><div><b>Ur (Uranus) · Steel Path Survival · 20 min</b><p>Counts for the Nightwave weekly (3 SP missions) and your SP Uranus backlog (40%). Level Nautilus and Oxylus for 6,000 mastery.</p></div></div>
+    <h3>Expected outcome</h3>
+    <table><tr><th>Gap</th><th>Before</th><th>After tonight</th></tr>
+      <tr><td>Mastery XP to MR 24</td><td>23,700</td><td>≈ 8,700 (Cedo + 2 companions)</td></tr>
+      <tr><td>Rhino Prime</td><td>3 / 4</td><td>4 / 4 with ~65% probability (3 runs)</td></tr>
+      <tr><td>Voidrig</td><td>3 / 4</td><td>in foundry (72 h)</td></tr>
+      <tr><td>Nightwave rank 27</td><td>21,500 short</td><td>14,000 short</td></tr>
+    </table>
+    <div class="pf">OPENWARFRAME · VOIDWANDERER · 16 OCT 2026</div><div class="pn">9 / 18</div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenWarframe · Planner (mockup)</title>
+<style>
+  :root{--bg:#0a0e18;--bg2:#0f1524;--panel:#141c2f;--panel2:#1a2440;--line:#243150;--text:#e6ebf5;--muted:#8e9ab5;--gold:#d9b35b;--cyan:#4fd1ea;--green:#5fd49a;--amber:#f0b35b;--red:#f06d6d;--violet:#a98cf5}
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 80% -10%,#1b2a4a 0%,var(--bg) 55%);color:var(--text);font:14px/1.45 "Segoe UI",system-ui,sans-serif}
+  .top{display:flex;align-items:center;gap:16px;padding:14px 28px;border-bottom:1px solid var(--line)}
+  .logo{font-weight:700;letter-spacing:.14em;color:var(--gold);font-size:13px}
+  .logo span{color:var(--text);font-weight:400;letter-spacing:.02em;margin-left:10px}
+  .tabs{margin-left:auto;display:flex;gap:6px;font-size:12px}
+  .tabs span{padding:5px 12px;border:1px solid var(--line);border-radius:999px;color:var(--muted)}
+  .tabs span.on{border-color:var(--cyan);color:var(--cyan)}
+  .wrap{max-width:1360px;margin:0 auto;padding:22px 28px 40px;display:grid;grid-template-columns:1.2fr .8fr;gap:18px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .card h2{margin:0 0 12px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600;display:flex;gap:8px}
+  .card h2 .sub{margin-left:auto;color:var(--muted);letter-spacing:0;text-transform:none;font-weight:400}
+  .span2{grid-column:1/-1}
+  .rec{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel2);margin-bottom:8px}
+  .rec .score{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;background:rgba(217,179,91,.14);color:var(--gold)}
+  .rec .score.c{background:rgba(79,209,234,.14);color:var(--cyan)} .rec .score.g{background:rgba(95,212,154,.14);color:var(--green)} .rec .score.v{background:rgba(169,140,245,.14);color:var(--violet)}
+  .rec b{font-size:14px}
+  .rec .why{color:var(--muted);font-size:12.5px;margin-top:3px}
+  .rec .why em{color:var(--text);font-style:normal;font-weight:500}
+  .rec .meta{display:flex;gap:10px;margin-top:6px;font-size:11px;color:var(--muted)}
+  .rec .meta span{border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+  .rec .exp{text-align:right;font-size:12px;color:var(--amber);white-space:nowrap}
+  .rec .exp small{display:block;color:var(--muted)}
+  /* loadout */
+  .lo{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:10px}
+  .slot{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px}
+  .slot .t{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .slot b{display:block;font-size:13px;margin:3px 0}
+  .slot .r{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+  .slot .r i{display:block;height:100%;background:var(--cyan)}
+  .slot small{color:var(--muted);font-size:11px}
+  .tip{font-size:12.5px;color:var(--muted);border-left:3px solid var(--cyan);padding:6px 10px;background:rgba(79,209,234,.06);border-radius:0 6px 6px 0}
+  .tip em{color:var(--text);font-style:normal}
+  /* checklist */
+  .chk{display:grid;grid-template-columns:1fr 1fr;gap:4px 18px}
+  .chk label{display:flex;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .chk input{accent-color:var(--gold);width:15px;height:15px}
+  .chk .m{margin-left:auto;color:var(--muted);font-size:11px}
+  .chk label.done{color:var(--muted);text-decoration:line-through}
+  /* goals */
+  .goal{padding:10px 0;border-bottom:1px dashed var(--line)}
+  .goal .h{display:flex;justify-content:space-between;align-items:baseline}
+  .goal b{font-size:14px}
+  .goal .p{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:6px 0 4px}
+  .goal .p i{display:block;height:100%;background:var(--gold)}
+  .goal .s{color:var(--muted);font-size:12px}
+  .tree{font-family:Consolas,monospace;font-size:12px;color:var(--muted);white-space:pre;line-height:1.5;margin:8px 0 0;background:var(--bg2);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+  .tree .ok{color:var(--green)} .tree .no{color:var(--amber)}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}.lo{grid-template-columns:repeat(2,1fr)}.chk{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top"><div class="logo">OPENWARFRAME <span>Planner</span></div>
+  <div class="tabs"><span class="on">Tonight</span><span>This week</span><span>Goals</span><span>Guide</span><span>Affinity</span></div></div>
+
+<div class="wrap">
+  <section class="card">
+    <h2>Do this now <span class="sub">live events × your gaps · refreshed 13:38 · scores explain themselves</span></h2>
+    <div class="rec"><div class="score">94</div><div><b>Run the Lith Defense fissure on Tessera (Venus) with Lith R2</b><div class="why">Drops <em>Rhino Prime Chassis</em>, the last part you need. You own <em>3 Radiant Lith R2</em> (10% each). Bring the freshly claimed Cedo: Affinity booster active.</div><div class="meta"><span>fissure</span><span>prime part</span><span>mastery +3,000</span><span>~7 min / run</span></div></div><div class="exp">38 min<small>expires 14:16</small></div></div>
+    <div class="rec"><div class="score c">88</div><div><b>Buy the Voidrig Weapon Pod blueprint from Loid</b><div class="why">You have <em>2,350 Necraloid standing</em> and it costs 2,000. This completes Voidrig (your only missing Necramech, 6,000 mastery).</div><div class="meta"><span>vendor</span><span>necramech</span><span>5 min</span></div></div><div class="exp">no expiry<small>standing resets daily</small></div></div>
+    <div class="rec"><div class="score g">81</div><div><b>Finish the Saxis (Eris) invasion, Corpus side</b><div class="why">1 of 3 runs left for an <em>Orokin Catalyst blueprint</em>. You have 0 Catalysts and 4 weapons you flagged as keepers without one.</div><div class="meta"><span>invasion</span><span>consumable</span><span>~5 min</span></div></div><div class="exp">6 h 12 min</div></div>
+    <div class="rec"><div class="score v">77</div><div><b>Steel Path Survival on Ur (Uranus), 20 minutes</b><div class="why">Counts toward the Nightwave weekly <em>"3 Steel Path missions"</em> (21,500 to rank 27), your SP Uranus backlog (40%), and levels Nautilus + Oxylus (6,000 mastery).</div><div class="meta"><span>nightwave</span><span>steel path</span><span>affinity</span></div></div><div class="exp">4 d<small>weekly reset Mon</small></div></div>
+    <div class="rec"><div class="score">70</div><div><b>Today's Sortie (Grineer, Kela De Thaym)</b><div class="why">Pool: Riven, 6,000 Kuva, Anasa sculpture. Not done today. Your sortie streak: 11 days.</div><div class="meta"><span>daily</span><span>riven chance 5%</span></div></div><div class="exp">9 h</div></div>
+    <div class="rec"><div class="score g">64</div><div><b>Sell prime junk before Baro (Friday)</b><div class="why">90 duplicate prime parts in inventory ≈ <em>1,420 ducats</em>. With your 1,340 you can afford Primed Pistol Gambit (350) and a Primed Fury (350) if he brings them.</div><div class="meta"><span>economy</span><span>baro</span></div></div><div class="exp">2 d 4 h</div></div>
+  </section>
+
+  <section class="card">
+    <h2>Affinity plan <span class="sub">unleveled gear you own · 23,700 XP to MR 24</span></h2>
+    <div class="lo">
+      <div class="slot"><div class="t">Warframe</div><b>Saryn Prime</b><div class="r"><i style="width:100%"></i></div><small>mastered · carries the run</small></div>
+      <div class="slot"><div class="t">Primary</div><b>Cedo</b><div class="r"><i style="width:0%"></i></div><small>rank 0 · 3,000 XP</small></div>
+      <div class="slot"><div class="t">Secondary</div><b>Zymos</b><div class="r"><i style="width:0%"></i></div><small>needs build</small></div>
+      <div class="slot"><div class="t">Melee</div><b>Hate</b><div class="r"><i style="width:40%"></i></div><small>rank 12 · 1,800 XP</small></div>
+      <div class="slot"><div class="t">Companion</div><b>Nautilus</b><div class="r"><i style="width:0%"></i></div><small>rank 0 · 6,000 XP</small></div>
+    </div>
+    <div class="tip"><em>Why this node:</em> Ur (Uranus) Survival gives shared affinity in a wide radius and counts for your Steel Path and Nightwave goals at the same time. Booster active 1 d 6 h. After this loadout: <em>Oxylus, Primed Rubico skin does not count, Kuva Zarr (not owned)</em>.</div>
+  </section>
+
+  <section class="card">
+    <h2>Daily &amp; weekly <span class="sub">from your snapshot · resets at 00:00 UTC / Monday</span></h2>
+    <div class="chk">
+      <label><input type="checkbox"> Sortie <span class="m">9 h</span></label>
+      <label><input type="checkbox" checked class="done"> Daily Tribute (day 1,214) <span class="m">done</span></label>
+      <label><input type="checkbox"> Archon Hunt (Amar) <span class="m">4 d</span></label>
+      <label><input type="checkbox"> Nightwave weeklies 0 / 3 <span class="m">4 d</span></label>
+      <label><input type="checkbox"> Syndicate standing 0 / 29,000 <span class="m">Steel Meridian, Arbiters</span></label>
+      <label><input type="checkbox"> Steel Path incursions 0 / 5 <span class="m">15 Steel Essence</span></label>
+      <label><input type="checkbox"> Circuit (SP) week 3 of rotation <span class="m">Torid adapter available</span></label>
+      <label><input type="checkbox"> Deep Archimedea <span class="m">4 d · you have 2/3 research</span></label>
+      <label><input type="checkbox"> Calendar (Höllvania) 2 / 6 tasks <span class="m">season ends in 12 d</span></label>
+      <label><input type="checkbox"> Foundry claims: Cedo, Forma ×2 <span class="m">ready</span></label>
+      <label><input type="checkbox" checked class="done"> Simaris daily target <span class="m">done</span></label>
+      <label><input type="checkbox"> Baro prep: sell junk <span class="m">Fri</span></label>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Goals <span class="sub">auto-tracked against each snapshot</span></h2>
+    <div class="goal"><div class="h"><b>Reach MR 24</b><span>94.6%</span></div><div class="p"><i style="width:94.6%"></i></div><div class="s">23,700 XP left · fastest path uses 4 items you already own (above). ETA: tonight.</div></div>
+    <div class="goal"><div class="h"><b>Build Wisp Prime</b><span>2 / 4</span></div><div class="p"><i style="width:50%"></i></div><div class="s">Custom goal · expands into the crafting tree:</div>
+<div class="tree"><span class="ok">✓</span> Blueprint              owned
+<span class="ok">✓</span> Chassis                owned
+<span class="no">✗</span> Neuroptics             Neo W1 (11%)   · you own 0  · 2 Neo fissures live now
+<span class="no">✗</span> Systems                Axi W2 (2%)    · you own 2 Intact → refine (50 traces, you have 1,180)
+<span class="ok">✓</span> 3× Orokin Cell         own 41
+<span class="ok">✓</span> 25,000 credits         own 4.2M</div></div>
+    <div class="goal"><div class="h"><b>Complete the Star Chart</b><span>97%</span></div><div class="p"><i style="width:97%"></i></div><div class="s">7 nodes left: Uranus (2), Neptune (3), Sedna (2). About 50 minutes. Unlocks the "Star Chart Master" achievement (97%).</div></div>
+    <div class="goal"><div class="h"><b>Steel Path 100%</b><span>61%</span></div><div class="p"><i style="width:61%"></i></div><div class="s">88 nodes left · prioritised by Nightwave overlap and resource drops you lack.</div></div>
+  </section>
+
+  <section class="card span2">
+    <h2>Guide · what this account has not discovered <span class="sub">rules from the knowledge base matched against your snapshot · 6 of 60 entries apply</span></h2>
+    <div class="chk" style="grid-template-columns:1fr 1fr 1fr">
+      <label><input type="checkbox"> Incarnon evolutions: 4 adapters installed, 0 evolved <span class="m">systems</span></label>
+      <label><input type="checkbox"> Archon shards: 2 unslotted since August <span class="m">overlooked</span></label>
+      <label><input type="checkbox"> The Leverian &amp; Zariman Hollow never visited <span class="m">hidden</span></label>
+      <label><input type="checkbox"> Lua puzzle "Pavlov's Halls" never completed <span class="m">achievement</span></label>
+      <label><input type="checkbox"> Helminth: 29 / 50 subsumed, 3 owned frames not yet fed <span class="m">systems</span></label>
+      <label><input type="checkbox"> Focus: Zenurik 100%, other 4 schools never unbound <span class="m">mastery</span></label>
+    </div>
+  </section>
+</div>
+</body>
+</html>

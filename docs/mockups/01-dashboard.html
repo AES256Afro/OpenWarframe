@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenWarframe · Account dashboard (mockup)</title>
+<style>
+  :root{
+    --bg:#0a0e18; --bg2:#0f1524; --panel:#141c2f; --panel2:#1a2440; --line:#243150;
+    --text:#e6ebf5; --muted:#8e9ab5; --gold:#d9b35b; --gold2:#f0d28a; --cyan:#4fd1ea;
+    --green:#5fd49a; --amber:#f0b35b; --red:#f06d6d; --violet:#a98cf5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#1b2a4a 0%,var(--bg) 55%);color:var(--text);
+       font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+  a{color:var(--cyan);text-decoration:none}
+  .top{display:flex;align-items:center;gap:16px;padding:14px 28px;border-bottom:1px solid var(--line);background:rgba(10,14,24,.7);backdrop-filter:blur(6px)}
+  .logo{font-weight:700;letter-spacing:.14em;color:var(--gold);font-size:13px}
+  .logo span{color:var(--text);font-weight:400;letter-spacing:.02em;margin-left:10px;font-size:14px}
+  .top .right{margin-left:auto;display:flex;gap:10px;align-items:center;color:var(--muted);font-size:12px}
+  .pill{border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--panel)}
+  .pill.on{border-color:var(--cyan);color:var(--cyan)}
+  .wrap{max-width:1360px;margin:0 auto;padding:22px 28px 40px;display:grid;grid-template-columns:1.1fr .9fr;gap:18px}
+  .span2{grid-column:1 / -1}
+  .card{background:linear-gradient(180deg,var(--panel),var(--bg2));border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .card h2{margin:0 0 12px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600;display:flex;align-items:center;gap:8px}
+  .card h2 .sub{margin-left:auto;color:var(--muted);letter-spacing:0;text-transform:none;font-weight:400;font-size:12px}
+  /* hero */
+  .hero{display:grid;grid-template-columns:180px 1fr;gap:22px;align-items:center}
+  .ring{position:relative;width:180px;height:180px}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .mr{font-size:46px;font-weight:700;color:var(--gold2);line-height:1}
+  .ring .t{font-size:11px;letter-spacing:.2em;color:var(--muted);margin-top:6px}
+  .name{font-size:26px;font-weight:600;margin:0}
+  .name small{color:var(--muted);font-weight:400;font-size:13px;margin-left:10px}
+  .facts{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);margin:8px 0 14px;font-size:13px}
+  .facts b{color:var(--text);font-weight:600}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .kpi{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kpi .v{font-size:20px;font-weight:700;color:var(--text)}
+  .kpi .k{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+  .kpi .d{font-size:11px;color:var(--green)}
+  /* bars */
+  .row{display:grid;grid-template-columns:120px 1fr 90px;gap:12px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .row:last-child{border-bottom:0}
+  .row .n{color:var(--text)}
+  .row .c{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+  .bar{height:12px;border-radius:6px;background:var(--line);overflow:hidden;display:flex}
+  .bar i{display:block;height:100%}
+  .m{background:var(--gold)} .o{background:var(--cyan)} .x{background:transparent}
+  .legend{display:flex;gap:14px;color:var(--muted);font-size:12px;margin-top:10px}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  /* foundry cards */
+  .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+  .fc{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .fc .h{display:flex;justify-content:space-between;align-items:baseline}
+  .fc .h b{font-size:14px}
+  .fc .tag{font-size:10px;letter-spacing:.1em;text-transform:uppercase;border-radius:4px;padding:2px 6px}
+  .tag.ready{background:rgba(95,212,154,.15);color:var(--green)}
+  .tag.part{background:rgba(240,179,91,.15);color:var(--amber)}
+  .tag.bp{background:rgba(169,140,245,.15);color:var(--violet)}
+  .tag.build{background:rgba(79,209,234,.15);color:var(--cyan)}
+  .parts{display:flex;gap:4px;margin:8px 0 6px}
+  .parts i{flex:1;height:7px;border-radius:3px;background:var(--line)}
+  .parts i.y{background:var(--green)}
+  .fc .src{font-size:12px;color:var(--muted)}
+  .fc .src b{color:var(--text);font-weight:500}
+  /* now */
+  .now{display:flex;flex-direction:column;gap:8px}
+  .ev{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;background:var(--panel2);border:1px solid var(--line);border-left:3px solid var(--cyan);border-radius:8px;padding:9px 12px}
+  .ev.gold{border-left-color:var(--gold)} .ev.green{border-left-color:var(--green)} .ev.violet{border-left-color:var(--violet)}
+  .ev .t{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .ev .w{font-size:13px}
+  .ev .w b{font-weight:600}
+  .ev .why{font-size:12px;color:var(--muted)}
+  .ev .exp{font-variant-numeric:tabular-nums;color:var(--amber);font-size:12px;white-space:nowrap}
+  /* star chart */
+  .planets{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
+  .pl{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:8px 6px;text-align:center}
+  .pl .p{font-size:11px;color:var(--muted)}
+  .pl .v{font-size:15px;font-weight:600}
+  .pl .sp{font-size:10px;color:var(--violet)}
+  .pl.done{border-color:rgba(217,179,91,.5)}
+  /* syndicates */
+  .syn{display:grid;grid-template-columns:repeat(3,1fr);gap:8px 18px}
+  .sy{display:grid;grid-template-columns:110px 1fr 54px;gap:8px;align-items:center;font-size:12px}
+  .sy .b{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+  .sy .b i{display:block;height:100%;background:var(--gold)}
+  .sy .b i.neg{background:var(--red)}
+  /* guide */
+  .guide{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .g{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .g .k{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--violet)}
+  .g b{display:block;margin:4px 0 6px;font-size:14px}
+  .g p{margin:0;color:var(--muted);font-size:12px}
+  .g .cta{display:inline-block;margin-top:8px;font-size:12px;color:var(--cyan)}
+  /* achievements */
+  .ach{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .a{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:12px}
+  .a .n{font-weight:600}
+  .a .pr{height:5px;border-radius:3px;background:var(--line);margin:6px 0 4px;overflow:hidden}
+  .a .pr i{display:block;height:100%;background:var(--green)}
+  .a .s{color:var(--muted)}
+  .foot{grid-column:1/-1;color:var(--muted);font-size:11px;display:flex;gap:18px;flex-wrap:wrap;padding-top:4px}
+  @media (max-width:900px){.wrap{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.planets{grid-template-columns:repeat(5,1fr)}.hero{grid-template-columns:1fr}.cards,.guide,.ach,.syn{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top">
+  <div class="logo">OPENWARFRAME <span>Account dashboard</span></div>
+  <div class="right">
+    <span class="pill">Snapshot 2026-10-16 13:35</span>
+    <span class="pill">Profile ✓ · Inventory ✓ · World state 2 min ago</span>
+    <span class="pill on">Share mode: off</span>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="card span2">
+    <div class="hero">
+      <div class="ring">
+        <svg width="180" height="180" viewBox="0 0 180 180">
+          <circle cx="90" cy="90" r="78" fill="none" stroke="#243150" stroke-width="12"/>
+          <circle cx="90" cy="90" r="78" fill="none" stroke="#d9b35b" stroke-width="12" stroke-linecap="round"
+                  stroke-dasharray="490" stroke-dashoffset="26"/>
+        </svg>
+        <div class="lbl"><div class="mr">23</div><div class="t">MASTERY</div></div>
+      </div>
+      <div>
+        <h1 class="name">VoidWanderer <small>PC · Clan: Orokin Archivists (Shadow) · playing since March 2019</small></h1>
+        <div class="facts">
+          <span>XP to MR 24: <b>23,700</b> of 436,000</span>
+          <span>Star chart: <b>97%</b> · Steel Path <b>61%</b></span>
+          <span>Quests: <b>44 / 47</b></span>
+          <span>Play time: <b>2,113 h</b></span>
+          <span>Stage: <b>late game</b></span>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="v">612 <span style="color:var(--muted);font-size:13px">/ 941</span></div><div class="k">Items mastered</div><div class="d">+6 this week</div></div>
+          <div class="kpi"><div class="v">143</div><div class="k">Blueprints unbuilt</div><div class="d" style="color:var(--amber)">9 ready to build</div></div>
+          <div class="kpi"><div class="v">1,284</div><div class="k">Relics</div><div class="d">212 radiant</div></div>
+          <div class="kpi"><div class="v">4.2M · 318</div><div class="k">Credits · Platinum</div><div class="d" style="color:var(--muted)">Endo 61,040</div></div>
+          <div class="kpi"><div class="v">3</div><div class="k">Foundry ready to claim</div><div class="d">Cedo, Forma ×2</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Arsenal <span class="sub">mastered · owned but unleveled · missing</span></h2>
+    <div class="row"><div class="n">Warframes</div><div class="bar"><i class="m" style="width:78%"></i><i class="o" style="width:7%"></i></div><div class="c">54 / 69</div></div>
+    <div class="row"><div class="n">Primary</div><div class="bar"><i class="m" style="width:70%"></i><i class="o" style="width:9%"></i></div><div class="c">176 / 251</div></div>
+    <div class="row"><div class="n">Secondary</div><div class="bar"><i class="m" style="width:74%"></i><i class="o" style="width:5%"></i></div><div class="c">141 / 190</div></div>
+    <div class="row"><div class="n">Melee</div><div class="bar"><i class="m" style="width:66%"></i><i class="o" style="width:11%"></i></div><div class="c">172 / 261</div></div>
+    <div class="row"><div class="n">Companions</div><div class="bar"><i class="m" style="width:53%"></i><i class="o" style="width:9%"></i></div><div class="c">31 / 58</div></div>
+    <div class="row"><div class="n">Archwing</div><div class="bar"><i class="m" style="width:88%"></i><i class="o" style="width:4%"></i></div><div class="c">28 / 32</div></div>
+    <div class="row"><div class="n">Necramech</div><div class="bar"><i class="m" style="width:50%"></i><i class="o" style="width:50%"></i></div><div class="c">1 / 2</div></div>
+    <div class="row"><div class="n">Amps · K-Drive</div><div class="bar"><i class="m" style="width:40%"></i><i class="o" style="width:0%"></i></div><div class="c">9 / 23</div></div>
+    <div class="legend"><span><i style="background:var(--gold)"></i>mastered</span><span><i style="background:var(--cyan)"></i>owned, not leveled (affinity waiting)</span><span><i style="background:var(--line)"></i>missing</span></div>
+  </section>
+
+  <section class="card">
+    <h2>Right now <span class="sub">world state 13:38 · matched to your gaps</span></h2>
+    <div class="now">
+      <div class="ev"><div class="t">Fissure</div><div><div class="w"><b>Lith · Defense · Tessera (Venus)</b></div><div class="why">You own 3× Lith R2 (Radiant). Drops Rhino Prime Chassis (your last missing part).</div></div><div class="exp">38 min</div></div>
+      <div class="ev gold"><div class="t">Invasion</div><div><div class="w"><b>Orokin Catalyst blueprint · Saxis (Eris)</b></div><div class="why">Corpus side, 2 of 3 runs done. You have 0 Catalysts in stock.</div></div><div class="exp">6 h 12 min</div></div>
+      <div class="ev violet"><div class="t">Nightwave</div><div><div class="w"><b>3 weeklies open · 21,500 standing to rank 27</b></div><div class="why">"Complete 3 Steel Path missions" overlaps your SP Neptune backlog.</div></div><div class="exp">4 d</div></div>
+      <div class="ev green"><div class="t">Baro</div><div><div class="w"><b>Arrives Friday · Strata Relay (Earth)</b></div><div class="why">Last visit had Primed Pistol Gambit (you lack it). You hold 1,340 ducats.</div></div><div class="exp">2 d 4 h</div></div>
+      <div class="ev"><div class="t">Sortie</div><div><div class="w"><b>Grineer · Sabotage → Defense → Assassination (Kela)</b></div><div class="why">Reward pool includes Riven Mod and 6,000 Kuva. Not done today.</div></div><div class="exp">9 h</div></div>
+    </div>
+  </section>
+
+  <section class="card span2">
+    <h2>Foundry backlog <span class="sub">143 unbuilt · sorted by how close you are</span></h2>
+    <div class="cards">
+      <div class="fc"><div class="h"><b>Cedo</b><span class="tag ready">Ready to claim</span></div><div class="parts"><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i></div><div class="src">Finished 3 h ago. Claiming it adds <b>3,000 mastery</b> once leveled.</div></div>
+      <div class="fc"><div class="h"><b>Rhino Prime</b><span class="tag part">3 / 4 parts</span></div><div class="parts"><i class="y"></i><i class="y"></i><i class="y"></i><i></i></div><div class="src">Missing <b>Chassis</b> · Lith R2 (Radiant 10%) · <b>you own 3 Radiant</b> · Lith fissure active now · market 12 p</div></div>
+      <div class="fc"><div class="h"><b>Wisp Prime</b><span class="tag part">2 / 4 parts</span></div><div class="parts"><i class="y"></i><i></i><i class="y"></i><i></i></div><div class="src">Missing <b>Neuroptics, Systems</b> · Neo W1 (you own 0), Axi W2 (you own 2 Intact) · set 180 p on market</div></div>
+      <div class="fc"><div class="h"><b>Zymos</b><span class="tag bp">Blueprint only</span></div><div class="parts"><i class="y"></i><i></i><i></i></div><div class="src">Needs <b>2× Scintillant, 5× Purified Heartwood</b> · Deimos Isolation Vault bounty · est. 25 min</div></div>
+      <div class="fc"><div class="h"><b>Voidrig (Necramech)</b><span class="tag part">Weapon pod missing</span></div><div class="parts"><i class="y"></i><i class="y"></i><i></i><i class="y"></i></div><div class="src">Missing <b>Weapon Pod</b> · Isolation Vault tier 2 (12.5%) · you are Entrati rank 4, Loid sells it for 2,000 standing (available now)</div></div>
+      <div class="fc"><div class="h"><b>Primed Chamber set · 9 blueprints</b><span class="tag build">Ready to build</span></div><div class="parts"><i class="y"></i><i class="y"></i><i class="y"></i><i class="y"></i></div><div class="src">You have every component for <b>9 items</b> (Ignis Wraith, Dread, Hate, ...). 36 h of build queue, 2 slots free.</div></div>
+    </div>
+  </section>
+
+  <section class="card span2">
+    <h2>Star chart <span class="sub">node completion · purple = Steel Path</span></h2>
+    <div class="planets">
+      <div class="pl done"><div class="p">Mercury</div><div class="v">100%</div><div class="sp">SP 100%</div></div>
+      <div class="pl done"><div class="p">Venus</div><div class="v">100%</div><div class="sp">SP 100%</div></div>
+      <div class="pl done"><div class="p">Earth</div><div class="v">100%</div><div class="sp">SP 92%</div></div>
+      <div class="pl done"><div class="p">Mars</div><div class="v">100%</div><div class="sp">SP 100%</div></div>
+      <div class="pl done"><div class="p">Jupiter</div><div class="v">100%</div><div class="sp">SP 71%</div></div>
+      <div class="pl done"><div class="p">Saturn</div><div class="v">100%</div><div class="sp">SP 64%</div></div>
+      <div class="pl"><div class="p">Uranus</div><div class="v">96%</div><div class="sp">SP 40%</div></div>
+      <div class="pl"><div class="p">Neptune</div><div class="v">92%</div><div class="sp">SP 18%</div></div>
+      <div class="pl done"><div class="p">Pluto</div><div class="v">100%</div><div class="sp">SP 55%</div></div>
+      <div class="pl"><div class="p">Sedna</div><div class="v">88%</div><div class="sp">SP 31%</div></div>
+      <div class="pl done"><div class="p">Eris</div><div class="v">100%</div><div class="sp">SP 60%</div></div>
+      <div class="pl done"><div class="p">Void</div><div class="v">100%</div><div class="sp">SP 100%</div></div>
+      <div class="pl"><div class="p">Kuva Fortress</div><div class="v">83%</div><div class="sp">SP 33%</div></div>
+      <div class="pl"><div class="p">Lua</div><div class="v">86%</div><div class="sp">SP 29%</div></div>
+      <div class="pl done"><div class="p">Deimos</div><div class="v">100%</div><div class="sp">SP 50%</div></div>
+      <div class="pl"><div class="p">Zariman</div><div class="v">80%</div><div class="sp">SP 0%</div></div>
+      <div class="pl done"><div class="p">Duviri</div><div class="v">100%</div><div class="sp">SP 100%</div></div>
+      <div class="pl"><div class="p">Höllvania</div><div class="v">75%</div><div class="sp">SP 25%</div></div>
+      <div class="pl done"><div class="p">Veil Proxima</div><div class="v">100%</div><div class="sp">—</div></div>
+      <div class="pl"><div class="p">Junctions</div><div class="v">18 / 19</div><div class="sp">Höllvania open</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Syndicates <span class="sub">standing · rank</span></h2>
+    <div class="syn">
+      <div class="sy"><span>Steel Meridian</span><div class="b"><i style="width:100%"></i></div><span>Max</span></div>
+      <div class="sy"><span>Arbiters</span><div class="b"><i style="width:100%"></i></div><span>Max</span></div>
+      <div class="sy"><span>Red Veil</span><div class="b"><i class="neg" style="width:60%"></i></div><span>−2</span></div>
+      <div class="sy"><span>Perrin</span><div class="b"><i class="neg" style="width:40%"></i></div><span>−1</span></div>
+      <div class="sy"><span>Ostron</span><div class="b"><i style="width:100%"></i></div><span>Max</span></div>
+      <div class="sy"><span>Solaris</span><div class="b"><i style="width:100%"></i></div><span>Max</span></div>
+      <div class="sy"><span>Entrati</span><div class="b"><i style="width:80%"></i></div><span>4 / 5</span></div>
+      <div class="sy"><span>Necraloid</span><div class="b"><i style="width:33%"></i></div><span>1 / 3</span></div>
+      <div class="sy"><span>Holdfasts</span><div class="b"><i style="width:60%"></i></div><span>3 / 5</span></div>
+      <div class="sy"><span>Cavia</span><div class="b"><i style="width:40%"></i></div><span>2 / 5</span></div>
+      <div class="sy"><span>The Hex</span><div class="b"><i style="width:20%"></i></div><span>1 / 5</span></div>
+      <div class="sy"><span>Simaris</span><div class="b"><i style="width:55%"></i></div><span>72k</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Achievements you are close to <span class="sub">from your profile</span></h2>
+    <div class="ach">
+      <div class="a"><div class="n">Archivist</div><div class="pr"><i style="width:92%"></i></div><div class="s">Scan 1,000 codex entries · 921</div></div>
+      <div class="a"><div class="n">Eximus Hunter</div><div class="pr"><i style="width:84%"></i></div><div class="s">Kill 2,500 Eximus · 2,110</div></div>
+      <div class="a"><div class="n">Relic Breaker</div><div class="pr"><i style="width:97%"></i></div><div class="s">Open 500 relics · 486</div></div>
+      <div class="a"><div class="n">Lich Hunter</div><div class="pr"><i style="width:60%"></i></div><div class="s">Vanquish 10 Liches · 6</div></div>
+      <div class="a"><div class="n">Angler</div><div class="pr"><i style="width:30%"></i></div><div class="s">Catch every fish species · 11 of 37</div></div>
+      <div class="a"><div class="n">Star Chart Master</div><div class="pr"><i style="width:97%"></i></div><div class="s">Complete every node · 7 left (Uranus, Neptune, Sedna)</div></div>
+      <div class="a"><div class="n">Spy Master</div><div class="pr"><i style="width:75%"></i></div><div class="s">150 spy missions undetected · 112</div></div>
+      <div class="a"><div class="n">Lua Master</div><div class="pr"><i style="width:50%"></i></div><div class="s">Complete all 7 Lua puzzles · 4 (you never did Pavlov's Halls)</div></div>
+    </div>
+  </section>
+
+  <section class="card span2">
+    <h2>Guide · things this account has not done yet <span class="sub">from the knowledge base · rules matched against your snapshot</span></h2>
+    <div class="guide">
+      <div class="g"><div class="k">Hidden system</div><b>You have 4 Incarnon adapters installed and 0 evolutions unlocked</b><p>Incarnon weapons evolve through challenges done in any mission. Your Torid, Dual Toxocyst, Latron and Strun have adapters but have never evolved. Run Steel Path Circuit this week for the next adapter rotation (Boar, Gammacor, Angstrum, Gorgon, Anku).</p><a class="cta">Show the 5-step path →</a></div>
+      <div class="g"><div class="k">Overlooked</div><b>2 Archon Shards sitting unslotted since August</b><p>Shards give permanent stats. You have a Tauforged Crimson and an Azure unslotted; your most-used frame (Wisp, 311 h) has 2 free slots. Helminth → Archon Shards.</p><a class="cta">Suggest slots →</a></div>
+      <div class="g"><div class="k">Mastery</div><b>Fastest 23,700 XP to MR 24 is already in your inventory</b><p>Level the Cedo (ready to claim) and the Zymos blueprint, plus 2 unleveled companions (Nautilus, Oxylus). Affinity booster active for 1 d 6 h. Suggested node: Sanctuary Onslaught or Ur (Uranus) with a Saryn.</p><a class="cta">Open affinity plan →</a></div>
+      <div class="g"><div class="k">Quest</div><b>3 quests unfinished: The Hex, Whispers in the Walls (ch. 3), Jade Shadows</b><p>Whispers unlocks Cavia rank-ups and the Necraloid arcanes you keep buying from trade chat. 40 minutes of play.</p><a class="cta">Where to start →</a></div>
+      <div class="g"><div class="k">Economy</div><b>You hold 1,340 ducats and 90 prime junk parts worth 1,420 more</b><p>Baro arrives in 2 days. The knowledge base ranks his historic items you lack: Primed Pistol Gambit, Primed Fury (2nd), Sands of Inaros (you have it). Sell junk before Friday.</p><a class="cta">Ducat plan →</a></div>
+      <div class="g"><div class="k">Hidden room</div><b>You have never visited The Leverian or the Zariman Hollow</b><p>Detected from codex and node data. Both are free, two-minute lore stops with a cosmetic reward each. Tourists welcome.</p><a class="cta">How to get there →</a></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>Public Export 2026-10-07</span><span>Drop tables 2026-10-07 (WFCD)</span><span>warframe.market 13:36</span><span>World state 13:38</span><span>Profile 13:35</span><span>Inventory 13:35 (file import)</span><span>Mockup with synthetic data · OpenWarframe</span>
+  </div>
+</div>
+</body>
+</html>

@@ -3,6 +3,7 @@
 The endpoint is the one the in-game profile viewer uses. It is read-only and needs
 only the 24-character account ID (the `gid` cookie on warframe.com when logged in).
 """
+
 from __future__ import annotations
 
 import argparse
@@ -47,7 +48,9 @@ def main() -> None:
 
     xp = r.get("LoadOutInventory", {}).get("XPInfo", [])
     missions = r.get("Missions", [])
-    print(f"\nMastery rank: {r.get('PlayerLevel')}   items with XP: {len(xp)}   nodes with completions: {len(missions)}")
+    print(
+        f"\nMastery rank: {r.get('PlayerLevel')}   items with XP: {len(xp)}   nodes with completions: {len(missions)}"
+    )
     cats = Counter(x["ItemType"].split("/")[3] if x["ItemType"].count("/") > 3 else "?" for x in xp)
     print("XP entries by top-level path:", dict(cats.most_common(8)))
     print("Syndicates:", [(a.get("Tag"), a.get("Title")) for a in r.get("Affiliations", [])][:12])

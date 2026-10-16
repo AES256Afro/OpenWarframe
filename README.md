@@ -16,8 +16,32 @@ live world state, and turns it into things you can actually use:
 | **Planner** | What to farm next, which *active* fissures, invasions, alerts and bounties matter to *you*, which frames and weapons you own but never leveled, daily and weekly checklists, and goals on the road to MR 30 and beyond. |
 | **Guide** | A curated knowledge base of systems, unlocks and "things even veterans never knew about", shown only when they apply to your account. |
 
-Status: **planning** (started 2026-10-16). Nothing is shipped yet. Read the
-[roadmap](docs/ROADMAP.md) and the [mockups](docs/mockups/README.md).
+Status: **M0 foundation and M1 codex done** (2026-10-16). The codex builds and
+answers "where do I get X" and "what does X need". Account snapshots come next (M2).
+Read the [roadmap](docs/ROADMAP.md) and the [mockups](docs/mockups/README.md).
+
+## Try it now
+
+```bash
+uv sync --all-groups
+```
+
+```bash
+uv run openwarframe codex update
+```
+
+```bash
+uv run openwarframe codex sources "Rhino Prime Chassis"
+```
+
+```bash
+uv run openwarframe codex tree "Rhino Prime"
+```
+
+Other codex commands: `info` (source versions, row counts, `--unresolved`), `search`,
+`item`. Data lands in `%LOCALAPPDATA%\OpenWarframe` (override with
+`OPENWARFRAME_HOME`). On Windows terminals set `PYTHONIOENCODING=utf-8` if box
+characters render oddly.
 
 ---
 
@@ -71,7 +95,7 @@ headless Chromium (Playwright) to print the HTML dashboard to PDF, `Jinja2` for
 templates, `Typer` for the CLI. Rationale and alternatives in
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Repository layout (planned)
+## Repository layout
 
 ```
 openwarframe/
@@ -96,5 +120,5 @@ account dashboard, Excel workbook, PDF report, planner, and CLI.
 
 ## Contributing and license
 
-Not yet open for contributions while the foundation lands. A license has not been
-chosen yet (MIT is proposed). Third-party data keeps its own license and is credited.
+MIT licensed; see [CONTRIBUTING.md](CONTRIBUTING.md). Third-party data keeps its own
+license and is credited in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).

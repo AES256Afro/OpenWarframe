@@ -155,7 +155,12 @@ def build_tables(r: Report) -> list[Table]:
         )
     )
     t.append(
-        Table("syndicates", "Syndicates", ["name", "rank", "standing", "tag"], [s.model_dump() for s in r.syndicates])
+        Table(
+            "syndicates",
+            "Syndicates",
+            ["name", "rank", "standing", "tag"],
+            [s.model_dump() for s in r.syndicates],
+        )
     )
     t.append(
         Table(
@@ -165,7 +170,9 @@ def build_tables(r: Report) -> list[Table]:
             [a.model_dump() for a in r.achievements],
         )
     )
-    t.append(Table("intrinsics", "Intrinsics", ["name", "value", "key"], [i.model_dump() for i in r.intrinsics]))
+    t.append(
+        Table("intrinsics", "Intrinsics", ["name", "value", "key"], [i.model_dump() for i in r.intrinsics])
+    )
     t.append(
         Table(
             "weapon_usage",

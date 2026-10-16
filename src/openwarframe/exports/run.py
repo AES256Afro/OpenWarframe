@@ -27,7 +27,9 @@ class ExportResult:
         return self.path.stat().st_size if self.path.exists() else 0
 
 
-def run_exports(report: Report, out_dir: Path, formats: list[str], *, brief_budget: str = "compact") -> list[ExportResult]:
+def run_exports(
+    report: Report, out_dir: Path, formats: list[str], *, brief_budget: str = "compact"
+) -> list[ExportResult]:
     unknown = set(formats) - set(FORMATS)
     if unknown:
         raise ValueError(f"unknown formats: {sorted(unknown)}; choose from {', '.join(FORMATS)}")

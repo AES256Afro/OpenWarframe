@@ -13,6 +13,13 @@ drops, 4.7k vendor offers and 3.9k market items in about 6 s from a cold cache; 
 drop-table names (mostly bundles and boosters) stay unresolved and are listed by
 `openwarframe codex info --unresolved`.
 
+**M2 done** on 2026-10-16: `account set/show/howto`, `sync` (public profile → snapshot
+with items, ranks, estimated mastery, star chart, syndicates, intrinsics, achievements,
+loadout, lifetime stats; raw payload kept), `summary`, `snapshots`, `diff`. Known gaps
+to pick up in M6: the "in game" totals per category count every export entry (modular
+parts, variants) rather than mastery-eligible items only, and mastery XP from nodes,
+junctions and intrinsics is not yet estimated.
+
 ```
 M0 Foundation ─┬─ M1 Codex ──┬─ M2 Profile ──┬─ M4 Exports ── M5 Reports ── M9 Share & package
                │             │               │

@@ -16,8 +16,9 @@ live world state, and turns it into things you can actually use:
 | **Planner** | What to farm next, which *active* fissures, invasions, alerts and bounties matter to *you*, which frames and weapons you own but never leveled, daily and weekly checklists, and goals on the road to MR 30 and beyond. |
 | **Guide** | A curated knowledge base of systems, unlocks and "things even veterans never knew about", shown only when they apply to your account. |
 
-Status: **M0 foundation and M1 codex done** (2026-10-16). The codex builds and
-answers "where do I get X" and "what does X need". Account snapshots come next (M2).
+Status: **M0, M1 and M2 done** (2026-10-16). The codex answers "where do I get X" and
+"what does X need"; `sync` snapshots your account from the public profile and `diff`
+shows what changed between play sessions. Exports come next (M4).
 Read the [roadmap](docs/ROADMAP.md) and the [mockups](docs/mockups/README.md).
 
 ## Try it now
@@ -38,8 +39,16 @@ uv run openwarframe codex sources "Rhino Prime Chassis"
 uv run openwarframe codex tree "Rhino Prime"
 ```
 
-Other codex commands: `info` (source versions, row counts, `--unresolved`), `search`,
-`item`. Data lands in `%LOCALAPPDATA%\OpenWarframe` (override with
+```bash
+uv run openwarframe account howto
+```
+
+```bash
+uv run openwarframe sync
+```
+
+Other commands: `codex info|search|item`, `account set|show`, `summary`, `snapshots`,
+`diff`. Data lands in `%LOCALAPPDATA%\OpenWarframe` (override with
 `OPENWARFRAME_HOME`). On Windows terminals set `PYTHONIOENCODING=utf-8` if box
 characters render oddly.
 

@@ -75,14 +75,22 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
     out.append(
         f"- Star chart {h.starchart_done}/{h.starchart_total} nodes; Steel Path {h.steel_path_done}/{h.starchart_total}."
     )
-    out.append(f"- Syndicates at max rank: {h.syndicates_maxed}. Achievements tracked: {h.achievements_tracked}.")
+    out.append(
+        f"- Syndicates at max rank: {h.syndicates_maxed}. Achievements tracked: {h.achievements_tracked}."
+    )
     out.append(
         f"- Mastery XP visible {ms.visible_total:,}; rank {ms.rank} needs {ms.rank_threshold:,}, "
         f"rank {ms.rank + 1} needs {ms.next_rank_threshold:,}. {ms.note}"
     )
     for n in report.notes:
         out.append(f"- Data note: {n}")
-    out += ["", "# Mastery by category", "", "| category | mastered | leveling | never leveled | total |", "|---|---|---|---|---|"]
+    out += [
+        "",
+        "# Mastery by category",
+        "",
+        "| category | mastered | leveling | never leveled | total |",
+        "|---|---|---|---|---|",
+    ]
     for c in report.categories:
         out.append(f"| {c.category} | {c.mastered} | {c.leveling} | {c.missing} | {c.total} |")
 
@@ -93,21 +101,26 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
     out += ["", "# Never leveled: how they can be obtained", ""]
     out.append("Counts by route: " + "; ".join(f"{k}: {v}" for k, v in acq.most_common()))
     out += ["", "## Obtainable now or cheaply (within your MR first)", ""]
-    header_len = estimate_tokens("\n".join(out))
     shown = 0
     for m in missing:
         line = f"- {m.name} ({m.category}, MR {m.mastery_req}) - {m.acquisition}"
         src = best_sources(m, limit=2)
         if src:
             line += f" - {src}"
-        if budget == "compact" and ("vaulted" in m.acquisition or m.acquisition.startswith(("Trade", "Market", "Not in"))):
+        if budget == "compact" and (
+            "vaulted" in m.acquisition or m.acquisition.startswith(("Trade", "Market", "Not in"))
+        ):
             continue
         out.append(line)
         shown += 1
         if estimate_tokens("\n".join(out)) > limit * 0.75:
             out.append(f"- ... {len(missing) - shown} more not shown (budget {budget}); see account.json")
             break
-    rest = [m for m in missing if "vaulted" in m.acquisition or m.acquisition.startswith(("Trade", "Market", "Not in"))]
+    rest = [
+        m
+        for m in missing
+        if "vaulted" in m.acquisition or m.acquisition.startswith(("Trade", "Market", "Not in"))
+    ]
     out += ["", "## Vaulted, trade-only or outside the drop tables", ""]
     if budget == "compact":
         by_cat = Counter(m.category for m in rest)
@@ -115,7 +128,10 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
         out.append("- Examples: " + ", ".join(m.name for m in rest[:25]))
     else:
         for m in rest:
-            out.append(f"- {m.name} ({m.category}) - {m.acquisition}" + (f" - {m.market_slug}" if m.market_slug else ""))
+            out.append(
+                f"- {m.name} ({m.category}) - {m.acquisition}"
+                + (f" - {m.market_slug}" if m.market_slug else "")
+            )
 
     out += ["", "# Star chart", ""]
     if sc_missing:
@@ -143,7 +159,9 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
         "headline": report.headline.model_dump(),
         "mastery": report.mastery.model_dump(),
         "categories": [c.model_dump() for c in report.categories],
-        "leveling": [{"name": o.name, "category": o.category, "rank": o.rank, "xp_to_30": o.xp_to_30} for o in leveling],
+        "leveling": [
+            {"name": o.name, "category": o.category, "rank": o.rank, "xp_to_30": o.xp_to_30} for o in leveling
+        ],
         "missing": [
             {
                 "name": m.name,

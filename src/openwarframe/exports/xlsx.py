@@ -153,7 +153,14 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> No
         c.fill, c.font, c.border = HEADER_FILL, HEADER_FONT, BOX
     ws.column_dimensions["B"].width = 18
     for ri, row in enumerate(cat.rows, start=10):
-        vals = [row["category"], row["mastered"], row["leveling"], row["missing"], row["total"], row["percent_mastered"] / 100]
+        vals = [
+            row["category"],
+            row["mastered"],
+            row["leveling"],
+            row["missing"],
+            row["total"],
+            row["percent_mastered"] / 100,
+        ]
         for i, v in enumerate(vals):
             c = ws.cell(row=ri, column=2 + i, value=v)
             c.border = BOX
@@ -198,7 +205,12 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> No
     for i, line in enumerate(lines, start=1):
         c = ws.cell(row=row + i, column=2, value=line)
         c.font = Font(color=MUTED if i > 2 else INK, size=10)
-    ws.cell(row=row + len(lines) + 2, column=2, value="Sheets: " + ", ".join(t.title for t in tables.values() if t.name not in ("summary", "categories"))).font = SUB_FONT
+    ws.cell(
+        row=row + len(lines) + 2,
+        column=2,
+        value="Sheets: "
+        + ", ".join(t.title for t in tables.values() if t.name not in ("summary", "categories")),
+    ).font = SUB_FONT
 
 
 def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
@@ -214,7 +226,11 @@ def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
             col = _col(t, "acquisition")
             ws.conditional_formatting.add(
                 f"{col}{first}:{col}{last}",
-                FormulaRule(formula=[f'ISNUMBER(SEARCH("farmable now",{col}{first}))'], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG)),
+                FormulaRule(
+                    formula=[f'ISNUMBER(SEARCH("farmable now",{col}{first}))'],
+                    fill=_fill(GREEN_BG),
+                    font=Font(color=GREEN_FG),
+                ),
             )
             ws.conditional_formatting.add(
                 f"{col}{first}:{col}{last}",
@@ -222,7 +238,11 @@ def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
             )
             ws.conditional_formatting.add(
                 f"{col}{first}:{col}{last}",
-                FormulaRule(formula=[f'ISNUMBER(SEARCH("vaulted",{col}{first}))'], fill=_fill(AMBER_BG), font=Font(color=AMBER_FG)),
+                FormulaRule(
+                    formula=[f'ISNUMBER(SEARCH("vaulted",{col}{first}))'],
+                    fill=_fill(AMBER_BG),
+                    font=Font(color=AMBER_FG),
+                ),
             )
             above = _col(t, "above_your_mr")
             ws.conditional_formatting.add(
@@ -232,39 +252,65 @@ def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
         if name == "missing_sources" and t.rows:
             col = _col(t, "farmable")
             ws.conditional_formatting.add(
-                f"{col}{first}:{col}{last}", CellIsRule(operator="equal", formula=["TRUE"], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG))
+                f"{col}{first}:{col}{last}",
+                CellIsRule(
+                    operator="equal", formula=["TRUE"], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG)
+                ),
             )
             ws.conditional_formatting.add(
-                f"{col}{first}:{col}{last}", CellIsRule(operator="equal", formula=["FALSE"], fill=_fill(RED_BG), font=Font(color=RED_FG))
+                f"{col}{first}:{col}{last}",
+                CellIsRule(operator="equal", formula=["FALSE"], fill=_fill(RED_BG), font=Font(color=RED_FG)),
             )
         if name == "owned_items" and t.rows:
             col = _col(t, "mastered")
             ws.conditional_formatting.add(
-                f"{col}{first}:{col}{last}", CellIsRule(operator="equal", formula=["TRUE"], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG))
+                f"{col}{first}:{col}{last}",
+                CellIsRule(
+                    operator="equal", formula=["TRUE"], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG)
+                ),
             )
             ws.conditional_formatting.add(
-                f"{col}{first}:{col}{last}", CellIsRule(operator="equal", formula=["FALSE"], fill=_fill(AMBER_BG), font=Font(color=AMBER_FG))
+                f"{col}{first}:{col}{last}",
+                CellIsRule(
+                    operator="equal", formula=["FALSE"], fill=_fill(AMBER_BG), font=Font(color=AMBER_FG)
+                ),
             )
             for c in ("xp", "xp_to_30", "mastery_xp"):
                 letter = _col(t, c)
                 for r in range(first, last + 1):
                     ws[f"{letter}{r}"].number_format = "#,##0"
         if name == "star_chart" and t.rows:
-            for c, (yes_bg, yes_fg) in (("completed", (GREEN_BG, GREEN_FG)), ("steel_path", ("E4DCFB", "4B2FB0"))):
+            for c, (yes_bg, yes_fg) in (
+                ("completed", (GREEN_BG, GREEN_FG)),
+                ("steel_path", ("E4DCFB", "4B2FB0")),
+            ):
                 letter = _col(t, c)
                 ws.conditional_formatting.add(
-                    f"{letter}{first}:{letter}{last}", CellIsRule(operator="equal", formula=["TRUE"], fill=_fill(yes_bg), font=Font(color=yes_fg))
+                    f"{letter}{first}:{letter}{last}",
+                    CellIsRule(
+                        operator="equal", formula=["TRUE"], fill=_fill(yes_bg), font=Font(color=yes_fg)
+                    ),
                 )
                 ws.conditional_formatting.add(
-                    f"{letter}{first}:{letter}{last}", CellIsRule(operator="equal", formula=["FALSE"], fill=_fill(RED_BG), font=Font(color=RED_FG))
+                    f"{letter}{first}:{letter}{last}",
+                    CellIsRule(
+                        operator="equal", formula=["FALSE"], fill=_fill(RED_BG), font=Font(color=RED_FG)
+                    ),
                 )
         if name == "syndicates" and t.rows:
             letter = _col(t, "rank")
             ws.conditional_formatting.add(
-                f"{letter}{first}:{letter}{last}", CellIsRule(operator="greaterThanOrEqual", formula=["5"], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG))
+                f"{letter}{first}:{letter}{last}",
+                CellIsRule(
+                    operator="greaterThanOrEqual",
+                    formula=["5"],
+                    fill=_fill(GREEN_BG),
+                    font=Font(color=GREEN_FG),
+                ),
             )
             ws.conditional_formatting.add(
-                f"{letter}{first}:{letter}{last}", CellIsRule(operator="lessThan", formula=["0"], fill=_fill(RED_BG), font=Font(color=RED_FG))
+                f"{letter}{first}:{letter}{last}",
+                CellIsRule(operator="lessThan", formula=["0"], fill=_fill(RED_BG), font=Font(color=RED_FG)),
             )
             for r in range(first, last + 1):
                 ws[f"{_col(t, 'standing')}{r}"].number_format = "#,##0"

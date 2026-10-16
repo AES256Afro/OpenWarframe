@@ -8,12 +8,12 @@ build/
 *.egg-info/
 
 # Local data (never commit account data)
-data/
-cache/
+/data/
+/cache/
 *.sqlite
 *.sqlite-journal
-snapshots/
-exports/
+/snapshots/
+/exports/
 EE.log
 lastData.dat
 

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenWarframe · CLI (mockup)</title>
+<style>
+  body{margin:0;background:#1c1f26;font:13px/1.5 Consolas,"Cascadia Mono",Menlo,monospace;color:#d8dde8;padding:24px}
+  .win{max-width:1000px;margin:0 auto;background:#0c0f14;border-radius:10px;border:1px solid #2a3040;box-shadow:0 16px 50px rgba(0,0,0,.5);overflow:hidden}
+  .bar{display:flex;align-items:center;gap:8px;padding:9px 14px;background:#161a22;border-bottom:1px solid #2a3040;color:#8e9ab5;font-size:12px}
+  .bar i{width:11px;height:11px;border-radius:50%;display:inline-block}
+  pre{margin:0;padding:18px 20px;white-space:pre-wrap}
+  .p{color:#8e9ab5}.c{color:#4fd1ea}.g{color:#5fd49a}.y{color:#f0b35b}.r{color:#f06d6d}.v{color:#a98cf5}.gold{color:#d9b35b}.b{font-weight:700;color:#fff}.dim{color:#5c667d}
+</style>
+</head>
+<body>
+<div class="win">
+  <div class="bar"><i style="background:#f06d6d"></i><i style="background:#f0b35b"></i><i style="background:#5fd49a"></i><span style="margin-left:8px">PowerShell · OpenWarframe</span></div>
+<pre><span class="p">PS C:\Users\tenno&gt;</span> <span class="b">openwarframe sync --profile --inventory .\inventory.json</span>
+<span class="c">▸</span> Profile      pc · playerId 5f…c3  <span class="g">✓</span> 212 KB  <span class="dim">(cached 9 min, max-age 582 s)</span>
+<span class="c">▸</span> Inventory    inventory.json       <span class="g">✓</span> 3.8 MB · 41 sections · 0 unknown
+<span class="c">▸</span> World state  api.warframe.com     <span class="g">✓</span> 42 sections · 20 fissures · 5 invasions · 3 alerts
+<span class="c">▸</span> Codex        public export 2026-10-07 · drops 2026-10-07 · market 13:36  <span class="g">up to date</span>
+<span class="c">▸</span> Snapshot     snapshots\2026-10-16T133500Z.json  <span class="g">written</span>  <span class="dim">(diff vs 2026-10-12: +6 mastered, +2 nodes, +1 quest)</span>
+
+<span class="gold">  VoidWanderer</span> · MR <span class="b">23</span> (23,700 XP to 24) · 612/941 mastered · star chart 97% · SP 61%
+  foundry: <span class="g">3 ready to claim</span> · 9 ready to build · 143 unbuilt · relics 1,284 · plat 318
+
+<span class="p">PS C:\Users\tenno&gt;</span> <span class="b">openwarframe plan --tonight</span>
+<span class="gold">DO THIS NOW</span>                                                         <span class="dim">score  expires</span>
+  1  Lith Defense fissure · Tessera (Venus) · bring Lith R2 (own 3 Rad)  <span class="g">94</span>     38 min
+     <span class="dim">→ Rhino Prime Chassis (last part) · Cedo for affinity (booster on)</span>
+  2  Loid (Necralisk): buy Voidrig Weapon Pod bp · 2,000 of 2,350 standing <span class="c">88</span>     —
+  3  Saxis (Eris) invasion, Corpus · 1 run left → Orokin Catalyst bp     <span class="g">81</span>     6 h
+  4  Ur (Uranus) SP Survival 20 min · Nightwave weekly + SP + 6,000 XP   <span class="v">77</span>     4 d
+  5  Sortie (Grineer, Kela) · Riven / Kuva pool · streak 11               <span class="y">70</span>     9 h
+<span class="dim">  6 more · openwarframe plan --all</span>
+
+<span class="p">PS C:\Users\tenno&gt;</span> <span class="b">openwarframe export --format xlsx,pdf,docx,json,sqlite,llm --share</span>
+<span class="c">▸</span> xlsx   exports\OpenWarframe-2026-10-16.xlsx      13 sheets · 4,912 rows      <span class="g">✓</span> 1.9 MB
+<span class="c">▸</span> html   exports\dashboard.html                    single file, offline        <span class="g">✓</span> 2.4 MB
+<span class="c">▸</span> pdf    exports\OpenWarframe-2026-10-16.pdf       18 pages (chromium)         <span class="g">✓</span> 6.1 MB
+<span class="c">▸</span> docx   exports\OpenWarframe-2026-10-16.docx      18 pages                    <span class="g">✓</span> 3.0 MB
+<span class="c">▸</span> json   exports\account.json  (schema openwarframe.account/1)                <span class="g">✓</span> 5.2 MB
+<span class="c">▸</span> sqlite exports\account.sqlite  14 tables                                   <span class="g">✓</span> 7.7 MB
+<span class="c">▸</span> llm    exports\account-brief.md (compact, 7,850 tokens) + account-brief.json <span class="g">✓</span>
+<span class="y">!</span> share mode: display name, account id and clan replaced with placeholders in all outputs
+
+<span class="p">PS C:\Users\tenno&gt;</span> <span class="b">openwarframe guide</span>
+<span class="gold">6 OF 60 GUIDE ENTRIES APPLY TO THIS ACCOUNT</span>
+  <span class="v">[systems]</span>     Incarnon evolutions: 4 adapters installed, 0 evolved        <span class="dim">kb/systems/incarnon.yaml</span>
+  <span class="v">[overlooked]</span>  2 Archon Shards unslotted since 2026-08-02                   <span class="dim">kb/systems/archon-shards.yaml</span>
+  <span class="v">[hidden]</span>      The Leverian and the Zariman Hollow never visited            <span class="dim">kb/hidden/lore-rooms.yaml</span>
+  <span class="v">[achievement]</span> Lua puzzle "Pavlov's Halls" never completed (6/7 for Lua Master)
+  <span class="v">[systems]</span>     Helminth 29/50 · 3 owned frames not yet subsumed (Loki, Nyx, Zephyr)
+  <span class="v">[mastery]</span>     Only Zenurik unbound · 4 focus schools untouched (16 pool points waiting)
+<span class="dim">  openwarframe guide incarnon   # full steps, where to go, sources</span>
+</pre>
+</div>
+</body>
+</html>

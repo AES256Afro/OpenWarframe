@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OpenWarframe · Excel workbook (mockup)</title>
+<style>
+  :root{--grid:#d4d4d4;--head:#f3f3f3;--sel:#107c41;--green:#c6efce;--greent:#006100;--amber:#ffeb9c;--ambert:#9c5700;--red:#ffc7ce;--redt:#9c0006;--blue:#ddebf7;--gold:#fff2cc}
+  *{box-sizing:border-box}
+  body{margin:0;background:#e9e9e9;font:12px/1.35 "Segoe UI",system-ui,sans-serif;color:#222}
+  .xl{background:#fff;margin:18px auto;max-width:1380px;border:1px solid #bbb;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+  .title{background:#107c41;color:#fff;padding:7px 14px;font-size:12px;display:flex;gap:18px}
+  .title b{font-weight:600}
+  .ribbon{display:flex;gap:18px;padding:6px 14px;border-bottom:1px solid var(--grid);color:#444;font-size:12px}
+  .ribbon span.on{color:#107c41;font-weight:600;border-bottom:2px solid #107c41;padding-bottom:3px}
+  .fx{display:grid;grid-template-columns:90px 1fr;border-bottom:1px solid var(--grid)}
+  .fx div{padding:4px 8px;border-right:1px solid var(--grid);font-family:Consolas,monospace;font-size:12px}
+  table{border-collapse:collapse;width:100%;table-layout:fixed}
+  th,td{border:1px solid var(--grid);padding:3px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+  th{background:var(--head);font-weight:400;color:#555;text-align:center}
+  thead tr.hdr th{background:#1f3b5a;color:#fff;font-weight:600;text-align:left;position:relative}
+  thead tr.hdr th::after{content:"▾";position:absolute;right:4px;color:#9fb3c8;font-size:10px}
+  td.rn{background:var(--head);color:#555;text-align:center;width:34px}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  td.g{background:var(--green);color:var(--greent)} td.a{background:var(--amber);color:var(--ambert)} td.r{background:var(--red);color:var(--redt)} td.b{background:var(--blue)} td.y{background:var(--gold)}
+  td a{color:#0563c1;text-decoration:underline}
+  .bar{display:inline-block;height:9px;background:#63be7b;vertical-align:middle;margin-right:5px}
+  .tabs{display:flex;align-items:center;gap:2px;padding:4px 10px;background:#f3f3f3;border-top:1px solid var(--grid);font-size:12px;overflow:auto}
+  .tabs span{padding:4px 12px;border:1px solid var(--grid);border-top:0;background:#fff;color:#333}
+  .tabs span.on{color:#107c41;font-weight:600;border-bottom:2px solid #107c41}
+  .status{display:flex;gap:18px;padding:4px 12px;background:#107c41;color:#fff;font-size:11px}
+  .note{max-width:1380px;margin:0 auto 24px;color:#555;font-size:12px;padding:0 4px}
+</style>
+</head>
+<body>
+<div class="xl">
+  <div class="title"><b>OpenWarframe-VoidWanderer-2026-10-16.xlsx</b><span>Excel</span><span style="margin-left:auto">Saved to exports/</span></div>
+  <div class="ribbon"><span>File</span><span class="on">Home</span><span>Insert</span><span>Data</span><span>Review</span><span>View</span></div>
+  <div class="fx"><div>C4</div><div>Partial (3 / 4)</div></div>
+  <table>
+    <colgroup><col style="width:34px"><col style="width:190px"><col style="width:90px"><col style="width:110px"><col style="width:150px"><col style="width:240px"><col style="width:64px"><col style="width:90px"><col style="width:80px"><col style="width:80px"><col style="width:110px"><col style="width:70px"></colgroup>
+    <thead>
+      <tr><th></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th>I</th><th>J</th><th>K</th></tr>
+      <tr class="hdr"><th></th><th>Item</th><th>Category</th><th>Status</th><th>Missing component</th><th>Best source</th><th>Chance</th><th>You own relic</th><th>Est. min</th><th>Market (p)</th><th>Resources short</th><th>Wiki</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="rn">1</td><td><b>Foundry &amp; Blueprints</b> · 143 rows · generated 2026-10-16 13:40 · drop data 2026-10-07</td><td colspan="10" style="color:#777">Filter: Status ≠ Mastered</td></tr>
+      <tr><td class="rn">2</td><td>Cedo</td><td>Primary</td><td class="g">Ready to claim</td><td>—</td><td>Foundry (finished 3 h ago)</td><td class="num"></td><td></td><td class="num">0</td><td class="num"></td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">3</td><td>Ignis Wraith</td><td>Primary</td><td class="g">Ready to build</td><td>—</td><td>All components owned · 12 h build</td><td class="num"></td><td></td><td class="num">0</td><td class="num"></td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">4</td><td>Rhino Prime</td><td>Warframe</td><td class="a">Partial (3 / 4)</td><td>Chassis</td><td>Lith R2 · Radiant · Lith fissure active (Tessera)</td><td class="num">10.0%</td><td class="b">3 Radiant</td><td class="num">35</td><td class="num">12</td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">5</td><td>Wisp Prime</td><td>Warframe</td><td class="a">Partial (2 / 4)</td><td>Neuroptics, Systems</td><td>Neo W1 (Neuroptics) · Axi W2 (Systems)</td><td class="num">11.0% / 2.0%</td><td class="b">0 · 2 Intact</td><td class="num">190</td><td class="num">180 (set)</td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">6</td><td>Voidrig</td><td>Necramech</td><td class="a">Partial (3 / 4)</td><td>Weapon Pod</td><td>Loid (Necraloid rank 1) · 2,000 standing · available now</td><td class="num">100%</td><td></td><td class="num">5</td><td class="num"></td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">7</td><td>Zymos</td><td>Secondary</td><td class="y">Blueprint only</td><td>Resources</td><td>Isolation Vault bounty (Deimos) · Scintillant</td><td class="num">—</td><td></td><td class="num">25</td><td class="num"></td><td class="r">2 Scintillant, 5 Heartwood</td><td><a>link</a></td></tr>
+      <tr><td class="rn">8</td><td>Tenet Envoy</td><td>Primary</td><td class="r">Not owned</td><td>Whole weapon</td><td>Sister of Parvos (Candidate on Neptune) · or trade</td><td class="num">—</td><td></td><td class="num">120</td><td class="num">55</td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">9</td><td>Kuva Zarr</td><td>Primary</td><td class="r">Not owned</td><td>Whole weapon</td><td>Kuva Lich · or trade · Valence fusion not relevant</td><td class="num">—</td><td></td><td class="num">150</td><td class="num">60</td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">10</td><td>Nautilus</td><td>Companion</td><td class="y">Blueprint only</td><td>Resources</td><td>Railjack (Veil Proxima) · Carbides, Titanium</td><td class="num">—</td><td></td><td class="num">20</td><td class="num"></td><td class="r">400 Titanium</td><td><a>link</a></td></tr>
+      <tr><td class="rn">11</td><td>Gauss Prime</td><td>Warframe</td><td class="a">Partial (1 / 4)</td><td>Blueprint, Chassis, Systems</td><td>Prime Resurgence this rotation · Aya 15 total</td><td class="num">—</td><td class="b">Aya ×6</td><td class="num">90</td><td class="num">130 (set)</td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">12</td><td>Dread</td><td>Primary</td><td class="g">Ready to build</td><td>—</td><td>All components owned · 12 h build</td><td class="num"></td><td></td><td class="num">0</td><td class="num"></td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">13</td><td>Primed Pistol Gambit</td><td>Mod</td><td class="r">Not owned</td><td>—</td><td>Baro Ki'Teer · last seen 2026-08-29 · 350 ducats</td><td class="num">—</td><td class="b">1,340 ducats</td><td class="num">0</td><td class="num">95</td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">14</td><td>Orokin Catalyst</td><td>Consumable</td><td class="r">0 in stock</td><td>—</td><td>Invasion Saxis (Eris) · 6 h left · Nightwave 75 cred</td><td class="num">100%</td><td></td><td class="num">15</td><td class="num"></td><td></td><td><a>link</a></td></tr>
+      <tr><td class="rn">15</td><td style="color:#999">… 128 more rows</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+    </tbody>
+  </table>
+  <div class="tabs">
+    <span>Summary</span><span>Mastery</span><span>Arsenal</span><span class="on">Foundry &amp; Blueprints</span><span>Farm Plan</span><span>Right Now</span><span>Relics</span><span>Mods &amp; Arcanes</span><span>Resources</span><span>Star Chart</span><span>Syndicates</span><span>Achievements</span><span>Sources</span>
+  </div>
+  <div class="status"><span>Ready</span><span>143 of 941 records</span><span>Frozen header · AutoFilter on · conditional formatting: Status, You own relic, Resources short</span></div>
+</div>
+<div class="note">Mockup of the workbook produced by <code>openwarframe export --format xlsx</code>. Each sheet is one table; every row keeps the game's internal item id in a hidden column so the file can be joined back to the JSON or SQLite export. Synthetic data.</div>
+</body>
+</html>

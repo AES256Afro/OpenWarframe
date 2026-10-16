@@ -1,4 +1,5 @@
 """Spike: fetch the official world state and resolve active fissures to node names."""
+
 from __future__ import annotations
 
 import argparse
@@ -9,7 +10,14 @@ from pathlib import Path
 
 WORLDSTATE = "https://api.warframe.com/cdn/worldState.php"
 UA = "OpenWarframe-spike/0.1 (+https://github.com/AES256Afro/OpenWarframe)"
-TIER = {"VoidT1": "Lith", "VoidT2": "Meso", "VoidT3": "Neo", "VoidT4": "Axi", "VoidT5": "Requiem", "VoidT6": "Omnia"}
+TIER = {
+    "VoidT1": "Lith",
+    "VoidT2": "Meso",
+    "VoidT3": "Neo",
+    "VoidT4": "Axi",
+    "VoidT5": "Requiem",
+    "VoidT6": "Omnia",
+}
 
 
 def fetch_json(url: str) -> dict:
@@ -20,7 +28,9 @@ def fetch_json(url: str) -> dict:
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--pe", type=Path, default=Path("data/pe"), help="directory written by poc_public_export.py")
+    ap.add_argument(
+        "--pe", type=Path, default=Path("data/pe"), help="directory written by poc_public_export.py"
+    )
     args = ap.parse_args()
 
     regions = json.loads((args.pe / "ExportRegions_en.json").read_text(encoding="utf-8"))["ExportRegions"]
@@ -34,7 +44,9 @@ def main() -> None:
         node = nodes.get(f["Node"], {})
         mins = (int(f["Expiry"]["$date"]["$numberLong"]) - now_ms) / 60000
         sp = "  Steel Path" if f.get("Hard") else ""
-        print(f"  {TIER.get(f['Modifier'], f['Modifier']):8} {f['MissionType']:<22} {node.get('name', f['Node'])} ({node.get('systemName', '?')})  {mins:4.0f} min left{sp}")
+        print(
+            f"  {TIER.get(f['Modifier'], f['Modifier']):8} {f['MissionType']:<22} {node.get('name', f['Node'])} ({node.get('systemName', '?')})  {mins:4.0f} min left{sp}"
+        )
 
     live = ("Alerts", "Invasions", "Sorties", "LiteSorties", "VoidTraders", "SyndicateMissions", "Goals")
     print("\nOther live sections present:", ", ".join(k for k in live if ws.get(k)))

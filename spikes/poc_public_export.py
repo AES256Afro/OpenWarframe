@@ -4,6 +4,7 @@ DE publishes an LZMA-compressed index listing manifest file names. Python's lzma
 module rejects the file in FORMAT_AUTO/FORMAT_ALONE ("Corrupt input data"), but the
 payload after the 13-byte LZMA-alone header decodes fine as raw LZMA1.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -27,13 +28,15 @@ def fetch(url: str) -> bytes:
 def decode_index(raw: bytes) -> list[str]:
     props = raw[0]
     dict_size = struct.unpack("<I", raw[1:5])[0]
-    filters = [{
-        "id": lzma.FILTER_LZMA1,
-        "lc": props % 9,
-        "lp": (props // 9) % 5,
-        "pb": props // 45,
-        "dict_size": dict_size,
-    }]
+    filters = [
+        {
+            "id": lzma.FILTER_LZMA1,
+            "lc": props % 9,
+            "lp": (props // 9) % 5,
+            "pb": props // 45,
+            "dict_size": dict_size,
+        }
+    ]
     dec = lzma.LZMADecompressor(format=lzma.FORMAT_RAW, filters=filters)
     return dec.decompress(raw[13:]).decode("utf-8").split()
 

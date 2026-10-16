@@ -7,6 +7,12 @@ guides, not promises.
 Decision gates (marked **DG**) are points where the project owner has to choose
 before work continues.
 
+Progress: **M0 done** and **M1 done** on 2026-10-16 (DG0 resolved: MIT). The codex
+loads 17k items, 1,885 recipes, 795 relics, 269 nodes, 10k node rewards, 9.9k enemy
+drops, 4.7k vendor offers and 3.9k market items in about 6 s from a cold cache; 49
+drop-table names (mostly bundles and boosters) stay unresolved and are listed by
+`openwarframe codex info --unresolved`.
+
 ```
 M0 Foundation ─┬─ M1 Codex ──┬─ M2 Profile ──┬─ M4 Exports ── M5 Reports ── M9 Share & package
                │             │               │

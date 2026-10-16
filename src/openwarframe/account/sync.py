@@ -43,3 +43,15 @@ def sync_profile(
             if previous.raw.get("profile") == data:
                 return previous, paths[-1], False
     return snapshot, store.save(snapshot), True
+
+
+def reparse(snapshot: Snapshot, codex: Codex | None) -> Snapshot:
+    """Re-derive a snapshot from its raw profile with the current codex.
+
+    Names and categories come from the codex, which improves over time; the raw
+    payload is the source of truth, so exports always use the latest mapping.
+    """
+    raw = snapshot.raw.get("profile")
+    if not raw:
+        return snapshot
+    return parse_profile(raw, platform=snapshot.identity.platform, codex=codex, taken_at=snapshot.taken_at)

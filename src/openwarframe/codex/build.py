@@ -95,8 +95,44 @@ class BuildReport:
 # helpers
 
 
+_MODULAR_MARKERS = (
+    "/ModularMelee",
+    "/SUModular",
+    "/InfKitGun/",
+    "/OperatorAmplifiers/",
+    "/HoverboardParts/",
+    "PetParts/",
+)
+
+
+def modular_category(unique_name: str) -> str | None:
+    """Classify modular parts. Returns a mastery category for the one part per assembly
+    that earns mastery (Zaw strike, Kitgun chamber, Amp prism, K-Drive deck, MOA/Hound
+    model), "Modular Part" for every other part, or None if not modular."""
+    u = unique_name
+    if not any(m in u for m in _MODULAR_MARKERS):
+        return None
+    if "PvPVariant" in u:
+        return "Modular Part"
+    if "/ModularMelee" in u and ("/Tip/" in u or "/Tips/" in u):
+        return "Melee"
+    if ("/SUModularSecondary" in u and "/Barrel/" in u) or ("/InfKitGun/Barrels/" in u):
+        return "Secondary"
+    if "/OperatorAmplifiers/" in u and "Barrel" in u.rsplit("/", 2)[-2] + u.rsplit("/", 1)[-1]:
+        return "Amp"
+    if "/HoverboardParts/" in u and u.endswith("Deck"):
+        return "K-Drive"
+    if "/MoaPetParts/MoaPetHead" in u or "/ZanukaPetParts/ZanukaPetPartHead" in u:
+        return "Companion"
+    return "Modular Part"
+
+
 def _category_for(manifest_label: str, rec: dict) -> str:
     pc = rec.get("productCategory")
+    if manifest_label in ("Weapon", "Companion"):
+        modular = modular_category(rec.get("uniqueName", ""))
+        if modular:
+            return modular
     if manifest_label == "Warframe":
         if str(rec.get("name", "")).startswith("<ARCHWING>"):
             return "Archwing"
@@ -216,7 +252,7 @@ def load_recipes(conn: sqlite3.Connection, pe: PublicExport, resolver: NameResol
     return len(rrows)
 
 
-def load_relics(conn: sqlite3.Connection, pe: PublicExport, plus: PlusExport) -> int:
+def load_relics(conn: sqlite3.Connection, pe: PublicExport, plus: PlusExport, resolver: NameResolver) -> int:
     plus_relics = plus.files.get("ExportRelics", {})
     rrows, rewards = [], []
     # The export lists one entry per refinement (…Bronze/Silver/Gold/Platinum).
@@ -230,6 +266,8 @@ def load_relics(conn: sqlite3.Connection, pe: PublicExport, plus: PlusExport) ->
         if not short or short[0] in seen:
             continue
         seen.add(short[0])
+        # the relic table's choice is canonical: drop-table names must resolve to it
+        resolver.add_relic(short[0], uid, prefer=True)
         extra = plus_relics.get(uid, {})
         rrows.append(
             (uid, short[0], extra.get("era") or short[1], extra.get("category"), extra.get("quality"))
@@ -557,7 +595,7 @@ def build_codex(conn: sqlite3.Connection, payloads: CodexPayloads) -> BuildRepor
     with conn:
         report.counts["item"] = load_items(conn, pe, resolver)
         report.counts["recipe"] = load_recipes(conn, pe, resolver)
-        report.counts["relic"] = load_relics(conn, pe, plus)
+        report.counts["relic"] = load_relics(conn, pe, plus, resolver)
         report.counts["node"] = load_nodes(conn, pe, plus)
         report.counts["vendor_offer"] = load_vendors(conn, plus)
         report.counts["syndicate"] = load_syndicates(conn, plus)

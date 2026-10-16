@@ -310,3 +310,55 @@ def test_sources_cover_every_table(codex_path: Path):
     assert relics[0].extra["intact"] == 2.0 and relics[0].extra["radiant"] == 10.0
     assert cx.resolve("Lith R2 Relic") == RELIC
     assert cx.counts()["unresolved_name"] == 1
+
+
+def test_modular_parts_classification():
+    from openwarframe.codex.build import modular_category
+
+    assert modular_category("/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/TipOne") == "Melee"
+    assert (
+        modular_category("/Lotus/Weapons/Ostron/Melee/ModularMelee01/Tip/PvPVariantTipOne") == "Modular Part"
+    )
+    assert modular_category("/Lotus/Weapons/Ostron/Melee/ModularMelee01/Handle/HandleOne") == "Modular Part"
+    assert (
+        modular_category(
+            "/Lotus/Weapons/SolarisUnited/Secondary/SUModularSecondarySet1/Barrel/SUModularSecondaryBarrelAPart"
+        )
+        == "Secondary"
+    )
+    assert (
+        modular_category(
+            "/Lotus/Weapons/Infested/Pistols/InfKitGun/Barrels/InfBarrelEgg/InfModularBarrelEggPart"
+        )
+        == "Secondary"
+    )
+    assert (
+        modular_category("/Lotus/Weapons/Infested/Pistols/InfKitGun/Clips/InfClipBig/InfModularClipBigPart")
+        == "Modular Part"
+    )
+    assert (
+        modular_category("/Lotus/Weapons/Corpus/OperatorAmplifiers/Set1/Barrel/CorpAmpSet1BarrelPartA")
+        == "Amp"
+    )
+    assert (
+        modular_category(
+            "/Lotus/Weapons/Sentients/OperatorAmplifiers/SentTrainingAmplifier/SentAmpTrainingBarrel"
+        )
+        == "Amp"
+    )
+    assert (
+        modular_category("/Lotus/Weapons/Corpus/OperatorAmplifiers/Set1/Grip/CorpAmpSet1GripPartA")
+        == "Modular Part"
+    )
+    deck = "/Lotus/Types/Vehicles/Hoverboard/HoverboardParts/PartComponents/HoverboardCorpusA/HoverboardCorpusADeck"
+    assert modular_category(deck) == "K-Drive"
+    assert modular_category("/Lotus/Types/Friendly/Pets/MoaPets/MoaPetParts/MoaPetHeadLambeo") == "Companion"
+    assert (
+        modular_category("/Lotus/Types/Friendly/Pets/MoaPets/MoaPetParts/MoaPetEngineKrisys")
+        == "Modular Part"
+    )
+    assert (
+        modular_category("/Lotus/Types/Friendly/Pets/ZanukaPets/ZanukaPetParts/ZanukaPetPartHeadA")
+        == "Companion"
+    )
+    assert modular_category("/Lotus/Weapons/Tenno/Pistol/Lex") is None

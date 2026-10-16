@@ -16,9 +16,11 @@ live world state, and turns it into things you can actually use:
 | **Planner** | What to farm next, which *active* fissures, invasions, alerts and bounties matter to *you*, which frames and weapons you own but never leveled, daily and weekly checklists, and goals on the road to MR 30 and beyond. |
 | **Guide** | A curated knowledge base of systems, unlocks and "things even veterans never knew about", shown only when they apply to your account. |
 
-Status: **M0, M1 and M2 done** (2026-10-16). The codex answers "where do I get X" and
-"what does X need"; `sync` snapshots your account from the public profile and `diff`
-shows what changed between play sessions. Exports come next (M4).
+Status: **M0, M1, M2 and M4 done** (2026-10-16). The codex answers "where do I get X"
+and "what does X need"; `sync` snapshots your account from the public profile, `diff`
+shows what changed between play sessions, and `export` writes JSON, SQLite, CSV, a
+styled Excel workbook and an LLM planning brief ([details](docs/EXPORTS.md)). The
+HTML dashboard, PDF and DOCX reports come next (M5).
 Read the [roadmap](docs/ROADMAP.md) and the [mockups](docs/mockups/README.md).
 
 ## Try it now
@@ -47,8 +49,12 @@ uv run openwarframe account howto
 uv run openwarframe sync
 ```
 
+```bash
+uv run openwarframe export
+```
+
 Other commands: `codex info|search|item`, `account set|show`, `summary`, `snapshots`,
-`diff`. Data lands in `%LOCALAPPDATA%\OpenWarframe` (override with
+`diff`, `export --share`, `schema`. Data lands in `%LOCALAPPDATA%\OpenWarframe` (override with
 `OPENWARFRAME_HOME`). On Windows terminals set `PYTHONIOENCODING=utf-8` if box
 characters render oddly.
 

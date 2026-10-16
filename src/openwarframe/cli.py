@@ -46,9 +46,69 @@ def version() -> None:
 
 
 @app.command()
-def export() -> None:
-    """Export the latest snapshot (milestone 4, not implemented yet)."""
-    raise typer.Exit(code=_not_yet("export", "M4"))
+def export(
+    formats: str = typer.Option(
+        "json,sqlite,csv,xlsx,llm", "--format", "-f", help="Comma-separated: json, sqlite, csv, xlsx, llm."
+    ),
+    out: Path | None = typer.Option(
+        None, "--out", "-o", help="Output directory (default: data dir/exports/<date>)."
+    ),
+    snapshot: str = typer.Option(
+        "latest", "--snapshot", help="Snapshot file, prefix, 'latest' or 'previous'."
+    ),
+    share: bool = typer.Option(False, "--share", help="Strip display name, clan and raw payloads."),
+    budget: str = typer.Option("compact", "--budget", help="LLM brief budget: compact (~8k tokens) or full."),
+) -> None:
+    """Export a snapshot to JSON, SQLite, CSV, Excel and an LLM planning brief."""
+    from .account.store import SnapshotStore
+    from .account.sync import reparse
+    from .codex import Codex
+    from .exports import FORMATS, run_exports
+    from .report import build_report
+
+    s = load_settings()
+    if not s.codex_path.exists():
+        console.print("[red]No codex yet; run `openwarframe codex update` first.[/red]")
+        raise typer.Exit(code=1)
+    store = SnapshotStore(s.snapshots_dir)
+    try:
+        snap = store.load(snapshot)
+    except FileNotFoundError:
+        console.print("[red]No snapshot yet; run `openwarframe sync` first.[/red]")
+        raise typer.Exit(code=1) from None
+    wanted = [f.strip().lower() for f in formats.split(",") if f.strip()]
+    bad = [f for f in wanted if f not in FORMATS]
+    if bad:
+        raise typer.BadParameter(f"unknown format(s) {bad}; choose from {', '.join(FORMATS)}")
+    if budget not in ("compact", "full"):
+        raise typer.BadParameter("budget must be compact or full")
+    codex = Codex(s.codex_path)
+    with console.status("Building report..."):
+        report = build_report(reparse(snap, codex), codex, anonymize=share)
+    target = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M") / ("share" if share else "full"))
+    with console.status("Writing exports..."):
+        results = run_exports(report, target, wanted, brief_budget=budget)
+    t = Table(title=f"exports -> {target}", show_edge=False)
+    t.add_column("format")
+    t.add_column("file")
+    t.add_column("detail")
+    t.add_column("size", justify="right")
+    for r in results:
+        t.add_row(
+            r.format, r.path.name + ("/" if r.path.is_dir() else ""), r.detail, f"{r.size / 1024:,.0f} KB"
+        )
+    console.print(t)
+    if share:
+        console.print("[yellow]share mode: display name, clan and raw payloads removed[/yellow]")
+
+
+@app.command()
+def schema(out: Path = typer.Option(Path("docs/schema/account.schema.json"), "--out")) -> None:
+    """Write the JSON Schema for account.json."""
+    from .exports.data import write_schema
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    console.print(f"wrote {write_schema(out)}")
 
 
 @app.command()

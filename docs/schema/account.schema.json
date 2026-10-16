@@ -1,0 +1,766 @@
+{
+ "$defs": {
+  "AchievementRow": {
+   "properties": {
+    "key": {
+     "title": "Key",
+     "type": "string"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "description": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Description"
+    },
+    "progress": {
+     "title": "Progress",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "key",
+    "name",
+    "progress"
+   ],
+   "title": "AchievementRow",
+   "type": "object"
+  },
+  "CategoryRow": {
+   "properties": {
+    "category": {
+     "title": "Category",
+     "type": "string"
+    },
+    "mastered": {
+     "title": "Mastered",
+     "type": "integer"
+    },
+    "leveling": {
+     "title": "Leveling",
+     "type": "integer"
+    },
+    "missing": {
+     "title": "Missing",
+     "type": "integer"
+    },
+    "total": {
+     "title": "Total",
+     "type": "integer"
+    },
+    "percent_mastered": {
+     "title": "Percent Mastered",
+     "type": "number"
+    }
+   },
+   "required": [
+    "category",
+    "mastered",
+    "leveling",
+    "missing",
+    "total",
+    "percent_mastered"
+   ],
+   "title": "CategoryRow",
+   "type": "object"
+  },
+  "ComponentRow": {
+   "properties": {
+    "unique_name": {
+     "title": "Unique Name",
+     "type": "string"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "count": {
+     "title": "Count",
+     "type": "integer"
+    },
+    "sources": {
+     "items": {
+      "$ref": "#/$defs/SourceRow"
+     },
+     "title": "Sources",
+     "type": "array"
+    }
+   },
+   "required": [
+    "unique_name",
+    "name",
+    "count"
+   ],
+   "title": "ComponentRow",
+   "type": "object"
+  },
+  "Headline": {
+   "properties": {
+    "mastery_rank": {
+     "title": "Mastery Rank",
+     "type": "integer"
+    },
+    "account_age_days": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Account Age Days"
+    },
+    "play_time_hours": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Play Time Hours"
+    },
+    "missions_completed": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Missions Completed"
+    },
+    "items_mastered": {
+     "title": "Items Mastered",
+     "type": "integer"
+    },
+    "items_leveling": {
+     "title": "Items Leveling",
+     "type": "integer"
+    },
+    "items_missing": {
+     "title": "Items Missing",
+     "type": "integer"
+    },
+    "items_total": {
+     "title": "Items Total",
+     "type": "integer"
+    },
+    "starchart_done": {
+     "title": "Starchart Done",
+     "type": "integer"
+    },
+    "starchart_total": {
+     "title": "Starchart Total",
+     "type": "integer"
+    },
+    "steel_path_done": {
+     "title": "Steel Path Done",
+     "type": "integer"
+    },
+    "syndicates_maxed": {
+     "title": "Syndicates Maxed",
+     "type": "integer"
+    },
+    "achievements_tracked": {
+     "title": "Achievements Tracked",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "mastery_rank",
+    "items_mastered",
+    "items_leveling",
+    "items_missing",
+    "items_total",
+    "starchart_done",
+    "starchart_total",
+    "steel_path_done",
+    "syndicates_maxed",
+    "achievements_tracked"
+   ],
+   "title": "Headline",
+   "type": "object"
+  },
+  "Identity": {
+   "properties": {
+    "display_name": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Display Name"
+    },
+    "platform": {
+     "title": "Platform",
+     "type": "string"
+    },
+    "clan": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Clan"
+    },
+    "created_at": {
+     "anyOf": [
+      {
+       "format": "date-time",
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Created At"
+    },
+    "anonymized": {
+     "default": false,
+     "title": "Anonymized",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "platform"
+   ],
+   "title": "Identity",
+   "type": "object"
+  },
+  "IntrinsicRow": {
+   "properties": {
+    "key": {
+     "title": "Key",
+     "type": "string"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "value": {
+     "title": "Value",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "key",
+    "name",
+    "value"
+   ],
+   "title": "IntrinsicRow",
+   "type": "object"
+  },
+  "MasteryEstimate": {
+   "description": "Mastery XP we can see. Star chart and junction XP are not in the profile, so the\nestimate is a floor, not the account's true total.",
+   "properties": {
+    "rank": {
+     "title": "Rank",
+     "type": "integer"
+    },
+    "rank_threshold": {
+     "title": "Rank Threshold",
+     "type": "integer"
+    },
+    "next_rank_threshold": {
+     "title": "Next Rank Threshold",
+     "type": "integer"
+    },
+    "from_items": {
+     "title": "From Items",
+     "type": "integer"
+    },
+    "from_intrinsics": {
+     "title": "From Intrinsics",
+     "type": "integer"
+    },
+    "visible_total": {
+     "title": "Visible Total",
+     "type": "integer"
+    },
+    "note": {
+     "title": "Note",
+     "type": "string"
+    }
+   },
+   "required": [
+    "rank",
+    "rank_threshold",
+    "next_rank_threshold",
+    "from_items",
+    "from_intrinsics",
+    "visible_total",
+    "note"
+   ],
+   "title": "MasteryEstimate",
+   "type": "object"
+  },
+  "MissingItem": {
+   "properties": {
+    "unique_name": {
+     "title": "Unique Name",
+     "type": "string"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "category": {
+     "title": "Category",
+     "type": "string"
+    },
+    "mastery_req": {
+     "title": "Mastery Req",
+     "type": "integer"
+    },
+    "above_your_mr": {
+     "title": "Above Your Mr",
+     "type": "boolean"
+    },
+    "acquisition": {
+     "title": "Acquisition",
+     "type": "string"
+    },
+    "tradeable": {
+     "title": "Tradeable",
+     "type": "boolean"
+    },
+    "market_slug": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Market Slug"
+    },
+    "blueprint_sources": {
+     "items": {
+      "$ref": "#/$defs/SourceRow"
+     },
+     "title": "Blueprint Sources",
+     "type": "array"
+    },
+    "components": {
+     "items": {
+      "$ref": "#/$defs/ComponentRow"
+     },
+     "title": "Components",
+     "type": "array"
+    },
+    "wiki_url": {
+     "title": "Wiki Url",
+     "type": "string"
+    }
+   },
+   "required": [
+    "unique_name",
+    "name",
+    "category",
+    "mastery_req",
+    "above_your_mr",
+    "acquisition",
+    "tradeable",
+    "wiki_url"
+   ],
+   "title": "MissingItem",
+   "type": "object"
+  },
+  "NodeRow": {
+   "properties": {
+    "node": {
+     "title": "Node",
+     "type": "string"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "planet": {
+     "title": "Planet",
+     "type": "string"
+    },
+    "mission_type": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Mission Type"
+    },
+    "faction": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Faction"
+    },
+    "level": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Level"
+    },
+    "completes": {
+     "title": "Completes",
+     "type": "integer"
+    },
+    "completed": {
+     "title": "Completed",
+     "type": "boolean"
+    },
+    "steel_path": {
+     "title": "Steel Path",
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "node",
+    "name",
+    "planet",
+    "completes",
+    "completed",
+    "steel_path"
+   ],
+   "title": "NodeRow",
+   "type": "object"
+  },
+  "OwnedItem": {
+   "properties": {
+    "unique_name": {
+     "title": "Unique Name",
+     "type": "string"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "category": {
+     "title": "Category",
+     "type": "string"
+    },
+    "rank": {
+     "title": "Rank",
+     "type": "integer"
+    },
+    "xp": {
+     "title": "Xp",
+     "type": "integer"
+    },
+    "mastery_xp": {
+     "title": "Mastery Xp",
+     "type": "integer"
+    },
+    "mastered": {
+     "title": "Mastered",
+     "type": "boolean"
+    },
+    "xp_to_30": {
+     "title": "Xp To 30",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "unique_name",
+    "name",
+    "category",
+    "rank",
+    "xp",
+    "mastery_xp",
+    "mastered",
+    "xp_to_30"
+   ],
+   "title": "OwnedItem",
+   "type": "object"
+  },
+  "SourceRow": {
+   "properties": {
+    "kind": {
+     "title": "Kind",
+     "type": "string"
+    },
+    "where": {
+     "title": "Where",
+     "type": "string"
+    },
+    "detail": {
+     "title": "Detail",
+     "type": "string"
+    },
+    "farmable": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Farmable"
+    }
+   },
+   "required": [
+    "kind",
+    "where",
+    "detail"
+   ],
+   "title": "SourceRow",
+   "type": "object"
+  },
+  "SourceStamp": {
+   "properties": {
+    "source": {
+     "title": "Source",
+     "type": "string"
+    },
+    "version": {
+     "title": "Version",
+     "type": "string"
+    },
+    "fetched_at": {
+     "title": "Fetched At",
+     "type": "string"
+    }
+   },
+   "required": [
+    "source",
+    "version",
+    "fetched_at"
+   ],
+   "title": "SourceStamp",
+   "type": "object"
+  },
+  "SyndicateRow": {
+   "properties": {
+    "tag": {
+     "title": "Tag",
+     "type": "string"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "rank": {
+     "title": "Rank",
+     "type": "integer"
+    },
+    "standing": {
+     "title": "Standing",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "tag",
+    "name",
+    "rank",
+    "standing"
+   ],
+   "title": "SyndicateRow",
+   "type": "object"
+  },
+  "UsageRow": {
+   "properties": {
+    "unique_name": {
+     "title": "Unique Name",
+     "type": "string"
+    },
+    "name": {
+     "title": "Name",
+     "type": "string"
+    },
+    "kills": {
+     "title": "Kills",
+     "type": "integer"
+    },
+    "headshots": {
+     "title": "Headshots",
+     "type": "integer"
+    },
+    "equip_hours": {
+     "title": "Equip Hours",
+     "type": "number"
+    },
+    "xp": {
+     "title": "Xp",
+     "type": "integer"
+    }
+   },
+   "required": [
+    "unique_name",
+    "name",
+    "kills",
+    "headshots",
+    "equip_hours",
+    "xp"
+   ],
+   "title": "UsageRow",
+   "type": "object"
+  }
+ },
+ "properties": {
+  "schema_version": {
+   "default": "openwarframe.account/1",
+   "title": "Schema Version",
+   "type": "string"
+  },
+  "generated_at": {
+   "format": "date-time",
+   "title": "Generated At",
+   "type": "string"
+  },
+  "snapshot_taken_at": {
+   "format": "date-time",
+   "title": "Snapshot Taken At",
+   "type": "string"
+  },
+  "coverage": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Coverage",
+   "type": "array"
+  },
+  "identity": {
+   "$ref": "#/$defs/Identity"
+  },
+  "headline": {
+   "$ref": "#/$defs/Headline"
+  },
+  "mastery": {
+   "$ref": "#/$defs/MasteryEstimate"
+  },
+  "categories": {
+   "items": {
+    "$ref": "#/$defs/CategoryRow"
+   },
+   "title": "Categories",
+   "type": "array"
+  },
+  "owned": {
+   "items": {
+    "$ref": "#/$defs/OwnedItem"
+   },
+   "title": "Owned",
+   "type": "array"
+  },
+  "missing": {
+   "items": {
+    "$ref": "#/$defs/MissingItem"
+   },
+   "title": "Missing",
+   "type": "array"
+  },
+  "nodes": {
+   "items": {
+    "$ref": "#/$defs/NodeRow"
+   },
+   "title": "Nodes",
+   "type": "array"
+  },
+  "syndicates": {
+   "items": {
+    "$ref": "#/$defs/SyndicateRow"
+   },
+   "title": "Syndicates",
+   "type": "array"
+  },
+  "achievements": {
+   "items": {
+    "$ref": "#/$defs/AchievementRow"
+   },
+   "title": "Achievements",
+   "type": "array"
+  },
+  "intrinsics": {
+   "items": {
+    "$ref": "#/$defs/IntrinsicRow"
+   },
+   "title": "Intrinsics",
+   "type": "array"
+  },
+  "usage": {
+   "items": {
+    "$ref": "#/$defs/UsageRow"
+   },
+   "title": "Usage",
+   "type": "array"
+  },
+  "sources": {
+   "items": {
+    "$ref": "#/$defs/SourceStamp"
+   },
+   "title": "Sources",
+   "type": "array"
+  },
+  "notes": {
+   "items": {
+    "type": "string"
+   },
+   "title": "Notes",
+   "type": "array"
+  }
+ },
+ "required": [
+  "generated_at",
+  "snapshot_taken_at",
+  "coverage",
+  "identity",
+  "headline",
+  "mastery",
+  "categories",
+  "owned",
+  "missing",
+  "nodes",
+  "syndicates",
+  "achievements",
+  "intrinsics",
+  "usage",
+  "sources"
+ ],
+ "title": "OpenWarframe account report",
+ "type": "object",
+ "$id": "https://github.com/AES256Afro/OpenWarframe/docs/schema/account.schema.json"
+}

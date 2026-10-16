@@ -82,6 +82,14 @@ class NameResolver:
         if currency:
             return currency[0]
 
+        # Relics first: every refinement variant shares the display name, and the
+        # relic table's canonical variant must win over the generic item map.
+        parts = key.split(" ")
+        if len(parts) >= 2 and parts[0] in (t.lower() for t in RELIC_TIERS):
+            short = " ".join(parts[:2])
+            if short in self.relics and (len(parts) == 2 or parts[2].startswith(("relic", "("))):
+                return self.relics[short]
+
         if key.endswith(" blueprint"):
             base = key[: -len(" blueprint")]
             if base in self.recipes_by_result_name:
@@ -94,15 +102,6 @@ class NameResolver:
                 return self.items[base]
         if key in self.items:
             return self.items[key]
-        if key.endswith(" relic"):
-            short = key[: -len(" relic")]
-            if short in self.relics:
-                return self.relics[short]
-        parts = key.split(" ")
-        if len(parts) >= 2 and parts[0] in (t.lower() for t in RELIC_TIERS):
-            short = " ".join(parts[:2])
-            if short in self.relics:
-                return self.relics[short]
 
         count, _ = self.unresolved.get(raw, (0, source))
         self.unresolved[raw] = (count + 1, source)

@@ -20,6 +20,15 @@ to pick up in M6: the "in game" totals per category count every export entry (mo
 parts, variants) rather than mastery-eligible items only, and mastery XP from nodes,
 junctions and intrinsics is not yet estimated.
 
+**M4 done** on 2026-10-16: `export` writes `account.json` (schema in
+`docs/schema/account.schema.json`), `account.sqlite`, a CSV folder, a styled Excel
+workbook (Summary with KPI tiles and chart, plus Never leveled, Where to get them,
+Owned and leveled, Star chart, Syndicates, Achievements, Intrinsics, Usage, Sources)
+and a compact LLM brief of about 6.5k tokens; `--share` anonymizes. Along the way the
+codex learned which modular parts count for mastery and which relics drop right now,
+and the "in game" totals gap noted under M2 is closed (817 masterable items).
+See `docs/EXPORTS.md`.
+
 ```
 M0 Foundation ─┬─ M1 Codex ──┬─ M2 Profile ──┬─ M4 Exports ── M5 Reports ── M9 Share & package
                │             │               │

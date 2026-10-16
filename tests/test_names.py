@@ -42,3 +42,11 @@ def test_currency_names_map_to_pseudo_items():
     r = NameResolver()
     assert r.resolve("400 Endo") == "/OpenWarframe/Currency/Endo"
     assert not r.unresolved
+
+
+def test_relic_names_prefer_canonical_relic_over_item_map():
+    r = NameResolver()
+    r.add_item("Lith C5 Relic", "/Lotus/Types/Game/Projections/T1C5Silver")  # variant seen first
+    r.add_relic("Lith C5", "/Lotus/Types/Game/Projections/T1C5Bronze", prefer=True)
+    assert r.resolve("Lith C5 Relic") == "/Lotus/Types/Game/Projections/T1C5Bronze"
+    assert r.resolve("Lith C5 Relic (Radiant)") == "/Lotus/Types/Game/Projections/T1C5Bronze"

@@ -73,3 +73,20 @@ def load_settings(home: Path | None = None) -> Settings:
         settings.extra = {k: v for k, v in data.items() if k not in {"platform", "account_id"}}
     settings.ensure_dirs()
     return settings
+
+
+def save_settings(settings: Settings) -> Path:
+    """Write config.toml: the keys OpenWarframe owns plus any scalar extras."""
+    lines = [f'platform = "{settings.platform}"']
+    if settings.account_id:
+        lines.append(f'account_id = "{settings.account_id}"')
+    for k, v in settings.extra.items():
+        if isinstance(v, bool):
+            lines.append(f"{k} = {'true' if v else 'false'}")
+        elif isinstance(v, int | float):
+            lines.append(f"{k} = {v}")
+        elif isinstance(v, str):
+            lines.append(f'{k} = "{v}"')
+    settings.ensure_dirs()
+    settings.config_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return settings.config_path

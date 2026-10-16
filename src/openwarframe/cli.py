@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 
 import typer
@@ -17,7 +18,9 @@ app = typer.Typer(help="Export, explain and plan your Warframe account.", no_arg
 codex_app = typer.Typer(
     help="The local game database (items, recipes, drops, vendors).", no_args_is_help=True
 )
+account_app = typer.Typer(help="Which account to snapshot.", no_args_is_help=True)
 app.add_typer(codex_app, name="codex")
+app.add_typer(account_app, name="account")
 console = Console()
 
 
@@ -32,8 +35,6 @@ def _main(
         level=logging.INFO if verbose else logging.WARNING, format="%(levelname)s %(name)s: %(message)s"
     )
     if home:
-        import os
-
         os.environ["OPENWARFRAME_HOME"] = str(home)
 
 
@@ -42,12 +43,6 @@ def version() -> None:
     """Print the version and data directory."""
     s = load_settings()
     console.print(f"openwarframe {__version__}  -  data in {s.home}")
-
-
-@app.command()
-def sync() -> None:
-    """Take an account snapshot (milestone 2, not implemented yet)."""
-    raise typer.Exit(code=_not_yet("sync", "M2"))
 
 
 @app.command()
@@ -65,6 +60,179 @@ def plan() -> None:
 def _not_yet(cmd: str, milestone: str) -> int:
     console.print(f"[yellow]`openwarframe {cmd}` arrives in {milestone}. See docs/ROADMAP.md.[/yellow]")
     return 2
+
+
+# -- account -----------------------------------------------------------------------------
+
+
+@account_app.command("howto")
+def account_howto() -> None:
+    """Explain how to find your account id."""
+    from .sources.account.profile import HOW_TO_FIND_ID
+
+    console.print(HOW_TO_FIND_ID)
+
+
+@account_app.command("set")
+def account_set(
+    id: str = typer.Option(..., "--id", help="24-character account id (the warframe.com `gid` cookie)."),
+    platform: str = typer.Option("pc", "--platform", help="pc, ps4, xb1, swi, mob or and."),
+) -> None:
+    """Store the account id and platform in config.toml."""
+    from .config import save_settings
+    from .sources.account.profile import HOSTS, ProfileError, validate_account_id
+
+    s = load_settings()
+    try:
+        s.account_id = validate_account_id(id)
+    except ProfileError as exc:
+        raise typer.BadParameter(str(exc)) from None
+    if platform not in HOSTS:
+        raise typer.BadParameter(f"platform must be one of {', '.join(HOSTS)}")
+    s.platform = platform
+    console.print(f"saved to {save_settings(s)}")
+
+
+@account_app.command("show")
+def account_show() -> None:
+    """Show the configured account."""
+    s = load_settings()
+    console.print(
+        f"platform: {s.platform}\naccount id: {s.account_id or '[not set]'}\nconfig: {s.config_path}"
+    )
+
+
+# -- snapshots ----------------------------------------------------------------------------
+
+
+def _open_codex(s):
+    from .codex import Codex
+
+    return Codex(s.codex_path) if s.codex_path.exists() else None
+
+
+def _print_summary(snapshot, codex) -> None:
+    from .account.summary import summarize
+
+    sm = summarize(snapshot, codex)
+    who = snapshot.identity.display_name or "account"
+    age = ""
+    if sm.account_age_days:
+        age = f" - playing for {sm.account_age_days // 365} y {sm.account_age_days % 365 // 30} m"
+    console.print(f"[bold]{who}[/bold]  MR {sm.mastery_rank}{age}")
+    bits = []
+    if sm.play_time_h:
+        bits.append(f"{sm.play_time_h:,.0f} h played")
+    if sm.missions_completed:
+        bits.append(f"{sm.missions_completed:,} missions")
+    nodes = f"{sm.nodes_done}" + (f" / {sm.nodes_total}" if sm.nodes_total else "")
+    other = f", +{sm.nodes_other} other" if sm.nodes_other else ""
+    bits.append(f"star chart {nodes} nodes ({sm.steel_path_done} Steel Path{other})")
+    bits.append(f"syndicates {sm.syndicates_max} maxed of {sm.syndicates_total}")
+    bits.append(f"{sm.challenges_tracked} achievements tracked")
+    console.print("  " + " - ".join(bits))
+    t = Table(title="mastery", show_edge=False)
+    t.add_column("category")
+    t.add_column("mastered", justify="right")
+    t.add_column("leveling", justify="right")
+    t.add_column("in game", justify="right")
+    for c in sm.categories:
+        t.add_row(c.category, str(c.mastered), str(c.leveling), str(c.total) if c.total is not None else "?")
+    console.print(t)
+    if sm.unmastered_names:
+        console.print("[dim]owned, not mastered: " + ", ".join(sm.unmastered_names) + "[/dim]")
+
+
+def _print_diff(d) -> None:
+    if d.is_empty():
+        console.print(f"[dim]no progression changes since {d.before:%Y-%m-%d %H:%M}[/dim]")
+        return
+    console.print(
+        f"\n[bold]Changes[/bold] {d.before:%Y-%m-%d %H:%M} -> {d.after:%Y-%m-%d %H:%M}"
+        f"  ({d.play_time_h:.1f} h played, {d.missions_completed} missions)"
+    )
+    if d.mastery_rank[0] != d.mastery_rank[1]:
+        console.print(f"  mastery rank {d.mastery_rank[0]} -> {d.mastery_rank[1]}")
+    if d.newly_mastered:
+        console.print("  [green]mastered:[/green] " + ", ".join(d.newly_mastered))
+    if d.rank_ups:
+        console.print("  ranked up: " + ", ".join(f"{n} {a}->{b}" for n, a, b in d.rank_ups[:15]))
+    new_only = [n for n in d.newly_leveled if n not in d.newly_mastered]
+    if new_only:
+        console.print("  started leveling: " + ", ".join(new_only[:15]))
+    if d.new_nodes:
+        console.print("  new nodes: " + ", ".join(d.new_nodes[:15]))
+    if d.new_steel_path_nodes:
+        console.print("  [magenta]Steel Path:[/magenta] " + ", ".join(d.new_steel_path_nodes[:15]))
+    if d.standing:
+        console.print("  standing: " + ", ".join(f"{n} {v:+,}" for n, v in d.standing[:10]))
+    if d.challenges_progressed:
+        console.print(f"  achievements progressed: {len(d.challenges_progressed)}")
+
+
+@app.command()
+def sync(force: bool = typer.Option(False, "--force", help="Ignore the 10-minute profile cache.")) -> None:
+    """Fetch the public profile and store a snapshot."""
+    from .account.store import SnapshotStore, diff_snapshots
+    from .account.sync import sync_profile
+    from .sources.account.profile import ProfileError
+
+    s = load_settings()
+    store = SnapshotStore(s.snapshots_dir)
+    previous = store.latest()
+    try:
+        with console.status("Fetching profile..."):
+            snapshot, path, written = sync_profile(s, force=force)
+    except ProfileError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1) from None
+    _print_summary(snapshot, _open_codex(s))
+    if written:
+        console.print(f"[dim]snapshot written to {path}[/dim]")
+        if previous:
+            _print_diff(diff_snapshots(previous, snapshot))
+    else:
+        console.print(
+            f"[dim]profile unchanged since {snapshot.taken_at:%Y-%m-%d %H:%M} (DE caches it ~10 min); nothing new written[/dim]"
+        )
+
+
+@app.command()
+def summary(
+    ref: str = typer.Argument("latest", help="Snapshot file, prefix, 'latest' or 'previous'."),
+) -> None:
+    """Summarize a stored snapshot."""
+    from .account.store import SnapshotStore
+
+    s = load_settings()
+    _print_summary(SnapshotStore(s.snapshots_dir).load(ref), _open_codex(s))
+
+
+@app.command()
+def snapshots() -> None:
+    """List stored snapshots."""
+    from .account.store import SnapshotStore
+
+    s = load_settings()
+    paths = SnapshotStore(s.snapshots_dir).list()
+    if not paths:
+        console.print("no snapshots yet; run `openwarframe sync`")
+        return
+    for p in paths:
+        console.print(f"  {p.stem}  [dim]{p.stat().st_size // 1024} KB[/dim]")
+
+
+@app.command()
+def diff(
+    before: str = typer.Argument("previous", help="Older snapshot (file, prefix, 'previous')."),
+    after: str = typer.Argument("latest", help="Newer snapshot (file, prefix, 'latest')."),
+) -> None:
+    """What changed between two snapshots."""
+    from .account.store import SnapshotStore, diff_snapshots
+
+    s = load_settings()
+    store = SnapshotStore(s.snapshots_dir)
+    _print_diff(diff_snapshots(store.load(before), store.load(after)))
 
 
 # -- codex -------------------------------------------------------------------------------
@@ -99,8 +267,7 @@ def codex_info(
     """Show source versions and row counts."""
     from .codex import Codex
 
-    s = load_settings()
-    cx = Codex(s.codex_path)
+    cx = Codex(load_settings().codex_path)
     t = Table(title="sources")
     t.add_column("source")
     t.add_column("version")
@@ -143,9 +310,8 @@ def codex_search(text: str, limit: int = 25) -> None:
 def _resolve_or_exit(cx, query: str) -> str:
     uid = cx.resolve(query)
     if not uid:
-        matches = cx.search(query, limit=8)
         console.print(f"[red]No unique match for '{query}'.[/red]")
-        for m in matches:
+        for m in cx.search(query, limit=8):
             console.print(f"  {m['name']}  [dim]{m['unique_name']}[/dim]")
         raise typer.Exit(code=1)
     return uid

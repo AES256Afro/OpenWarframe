@@ -1,0 +1,144 @@
+# Mastery Rank tests 24-30. `rank` is the rank you reach by passing the test.
+# `recommend` lists frames (and optionally companions) in order of preference; the
+# planner shows the ones the account has leveled first. Names match display names,
+# so "Mesa" also matches "Mesa Prime".
+sources:
+  - title: Mastery Rank - WARFRAME Wiki
+    url: https://wiki.warframe.com/w/Mastery_Rank
+    license: CC BY-SA
+last_verified: 2026-10-17
+
+rules:
+  - Tests are solo. Start one from your Profile with Rank Up once your mastery bar is full.
+  - Passing a test locks the next test for 23 hours, so you gain at most one rank per day.
+  - Recent patches removed the lockout for failing, so a failed attempt only costs time.
+  - Tests you have passed can be replayed in Cephalon Simaris' room on a Relay.
+
+tests:
+  - rank: 24
+    title: Gold Dragon
+    name: Operator Test
+    objective: >-
+      Destroy the orb in the middle of a small arena within 3 minutes while Infested
+      Brood Mothers attack. Your Operator loses its Amp, so you only have Void Sling,
+      Void Mode and Void Beam. You get 3 respawns.
+    tips:
+      - The orb keeps its damage when you die, but it heals if you stop hitting it for a while.
+      - Void Sling sheds attached Maggots. Void Mode only knocks them off and they jump back.
+      - Dashing through enemies restores a little energy. Two energy orbs respawn on opposite sides.
+      - Falling off does not kill you, but the landing animation leaves you open.
+    recommend: []
+    bring_default: Your Operator. Magus Lockdown can freeze enemies if you own it.
+
+  - rank: 25
+    title: Sage
+    name: Deployable Archwing Exterminate
+    objective: >-
+      Kill 50 enemies across floating platforms before the timer runs out. Archwings
+      respawn on each platform to fly to the next. Melee the orbs to add time.
+    tips:
+      - Enemies that fall off do not count, so avoid knockback melee and Crowd Dispersion.
+      - Blink is good for crossing platforms.
+    recommend:
+      - {name: Titania, why: Razorwing crosses platforms without an Archwing}
+      - {name: Nova, why: Wormhole and Molecular Prime speed up kills}
+      - {name: Saryn, why: Spores spread kills across a platform}
+    bring_default: A frame with strong area damage and a melee weapon without knockback.
+
+  - rank: 26
+    title: Silver Sage
+    name: Advanced Mobile Point Capture
+    objective: >-
+      Capture 6 moving points within 5 minutes under heavy Grineer fire (level 41 to
+      46). Points move faster than in the rank 23 version and go vertical. Progress
+      decays when you step out.
+    tips:
+      - Energy only comes from drops, so bring Energy Siphon or Rage and high efficiency. Zenurik's Wellspring helps.
+      - There is no way to add time, so stay inside the circle.
+    recommend:
+      - {name: Limbo, why: Rift Walk ignores incoming fire}
+      - {name: Loki, why: Invisibility keeps enemies off you}
+      - {name: Rhino, why: Iron Skin soaks the gunfire}
+      - {name: Inaros, why: huge health pool}
+      - {name: Nezha, why: Warding Halo}
+      - {name: Nidus, why: self-sustaining stacks}
+      - {name: Octavia, why: Metronome and long-duration invisibility}
+      - {name: Saryn, why: Molt draws fire and speeds her up}
+    bring_default: A tanky or invisible frame with energy sustain.
+
+  - rank: 27
+    title: Gold Sage
+    name: Index Banking
+    objective: >-
+      Collect and bank 100 points within 5 minutes. Level 25 Grineer spawn and slowly
+      scale up. Orange orbs on high ground are worth 3, blue orbs are worth 1, and
+      red-marked Grineer drop orange orbs.
+    tips:
+      - Unlike the real Index, you must activate the deposit point yourself.
+      - Orbs respawn when you bank, and leaving enemies alive keeps them weak.
+    recommend:
+      - {name: Mag, why: Greedy Pull with a Vacuum or Fetch companion makes it very easy}
+      - {name: Titania, why: fast movement}
+      - {name: Zephyr, why: fast movement}
+      - {name: Nova, why: Wormhole}
+    companions:
+      - {name: Carrier, why: Vacuum pulls orbs to you}
+      - {name: Helios, why: Investigator plus Vacuum on some builds}
+    bring_default: A fast frame and a companion with Vacuum or Fetch.
+
+  - rank: 28
+    title: Master
+    name: Condensed Thermia Extermination
+    objective: >-
+      Kill 60 enemies who are invulnerable until hit by a thrown Thermia canister.
+      Seven canisters spawn in a fixed order and each lasts 20 seconds. You fail if 60
+      kills are not done 15 seconds after the 7th throw.
+    tips:
+      - Group enemies, then throw into the cluster. The next canister spawns 10 seconds after a throw.
+      - Learn the spawn order on a first attempt so you move early.
+      - Watch for Parasitic Eximus draining your energy.
+    recommend:
+      - {name: Vauban, why: Bastille in Vortex mode clusters enemies}
+      - {name: Khora, why: Ensnare chains enemies together}
+      - {name: Nidus, why: Larva pulls a crowd}
+      - {name: Mag, why: a short-tap Magnetize pulls enemies in}
+      - {name: Yareli, why: Riptide clusters enemies}
+    bring_default: A frame that pulls enemies into a cluster.
+
+  - rank: 29
+    title: Middle Master
+    name: Advanced Timed Extermination
+    objective: >-
+      Kill 100 enemies whose levels climb from 50 to 110. A 14 second timer gains 2
+      seconds per kill. Every 10 kills adds levels, health or armor. Dying or timing
+      out resets the count, and you get 3 attempts.
+    tips:
+      - Ammo does not refill between attempts, so pick ammo-efficient weapons or bring Ammo Restores.
+      - Decoys from Loki or Saryn pull fire. Loki's Radial Disarm turns gunners into melee.
+    recommend:
+      - {name: Mesa, why: Peacemaker with Shatter Shield and Energy Restores}
+      - {name: Saryn, why: decoys and area damage}
+      - {name: Loki, why: Decoy and Radial Disarm}
+    bring_default: A frame with sustained single-target killing and a decoy or damage reduction.
+
+  - rank: 30
+    title: True Master
+    name: Advanced Survival
+    objective: >-
+      Survive 5 stages of enemies and bosses on fast-draining life support. It starts
+      at 107% and drains 1% every 0.66 seconds. Enemy modules add 10%, stage capsules
+      add 35%. Dying does not fail the test, but empty life support does.
+    tips:
+      - Stage 5 brings Nox at level 140 with Steel Path changes. Break his glass first.
+      - Crowd control and sprint speed matter most, because modules are your timer.
+      - Archwings and Necramechs are not allowed. Companions, Operator and Archguns are.
+    recommend:
+      - {name: Mesa, why: Peacemaker with Rage or Hunter Adrenaline}
+      - {name: Saryn, why: Spores clear mobs}
+      - {name: Protea, why: Blaze Artillery and Grenade Fan}
+      - {name: Khora, why: Ensnare crowd control}
+      - {name: Garuda, why: Gloom with Bloodletting}
+      - {name: Kullervo, why: Collective Curse and Wrathful Advance}
+    companions:
+      - {name: Carrier, why: Vacuum collects life support modules}
+    bring_default: A crowd-control frame with energy sustain and a Vacuum companion.

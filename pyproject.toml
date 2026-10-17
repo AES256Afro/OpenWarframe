@@ -13,6 +13,7 @@ dependencies = [
   "platformdirs>=4.2",
   "rich>=13.7",
   "openpyxl>=3.1",
+  "pyyaml>=6.0",
 ]
 
 [project.scripts]
@@ -30,6 +31,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openwarframe"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"kb" = "openwarframe/kb_data"
 
 [tool.ruff]
 line-length = 110

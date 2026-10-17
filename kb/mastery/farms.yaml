@@ -1,0 +1,114 @@
+# Affinity and mastery activities, tagged by mood. Text may use placeholders the
+# planner fills from the snapshot: {mastered_frames}, {drifter_ranks_left},
+# {drifter_mastery_left}, {railjack_ranks_left}, {railjack_mastery_left},
+# {archwing_partials}, {archwing_mastery}, {steel_path_left}, {extended_missing}.
+moods:
+  fast: Fastest XP
+  group: Group play
+  survival: Survival
+  chill: Solo and chill
+  nofight: No fighting
+  skill: Challenge me
+
+sources:
+  - title: Affinity - WARFRAME Wiki
+    url: https://wiki.warframe.com/w/Affinity
+    license: CC BY-SA
+  - title: Mastery Rank - WARFRAME Wiki
+    url: https://wiki.warframe.com/w/Mastery_Rank
+    license: CC BY-SA
+last_verified: 2026-10-17
+
+farms:
+  - id: elite-sanctuary-onslaught
+    name: Elite Sanctuary Onslaught
+    moods: [fast, group]
+    where: Navigation, Sanctuary Onslaught, Elite. Needs a rank 30 frame, and you have {mastered_frames}.
+    levels: Three new weapons at once. Kill with abilities on a mastered frame, or let a public squad kill.
+    too_hard: Normal Sanctuary Onslaught allows an unranked frame and has lower enemy levels.
+    tired: Switch to an Archwing night or a shopping run.
+
+  - id: railjack-veil
+    name: Railjack in Veil Proxima
+    moods: [group]
+    where: R-9 Cloud (Skirmish, level 80 to 90) or Void Storms on any proxima.
+    levels: >-
+      Everything you carry, because Railjack shares affinity at any range. Archguns and
+      Necramechs work at R-9 Cloud. Also feeds Railjack intrinsics, with
+      {railjack_ranks_left} ranks ({railjack_mastery_left}) left.
+    too_hard: Earth or Saturn Proxima with a friend's ship.
+    tired: Public endless fissures, which also crack relics.
+
+  - id: endless-fissures
+    name: Endless survival fissures
+    moods: [survival, group]
+    where: Any Survival fissure in the Void Fissures tab.
+    levels: Your whole loadout, with up to double affinity after 16 relics. It also farms Prime parts.
+    too_hard: Lith fissures on early planets.
+    tired: Steel Path Elara, Jupiter, with an On Call Crew squad. Move every two minutes to avoid the idle timer.
+
+  - id: lu-yan
+    name: Lu-yan, Veil Proxima
+    moods: [survival, group]
+    where: Railjack Survival, level 55 to 59. Best during Void Storms with other players.
+    levels: Railjack intrinsics and anything you equip.
+    too_hard: Join someone else's crew instead of hosting.
+    tired: Elite Sanctuary Onslaught.
+
+  - id: duviri-undercroft
+    name: Duviri and the Undercroft
+    moods: [chill]
+    where: "Duviri: The Lone Story, The Circuit, The Undercroft."
+    levels: >-
+      Dax kills give about 2,000 affinity and the Orowyrm gives 100,000. Every run adds
+      Drifter points, with {drifter_ranks_left} ranks ({drifter_mastery_left}) left.
+    too_hard: Pick defensive Decrees first.
+    tired: Ur, Uranus Disruption for the dark sector bonus.
+
+  - id: archwing-salacia
+    name: Archwing night
+    moods: [chill]
+    where: Salacia, Neptune (Mobile Defense, level 27 to 32).
+    levels: Your {archwing_partials} unfinished Archwing pieces, about {archwing_mastery}.
+    too_hard: Lower Archwing nodes on Earth or Venus.
+    tired: Steel Path nodes you have not cleared.
+
+  - id: ur-disruption
+    name: Ur, Uranus
+    moods: [chill, fast]
+    where: Ur, Uranus (Disruption, level 30 to 35).
+    levels: Dark sector bonus of +25% affinity and +18% for pistols.
+    too_hard: Bring a tanky frame and let the conduits come to you.
+    tired: Duviri.
+
+  - id: shopping
+    name: Shopping with standing you already have
+    moods: [nofight, chill]
+    where: Syndicate and vendor shops where you already hold rank.
+    levels: Every new blueprint is 3,000 or 6,000 mastery waiting to happen. Some need parts or resources.
+    too_hard: Nothing to fight. Queue the Foundry and level everything later in one long session.
+    tired: Spend intrinsic points and claim builds.
+
+  - id: points-and-builds
+    name: Spend points and claim builds
+    moods: [nofight]
+    where: Profile, Intrinsics. Foundry. Market for credit blueprints. Clan Dojo labs.
+    levels: 1,500 per intrinsic rank, plus every blueprint you start.
+    too_hard: Nothing to fight.
+    tired: Sell mastered gear to free slots.
+
+  - id: adaro-stealth
+    name: Adaro stealth runs
+    moods: [skill]
+    where: Adaro, Sedna (Exterminate, level 32 to 36). Use Telesto, Saturn, if Adaro is invaded.
+    levels: Stealth kills chain a bonus up to 500%, and melee doubles it. Bring a stealth frame like Ivara, Loki or Ash.
+    too_hard: Telesto has lower enemy levels.
+    tired: Steel Path completion.
+
+  - id: adversaries
+    name: Kuva Liches, Sisters and Coda
+    moods: [skill, group]
+    where: Kuva Fortress and the Lich, Sister and Technocyte Coda systems.
+    levels: 4,000 per weapon once Forma'd to 40. You have {extended_missing} of these never leveled.
+    too_hard: Buy the weapons from players and only do the Forma part.
+    tired: The Steel Path chart, {steel_path_left} nodes left.

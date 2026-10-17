@@ -11,7 +11,7 @@ from .data import write_csv, write_json, write_sqlite
 from .tables import build_tables
 from .xlsx import write_xlsx
 
-FORMATS = ("json", "sqlite", "csv", "xlsx", "llm")
+FORMATS = ("json", "sqlite", "csv", "xlsx", "llm", "guide")
 
 
 @dataclass
@@ -54,4 +54,12 @@ def run_exports(
         elif fmt == "llm":
             md, js, tokens = write_brief(report, out_dir, brief_budget)
             results.append(ExportResult("llm", md, f"{brief_budget}, about {tokens:,} tokens (+ {js.name})"))
+        elif fmt == "guide":
+            from ..guide import build_mastery_plan, load_kb, write_mastery_html
+
+            plan = build_mastery_plan(report, load_kb())
+            p = write_mastery_html(plan, out_dir / "mastery-plan.html")
+            results.append(
+                ExportResult("guide", p, f"road to MR {plan.target_rank}, {len(plan.phases)} phases")
+            )
     return results

@@ -43,6 +43,28 @@ Rules:
 - Farming routes (`kb/routes/`) carry a `measured` block (resource per minute, sample
   size, date, mode) so numbers are honest.
 
+## Mastery guide
+
+`kb/mastery/` drives `openwarframe guide mastery` and the `mastery-plan.html` export.
+
+| File | Holds |
+| --- | --- |
+| `tests.yaml` | The Mastery Rank tests 24 to 30: objective, tips, and `recommend` frames and companions in order of preference. The planner names the ones the account has leveled, Prime versions first, and falls back to `bring_default`. |
+| `farms.yaml` | Affinity and mastery activities with mood tags (`fast`, `group`, `survival`, `chill`, `nofight`, `skill`), where to go, what it levels, and what to do if it is too hard or you get tired. Text may use placeholders such as `{drifter_ranks_left}` that the planner fills from the snapshot. |
+| `routes.yaml` | The order in which the planner spends mastery sources (`order`), the title, blurb and fallbacks shown for each source, and the general tips. |
+
+How the plan is built (`src/openwarframe/guide/mastery.py`):
+
+1. Every source of mastery becomes a unit: an unfinished item, an intrinsic rank, a
+   block of Steel Path nodes, a junction, Forma headroom on a rank 40 item, or a
+   never-leveled item routed by how it is obtained.
+2. Intrinsic ranks the banked points already pay for are bought greedily, cheapest
+   first (Drifter 20, 25, 30, 45, 65, 90, 125, 160, 205, 255; Railjack 2^rank). The
+   rest wait in `intrinsics_grind`.
+3. Units are queued in `routes.yaml` order and handed to each rank until its
+   threshold (2,500 x rank^2) is met. Items above the rank being worked toward wait.
+4. Each phase takes its title and fallbacks from the source that contributes most.
+
 ## Categories and first-pass content
 
 | Category | Examples of entries to write first |

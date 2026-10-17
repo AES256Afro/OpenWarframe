@@ -21,6 +21,8 @@ codex_app = typer.Typer(
 account_app = typer.Typer(help="Which account to snapshot.", no_args_is_help=True)
 app.add_typer(codex_app, name="codex")
 app.add_typer(account_app, name="account")
+guide_app = typer.Typer(help="Guides built from your snapshot and the knowledge base.", no_args_is_help=True)
+app.add_typer(guide_app, name="guide")
 console = Console()
 
 
@@ -48,7 +50,10 @@ def version() -> None:
 @app.command()
 def export(
     formats: str = typer.Option(
-        "json,sqlite,csv,xlsx,llm", "--format", "-f", help="Comma-separated: json, sqlite, csv, xlsx, llm."
+        "json,sqlite,csv,xlsx,llm,guide",
+        "--format",
+        "-f",
+        help="Comma-separated: json, sqlite, csv, xlsx, llm, guide.",
     ),
     out: Path | None = typer.Option(
         None, "--out", "-o", help="Output directory (default: data dir/exports/<date>)."
@@ -120,6 +125,81 @@ def plan() -> None:
 def _not_yet(cmd: str, milestone: str) -> int:
     console.print(f"[yellow]`openwarframe {cmd}` arrives in {milestone}. See docs/ROADMAP.md.[/yellow]")
     return 2
+
+
+# -- guides ------------------------------------------------------------------------------
+
+
+def _load_report(snapshot: str, share: bool = False):
+    from .account.store import SnapshotStore
+    from .account.sync import reparse
+    from .codex import Codex
+    from .report import build_report
+
+    s = load_settings()
+    if not s.codex_path.exists():
+        console.print("[red]No codex yet; run `openwarframe codex update` first.[/red]")
+        raise typer.Exit(code=1)
+    try:
+        snap = SnapshotStore(s.snapshots_dir).load(snapshot)
+    except FileNotFoundError:
+        console.print("[red]No snapshot yet; run `openwarframe sync` first.[/red]")
+        raise typer.Exit(code=1) from None
+    codex = Codex(s.codex_path)
+    return s, snap, build_report(reparse(snap, codex), codex, anonymize=share)
+
+
+@guide_app.command("mastery")
+def guide_mastery(
+    snapshot: str = typer.Option(
+        "latest", "--snapshot", help="Snapshot file, prefix, 'latest' or 'previous'."
+    ),
+    out: Path | None = typer.Option(
+        None, "--out", "-o", help="Where to write mastery-plan.html (default: data dir/exports/<date>/)."
+    ),
+    html: bool = typer.Option(True, "--html/--no-html", help="Also write the HTML guide."),
+    share: bool = typer.Option(False, "--share", help="Strip display name and clan."),
+) -> None:
+    """Your road to Mastery Rank 30: rank table, tonight's checklist, phased plan and test cards."""
+    from .guide import build_mastery_plan, load_kb, write_mastery_html
+
+    s, snap, report = _load_report(snapshot, share)
+    plan = build_mastery_plan(report, load_kb())
+    console.print(
+        f"[bold]MR {plan.rank}[/bold]  estimated mastery ~{plan.estimate:,}  -  "
+        f"~{plan.needed_to_target:,} to MR {plan.target_rank}"
+    )
+    t = Table(title="ranks", show_edge=False)
+    for col, just in (
+        ("rank", "right"),
+        ("title", "left"),
+        ("needed", "right"),
+        ("to earn", "right"),
+        ("test", "left"),
+    ):
+        t.add_column(col, justify=just)
+    for r in plan.ranks:
+        t.add_row(str(r.rank), r.title, f"{r.threshold:,}", f"{r.to_earn:,}", r.test)
+    console.print(t)
+    console.print("\n[bold]Tonight[/bold]")
+    for item in plan.tonight:
+        console.print(f"  [yellow]{item.gain_label:>8}[/yellow]  {item.title}")
+    console.print("\n[bold]The path[/bold]")
+    for p in plan.phases:
+        head = "already there" if p.already_there else f"~{p.need:,}"
+        console.print(f"  [bold]{p.from_rank} -> {p.to_rank}[/bold] {p.title} ({head}, test: {p.test})")
+        for st in p.steps:
+            names = ", ".join(st.items[:6]) + (" ..." if len(st.items) > 6 else "")
+            console.print(f"      +{st.mastery:>7,}  {st.title}: [dim]{names}[/dim]")
+    console.print("\n[bold]Tests[/bold]")
+    for tc in plan.tests:
+        console.print(f"  {tc.rank}  {tc.name}  [dim]bring: {tc.bring}[/dim]")
+    if html:
+        target = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M") / "mastery-plan.html")
+        if target.suffix.lower() != ".html":
+            target = target / "mastery-plan.html"
+        write_mastery_html(plan, target)
+        console.print(f"\n[green]wrote {target}[/green]")
 
 
 # -- account -----------------------------------------------------------------------------

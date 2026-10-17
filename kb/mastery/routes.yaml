@@ -1,0 +1,109 @@
+# How the planner orders sources of mastery and what it suggests around each one.
+# `order` is the path order: cheapest and most certain first. Each phase of the plan
+# takes the next sources from this list until the rank's gap is filled; the phase
+# headline and fallbacks come from the source that contributes most to it.
+last_verified: 2026-10-17
+sources:
+  - title: Affinity - WARFRAME Wiki
+    url: https://wiki.warframe.com/w/Affinity
+    license: CC BY-SA
+
+tips:
+  - title: Weapons give 3,000, frame-likes give 6,000.
+    text: >-
+      Warframes, companions, Archwings, K-Drives and Necramechs are worth double. Kuva,
+      Tenet and Coda weapons reach 4,000 once you Forma them up to rank 40.
+  - title: Only bring gear that still needs XP.
+    text: >-
+      A rank 30 weapon in your loadout still soaks up its share of affinity. Shared
+      affinity goes 25% to your frame and 75% split between equipped weapons.
+  - title: Sell it after rank 30.
+    text: Mastery stays forever, so free the slot and buy the next one. Slots are the real bottleneck.
+  - title: Double up.
+    text: >-
+      An Affinity Booster doubles everything. A Smeeta Kavat's Charm can roll triple
+      affinity when no new companion needs the slot.
+  - title: One rank per day at most.
+    text: >-
+      Passing a test locks the next one for 23 hours. Failing no longer does, so retry
+      as often as you need.
+
+routes:
+  partial:
+    title: Finish what you started
+    blurb: Gear you have leveled but never finished. No farming needed.
+    tired: Duviri, Undercroft. Dax are worth about 2,000 affinity each and you earn Drifter points.
+    too_hard: Normal Sanctuary Onslaught instead of Elite.
+  intrinsics:
+    title: Spend banked intrinsic points
+    blurb: Ranks your unspent Drifter and Railjack points already pay for. Each rank is worth 1,500.
+    tired: Railjack in Veil Proxima with friends.
+    too_hard: Duviri with defensive Decrees.
+  intrinsics_grind:
+    title: Earn more intrinsic ranks
+    blurb: >-
+      Drifter points come from Duviri; Railjack points come from affinity in Railjack
+      missions. Later ranks cost more, so this is a long tail at 1,500 per rank.
+    tired: Back to the credit sweep.
+    too_hard: Duviri with defensive Decrees, or join someone else's Railjack crew.
+  standing_owned:
+    title: Shop with standing you already have
+    blurb: Vendors where you already hold rank. Some items also need parts or resources.
+    tired: Ur, Uranus (Disruption) for the dark sector affinity bonus.
+    too_hard: Level new companions in normal Sanctuary Onslaught. Companions get full affinity from your kills.
+  relics_farmable:
+    title: Crack relics, collect Primes
+    blurb: Prime parts from relics that still drop. Run endless fissures for up to double affinity after 16 relics.
+    tired: Steel Path star chart nodes.
+    too_hard: Lith and Meso fissures on low planets. The relic drop is the same.
+  drops:
+    title: Mission, enemy and bounty drops
+    blurb: Blueprints and parts that drop from missions, enemies and open-world bounties.
+    tired: Shopping with standing you already have.
+    too_hard: Low-level bounties first; the drop tables are the same.
+  market:
+    title: The credit sweep
+    blurb: >-
+      Items from the Market, your clan Dojo or quests. Search each name in the Market
+      first; anything not sold there is researched in your clan Dojo labs.
+    tired: Railjack in Veil Proxima with friends. Shared affinity has no range limit there.
+    too_hard: Join public Elite Onslaught as support and let the squad kill.
+  standing_other:
+    title: New standing, new frames
+    blurb: Vendors where you still need standing first. Each frame is 6,000.
+    tired: Spend Drifter and Railjack points.
+    too_hard: Level new frames in normal Sanctuary Onslaught. Ability kills give the frame all the affinity.
+  steel_path:
+    title: The Steel Path chart
+    blurb: Steel Path nodes award the same mastery as normal nodes again, and junctions 1,000 each.
+    tired: Back to the credit sweep.
+    too_hard: Leave it for last and buy items instead.
+  extended:
+    title: Rank 40 weapons
+    blurb: Kuva, Tenet, Coda and Paracesis reach 4,000, Necramechs 8,000, once Forma'd to rank 40.
+    tired: Back to the credit sweep.
+    too_hard: Buy Kuva and Tenet weapons from players instead of hunting.
+  trade:
+    title: Trade and vaulted Primes
+    blurb: Items you can only buy from other players, or Primes whose relics are vaulted.
+    tired: Duviri Orowyrm fights, worth 100,000 affinity each.
+    too_hard: Failing a test no longer costs a cooldown, so treat a first attempt as a scouting run.
+  other:
+    title: Everything else
+    blurb: Items with no known source in the drop data, such as founder or event gear.
+    tired: Anything above.
+    too_hard: Skip them.
+
+order:
+  - partial
+  - intrinsics
+  - standing_owned
+  - relics_farmable
+  - drops
+  - market
+  - standing_other
+  - steel_path
+  - intrinsics_grind
+  - extended
+  - trade
+  - other

@@ -11,6 +11,7 @@ from html import escape
 from pathlib import Path
 
 from ..report.build import rank_threshold
+from .documents import CLOUD_LABELS, CLOUD_WEB, GuideFiles
 from .mastery import MasteryPlan
 
 CSS = """
@@ -36,6 +37,7 @@ CSS = """
   --ok:#5fd49a; --warn:#f0b35b; --bad:#f07a70; color-scheme: dark;
 }
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 body{margin:0; background:var(--bg); color:var(--fg); font:17px/1.55 var(--body);}
 .wrap{max-width:980px; margin:0 auto; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:28px 64px; display:grid; gap:44px;}
 h1,h2,h3{font-family:var(--display); text-wrap:balance; margin:0; letter-spacing:.02em}
@@ -113,8 +115,40 @@ td.r,th.r{text-align:right}
 .test ul{margin:0; padding-left:1.1em; display:grid; gap:4px}
 .bring{background:var(--gold-soft); border-radius:8px; padding:9px 12px; font-size:.93rem}
 .bring b{font:600 .7rem var(--mono); letter-spacing:.1em; text-transform:uppercase; color:var(--gold); margin-right:6px}
+.tools{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.tool{display:inline-flex; align-items:center; gap:8px; font:600 .9rem var(--body); color:var(--fg); background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:8px 14px; text-decoration:none; cursor:pointer}
+.tool:hover{border-color:var(--gold)}
+.tool:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+.tool .ext{font:600 .7rem var(--mono); letter-spacing:.08em; color:var(--gold)}
+.tool.primary{background:var(--gold); border-color:var(--gold); color:var(--bg)}
+.tool.primary .ext{color:var(--bg)}
+.tool[aria-expanded="true"]{border-color:var(--cyan)}
+.tools-note{font:.85rem var(--body); color:var(--muted)}
+.cloud-panel{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px 16px; display:grid; gap:8px; font-size:.95rem}
+.cloud-panel ol{margin:0; padding-left:1.2em; display:grid; gap:4px}
+.cloud-panel code{font:.85rem var(--mono); background:var(--panel2); border-radius:4px; padding:2px 6px; overflow-wrap:anywhere}
+.cloud-panel a{color:var(--cyan)}
+.cloud-panel .row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
 footer{font-size:.88rem; color:var(--muted); display:grid; gap:8px; border-top:1px solid var(--line); padding-top:18px}
 footer a{color:var(--cyan)}
+@page{margin:14mm 12mm}
+@media print{
+  :root, :root[data-theme="dark"], :root:not([data-theme="light"]){
+    --bg:#ffffff; --panel:#ffffff; --panel2:#f4f6f9; --fg:#172033; --muted:#566178; --line:#d6dce7;
+    --gold:#8f6a17; --gold-soft:#f6edd6; --cyan:#0d7891; --cyan-soft:#e3f3f7;
+    --ok:#1f8a55; --warn:#a8650c; --bad:#b4372f; color-scheme: light;
+  }
+  body{font-size:11pt; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+  .wrap{max-width:none; padding:0; gap:22px}
+  .tools, .tools-note, .cloud-panel, .chips{display:none !important}
+  .mood[hidden]{display:grid !important}
+  .cloud-panel[hidden]{display:none !important}
+  .phase, .test, .mood, .track, .check label, tr, .bring, .note{break-inside:avoid}
+  h2{break-after:avoid}
+  .tbl{overflow:visible}
+  table.wide{min-width:0}
+  a{color:inherit; text-decoration:none}
+}
 @media (max-width:720px){
   .branches,.moods{grid-template-columns:1fr}
   .test{grid-template-columns:1fr}
@@ -134,6 +168,33 @@ SCRIPT = """
     box.addEventListener('change',function(){
       saved[box.id]=box.checked;
       try{ localStorage.setItem(KEY, JSON.stringify(saved)); }catch(e){}
+    });
+  });
+  var printBtn=document.querySelector('[data-print]');
+  if(printBtn){ printBtn.addEventListener('click',function(){ window.print(); }); }
+  document.querySelectorAll('[data-panel]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var id=btn.getAttribute('data-panel');
+      document.querySelectorAll('.cloud-panel').forEach(function(p){
+        p.hidden = !(p.id===id && p.hidden);
+      });
+      document.querySelectorAll('[data-panel]').forEach(function(b){
+        var p=document.getElementById(b.getAttribute('data-panel'));
+        b.setAttribute('aria-expanded', p && !p.hidden ? 'true':'false');
+      });
+    });
+  });
+  document.querySelectorAll('[data-copy]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var text=btn.getAttribute('data-copy');
+      var label=btn.textContent;
+      var done=function(){ btn.textContent='Copied'; setTimeout(function(){ btn.textContent=label; },1500); };
+      var fallback=function(){
+        var code=btn.parentNode.querySelector('code');
+        if(code){ var r=document.createRange(); r.selectNodeContents(code); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent='Selected, press Ctrl+C'; }
+      };
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done, fallback); }
+      else { fallback(); }
     });
   });
   var buttons=document.querySelectorAll('.chips button');
@@ -192,7 +253,82 @@ def track_svg(rank: int, estimate: int, target: int = 30) -> str:
     return "".join(parts)
 
 
-def render_mastery_html(plan: MasteryPlan) -> str:
+def toolbar_html(files: GuideFiles) -> str:
+    """Save and share buttons. Links point at sibling files; cloud buttons explain or open the web app."""
+    h: list[str] = ['<nav class="tools" aria-label="Save or share this guide">']
+    if files.pdf:
+        h.append(
+            f'<a class="tool primary" href="{_e(files.pdf)}" target="_blank">'
+            '<span class="ext">PDF</span>Open PDF</a>'
+        )
+    else:
+        h.append(
+            '<button type="button" class="tool primary" data-print>'
+            '<span class="ext">PDF</span>Save as PDF</button>'
+        )
+    if files.docx:
+        h.append(
+            f'<a class="tool" href="{_e(files.docx)}" download><span class="ext">DOCX</span>Word document</a>'
+        )
+    for key in ("gdrive", "onedrive"):
+        h.append(
+            f'<button type="button" class="tool" data-panel="cloud-{key}" aria-expanded="false" '
+            f'aria-controls="cloud-{key}">Open in {CLOUD_LABELS[key]}</button>'
+        )
+    h.append("</nav>")
+    copied = [CLOUD_LABELS[k] for k in ("gdrive", "onedrive") if k in files.cloud]
+    if copied:
+        h.append(
+            f'<p class="tools-note">Copied to {" and ".join(copied)}. '
+            "The files appear online once the desktop app has synced.</p>"
+        )
+
+    doc_names = [n for n in (files.docx, files.pdf) if n]
+    upload = " or ".join(f"<code>{_e(n)}</code>" for n in doc_names) or "<code>mastery-plan.html</code>"
+    for key in ("gdrive", "onedrive"):
+        label, web = CLOUD_LABELS[key], CLOUD_WEB[key]
+        h.append(f'<div class="cloud-panel" id="cloud-{key}" hidden>')
+        if key in files.cloud:
+            where = "My Drive, OpenWarframe" if key == "gdrive" else "OneDrive, OpenWarframe"
+            h.append(
+                f"<p>This guide, its Word file and its PDF are in your {label} sync folder. "
+                f"Online they are under <b>{where}</b>.</p>"
+            )
+            h.append(f'<p class="muted"><code>{_e(files.cloud[key])}</code></p>')
+        else:
+            h.append(f"<p>Upload the files to {label} in two steps:</p><ol>")
+            h.append(
+                f'<li>Open <a href="{web}" target="_blank" rel="noopener">{label}</a> in your browser.</li>'
+            )
+            if files.folder:
+                h.append(
+                    f"<li>Drag {upload} into it from this folder:"
+                    f'<div class="row"><code>{_e(files.folder)}</code>'
+                    f'<button type="button" class="tool" data-copy="{_e(files.folder)}">Copy path</button>'
+                    "</div></li>"
+                )
+            else:
+                h.append(f"<li>Drag {upload} from the folder this page is in.</li>")
+            h.append("</ol>")
+            if key == "gdrive":
+                h.append(
+                    '<p class="muted">To edit the Word file in Drive, right-click it and choose Open with, '
+                    "Google Docs. With Google Drive for desktop installed, "
+                    "<code>openwarframe guide mastery --copy-to gdrive</code> uploads for you.</p>"
+                )
+            else:
+                h.append(
+                    '<p class="muted">OneDrive opens the Word file in Word for the web. With the OneDrive app '
+                    "installed, <code>openwarframe guide mastery --copy-to onedrive</code> uploads for you.</p>"
+                )
+        h.append(
+            f'<div class="row"><a class="tool primary" href="{web}" target="_blank" rel="noopener">'
+            f"Open {label}</a></div></div>"
+        )
+    return "".join(h)
+
+
+def render_mastery_html(plan: MasteryPlan, files: GuideFiles | None = None) -> str:
     who = plan.display_name.rstrip("") if plan.display_name else "Your account"
     h: list[str] = []
     a = h.append
@@ -215,8 +351,10 @@ def render_mastery_html(plan: MasteryPlan) -> str:
     a(
         f'<p class="lede">{n_tests} rank{"s" if n_tests != 1 else ""} to go and about '
         f"{plan.needed_to_target:,} mastery. Follow the path in order, or pick by mood when you want "
-        "something different. Every item named here comes from your account data.</p></header>"
+        "something different. Every item named here comes from your account data.</p>"
     )
+    a(toolbar_html(files or GuideFiles()))
+    a("</header>")
 
     # where you stand
     a('<section aria-labelledby="where"><h2 id="where">Where you stand</h2><div class="track">')
@@ -368,7 +506,7 @@ def render_mastery_html(plan: MasteryPlan) -> str:
     return "".join(h)
 
 
-def write_mastery_html(plan: MasteryPlan, path: Path) -> Path:
+def write_mastery_html(plan: MasteryPlan, path: Path, files: GuideFiles | None = None) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render_mastery_html(plan), encoding="utf-8")
+    path.write_text(render_mastery_html(plan, files), encoding="utf-8")
     return path

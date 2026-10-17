@@ -63,8 +63,14 @@ def export(
     ),
     share: bool = typer.Option(False, "--share", help="Strip display name, clan and raw payloads."),
     budget: str = typer.Option("compact", "--budget", help="LLM brief budget: compact (~8k tokens) or full."),
+    pdf: bool = typer.Option(
+        True, "--pdf/--no-pdf", help="With the guide, also print a PDF (needs Chrome or Edge)."
+    ),
+    copy_to: str | None = typer.Option(
+        None, "--copy-to", help="Copy the guide files to cloud sync folders: onedrive, gdrive or both."
+    ),
 ) -> None:
-    """Export a snapshot to JSON, SQLite, CSV, Excel and an LLM planning brief."""
+    """Export a snapshot to JSON, SQLite, CSV, Excel, an LLM brief and the mastery guide (HTML, Word, PDF)."""
     from .account.store import SnapshotStore
     from .account.sync import reparse
     from .codex import Codex
@@ -87,12 +93,15 @@ def export(
         raise typer.BadParameter(f"unknown format(s) {bad}; choose from {', '.join(FORMATS)}")
     if budget not in ("compact", "full"):
         raise typer.BadParameter("budget must be compact or full")
+    targets = _cloud_targets(copy_to)
     codex = Codex(s.codex_path)
     with console.status("Building report..."):
         report = build_report(reparse(snap, codex), codex, anonymize=share)
     target = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M") / ("share" if share else "full"))
     with console.status("Writing exports..."):
-        results = run_exports(report, target, wanted, brief_budget=budget)
+        results = run_exports(
+            report, target, wanted, brief_budget=budget, guide_pdf=pdf, copy_to=targets, share=share
+        )
     t = Table(title=f"exports -> {target}", show_edge=False)
     t.add_column("format")
     t.add_column("file")
@@ -130,6 +139,15 @@ def _not_yet(cmd: str, milestone: str) -> int:
 # -- guides ------------------------------------------------------------------------------
 
 
+def _cloud_targets(spec: str | None) -> list[str]:
+    from .guide.documents import parse_targets
+
+    try:
+        return parse_targets(spec)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from None
+
+
 def _load_report(snapshot: str, share: bool = False):
     from .account.store import SnapshotStore
     from .account.sync import reparse
@@ -157,11 +175,19 @@ def guide_mastery(
     out: Path | None = typer.Option(
         None, "--out", "-o", help="Where to write mastery-plan.html (default: data dir/exports/<date>/)."
     ),
-    html: bool = typer.Option(True, "--html/--no-html", help="Also write the HTML guide."),
+    html: bool = typer.Option(True, "--html/--no-html", help="Write the guide files (HTML, Word, PDF)."),
+    pdf: bool = typer.Option(True, "--pdf/--no-pdf", help="Also print a PDF (needs Chrome or Edge)."),
+    docx: bool = typer.Option(True, "--docx/--no-docx", help="Also write a Word document."),
+    copy_to: str | None = typer.Option(
+        None, "--copy-to", help="Copy the files to cloud sync folders: onedrive, gdrive or both."
+    ),
+    open_: bool = typer.Option(False, "--open", help="Open the HTML guide in your browser when done."),
     share: bool = typer.Option(False, "--share", help="Strip display name and clan."),
 ) -> None:
     """Your road to Mastery Rank 30: rank table, tonight's checklist, phased plan and test cards."""
-    from .guide import build_mastery_plan, load_kb, write_mastery_html
+    from .guide import build_mastery_plan, load_kb, write_guide_bundle
+
+    targets = _cloud_targets(copy_to)
 
     s, snap, report = _load_report(snapshot, share)
     plan = build_mastery_plan(report, load_kb())
@@ -195,11 +221,22 @@ def guide_mastery(
     for tc in plan.tests:
         console.print(f"  {tc.rank}  {tc.name}  [dim]bring: {tc.bring}[/dim]")
     if html:
-        target = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M") / "mastery-plan.html")
-        if target.suffix.lower() != ".html":
-            target = target / "mastery-plan.html"
-        write_mastery_html(plan, target)
-        console.print(f"\n[green]wrote {target}[/green]")
+        folder = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M"))
+        if folder.suffix.lower() == ".html":
+            folder = folder.parent
+        with console.status("Writing the guide..."):
+            bundle = write_guide_bundle(plan, folder, pdf=pdf, docx=docx, copy_to=targets, share=share)
+        console.print()
+        for f in bundle.files():
+            console.print(f"[green]wrote[/green] {f}")
+        for t_, where in bundle.cloud.items():
+            console.print(f"[green]copied to {t_}[/green] {where}")
+        for w in bundle.warnings:
+            console.print(f"[yellow]{w}[/yellow]")
+        if open_:
+            import webbrowser
+
+            webbrowser.open(bundle.html.resolve().as_uri())
 
 
 # -- account -----------------------------------------------------------------------------

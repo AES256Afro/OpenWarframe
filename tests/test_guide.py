@@ -320,6 +320,6 @@ def test_render_html_is_self_contained(kb, tmp_path: Path):
 def test_export_format_guide(tmp_path: Path):
     from openwarframe.exports import run_exports
 
-    results = run_exports(_report(), tmp_path, ["guide"])
+    results = run_exports(_report(), tmp_path, ["guide"], guide_pdf=False)
     assert results[0].format == "guide"
     assert (tmp_path / "mastery-plan.html").stat().st_size > 10_000

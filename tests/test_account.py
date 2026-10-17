@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from openwarframe.account import SnapshotStore, diff_snapshots, parse_profile
-from openwarframe.account.parse import category_from_path, mastery_for, rank_from_xp
+from openwarframe.account.parse import category_from_path, mastery_for, max_rank, rank_from_xp
 from openwarframe.account.summary import summarize
 from openwarframe.config import Settings, load_settings, save_settings
 from openwarframe.sources.account.profile import profile_url, validate_account_id
@@ -46,10 +46,49 @@ def test_mastery_math():
     assert rank_from_xp(900_000, suit=True) == 30
     assert rank_from_xp(450_000, suit=False) == 30
     assert rank_from_xp(200_000, suit=False) == 20
-    assert rank_from_xp(2_000_000, suit=True) == 40  # capped
+    assert rank_from_xp(2_000_000, suit=True) == 30  # capped at 30 by default
+    assert rank_from_xp(2_000_000, suit=True, cap=40) == 40
     assert mastery_for(30, True) == 6000 and mastery_for(30, False) == 3000
     assert category_from_path("/Lotus/Powersuits/Archwing/Odonata") == "Archwing"
     assert category_from_path("/Lotus/Weapons/Tenno/Melee/Skana") == "Melee"
+
+
+def test_max_rank_rules():
+    assert max_rank("Skana Prime", "Melee") == 30
+    assert max_rank("Excalibur Prime", "Warframe") == 30
+    assert max_rank("Carrier", "Companion") == 30
+    for name in ("Kuva Bramma", "Tenet Arca Plasmor", "Coda Hema", "Dual Coda Torxica", "Paracesis"):
+        assert max_rank(name, "Primary") == 40, name
+    assert max_rank("Bonewidow", "Necramech") == 40
+    assert max_rank("Kunai", "Secondary", "/Lotus/Weapons/Tenno/Pistols/Kunai/Kunai") == 30
+    assert (
+        max_rank("KuvaNukor", "Secondary", "/Lotus/Weapons/Grineer/KuvaLich/Secondaries/Nukor/KuvaNukor")
+        == 40
+    )
+
+
+def _xp_profile(entries: list[tuple[str, int]]) -> dict:
+    data = _profile()
+    data["Results"][0]["LoadOutInventory"]["XPInfo"] = [{"ItemType": t, "XP": xp} for t, xp in entries]
+    return data
+
+
+def test_rank_cap_in_parse():
+    kuva = "/Lotus/Weapons/Grineer/KuvaLich/Secondaries/Nukor/KuvaNukor"
+    mech = "/Lotus/Powersuits/EntratiMech/ThanoTech"
+    kdrive = "/Lotus/Types/Vehicles/Hoverboard/HoverboardParts/PartComponents/HoverboardCorpusB/HoverboardCorpusBDeck"
+    snap = parse_profile(
+        _xp_profile(
+            [(BRATON, 900_000), (kuva, 900_000), (RHINO, 2_000_000), (mech, 2_000_000), (kdrive, 1015)]
+        )
+    )
+    got = {i.item: (i.category, i.rank, i.mastery_xp) for i in snap.progression.items}
+    assert got[BRATON] == ("Primary", 30, 3000)  # normal weapon caps at 30
+    assert got[kuva][1:] == (40, 4000)  # Kuva weapon reaches 40
+    assert got[RHINO] == ("Warframe", 30, 6000)  # frame caps at 30
+    assert got[mech] == ("Necramech", 40, 8000)  # Necramech reaches 40
+    assert got[kdrive] == ("K-Drive", 1, 200)  # K-Drive levels like a frame
+    assert snap.progression.mastery_xp_from_items == 3000 + 4000 + 6000 + 8000 + 200
 
 
 def test_parse_profile_without_codex():

@@ -8,7 +8,6 @@ from datetime import UTC, datetime
 from urllib.parse import quote
 
 from ..account.model import SUIT_CATEGORIES, Snapshot
-from ..account.parse import mastery_for
 from ..account.summary import MASTERY_CATEGORIES
 from ..codex.queries import Codex
 from .model import (
@@ -43,12 +42,23 @@ INTRINSIC_NAMES = {
     "LPP_DRIFTER": "Drifter intrinsic points (unspent pool)",
 }
 INTRINSIC_MASTERY_PER_RANK = 1500
+# Star chart mastery: 241 nodes award mastery, 14,569 in total (about 60 each); Steel
+# Path awards the same again. Junctions are 1,000 each, normal and Steel Path.
+STARCHART_MASTERY_NODES = 241
+STARCHART_MASTERY_TOTAL = 14_569
+JUNCTION_MASTERY = 1000
 WIKI = "https://wiki.warframe.com/w/"
 _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
 
 
 def rank_threshold(rank: int) -> int:
     return 2500 * rank * rank
+
+
+def starchart_mastery(nodes_done: int) -> int:
+    """Estimated mastery for ``nodes_done`` completed star chart nodes."""
+    done = min(max(nodes_done, 0), STARCHART_MASTERY_NODES)
+    return round(done * STARCHART_MASTERY_TOTAL / STARCHART_MASTERY_NODES)
 
 
 def xp_for_rank(rank: int, suit: bool) -> int:
@@ -229,21 +239,6 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
             )
         )
 
-    # -- mastery estimate -------------------------------------------------------------
-    intrinsic_ranks = sum(v for k, v in p.intrinsics.items() if k.startswith("LPS_"))
-    from_intrinsics = intrinsic_ranks * INTRINSIC_MASTERY_PER_RANK
-    from_items = sum(mastery_for(i.rank, i.category in SUIT_CATEGORIES) for i in p.items)
-    mastery = MasteryEstimate(
-        rank=p.mastery_rank,
-        rank_threshold=rank_threshold(p.mastery_rank),
-        next_rank_threshold=rank_threshold(p.mastery_rank + 1),
-        from_items=from_items,
-        from_intrinsics=from_intrinsics,
-        visible_total=from_items + from_intrinsics,
-        note="Items and intrinsics only. Star chart, Steel Path and junction mastery are not in the profile, "
-        "so the true total is higher.",
-    )
-
     # -- star chart -------------------------------------------------------------------
     done = {n.node: n for n in p.nodes}
     nodes = []
@@ -266,6 +261,32 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
             )
         )
     sc_done = sum(1 for n in nodes if n.completed)
+
+    # -- mastery estimate -------------------------------------------------------------
+    intrinsic_ranks = sum(v for k, v in p.intrinsics.items() if k.startswith("LPS_"))
+    from_intrinsics = intrinsic_ranks * INTRINSIC_MASTERY_PER_RANK
+    from_items = sum(i.mastery_xp for i in p.items)
+    from_starchart = starchart_mastery(sc_done)
+    from_steel_path = starchart_mastery(sum(1 for n in nodes if n.steel_path))
+    junctions = [n for n in p.nodes if n.node.endswith("Junction")]
+    from_junctions = JUNCTION_MASTERY * (len(junctions) + sum(1 for n in junctions if n.steel_path))
+    visible = from_items + from_intrinsics
+    mastery = MasteryEstimate(
+        rank=p.mastery_rank,
+        rank_threshold=rank_threshold(p.mastery_rank),
+        next_rank_threshold=rank_threshold(p.mastery_rank + 1),
+        from_items=from_items,
+        from_intrinsics=from_intrinsics,
+        visible_total=visible,
+        from_starchart=from_starchart,
+        from_steel_path=from_steel_path,
+        from_junctions=from_junctions,
+        estimated_total=visible + from_starchart + from_steel_path + from_junctions,
+        note="Items and intrinsics are computed from the profile. The estimated total adds star chart and "
+        f"Steel Path nodes (about {STARCHART_MASTERY_TOTAL // STARCHART_MASTERY_NODES} each, "
+        f"{STARCHART_MASTERY_TOTAL:,} for all {STARCHART_MASTERY_NODES}) and junctions "
+        f"({JUNCTION_MASTERY:,} each); it is an estimate, not the in-game figure.",
+    )
 
     # -- syndicates, achievements, intrinsics, usage ----------------------------------
     name_counts: dict[str, int] = {}

@@ -49,7 +49,11 @@ K-Drive deck, MOA and Hound model. PvP variant parts are ignored.
 
 - "Missing" means never leveled. Items you own but never equipped count as missing.
 - Resource counts, owned blueprints, foundry, relics and mods need an inventory source (M3).
-- Mastery XP from star chart nodes, Steel Path and junctions is not in the profile; the
-  visible total covers items and intrinsics only.
+- Mastery XP from star chart nodes, Steel Path and junctions is not in the profile. The
+  items + intrinsics figure is computed exactly; the estimated total adds completed star
+  chart and Steel Path nodes (14,569 for all 241 mastery nodes, about 60 each) and
+  junctions (1,000 each, normal and Steel Path), and is labelled as an estimate.
+- Item ranks are capped at 30, or 40 for Kuva, Tenet, Coda and Dual Coda weapons,
+  Paracesis and Necramechs; the profile keeps counting affinity past the cap.
 - Relic farmability means the relic appears in the current drop tables. It updates
   when you run `openwarframe codex update`.

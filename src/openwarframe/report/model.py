@@ -17,15 +17,20 @@ class SourceStamp(BaseModel):
 
 
 class MasteryEstimate(BaseModel):
-    """Mastery XP we can see. Star chart and junction XP are not in the profile, so the
-    estimate is a floor, not the account's true total."""
+    """Mastery XP from items and intrinsics (``visible_total``), plus an estimated total
+    that adds star chart, Steel Path and junction mastery from completed nodes. The
+    profile does not report node mastery, so ``estimated_total`` is an approximation."""
 
     rank: int
     rank_threshold: int  # total mastery XP the current rank requires (2500 * r^2)
     next_rank_threshold: int
     from_items: int
     from_intrinsics: int
-    visible_total: int
+    visible_total: int  # items + intrinsics
+    from_starchart: int = 0  # estimate: completed nodes x average node mastery
+    from_steel_path: int = 0  # estimate: same, for Steel Path completions
+    from_junctions: int = 0  # 1000 per junction, normal and Steel Path
+    estimated_total: int = 0  # visible_total + star chart + Steel Path + junctions
     note: str
 
 

@@ -198,13 +198,15 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> No
     m = report.mastery
     ws.cell(row=row, column=2, value="Mastery XP").font = Font(bold=True, color=GOLD, size=12)
     lines = [
-        f"Visible: {m.visible_total:,} (items {m.from_items:,} + intrinsics {m.from_intrinsics:,})",
+        f"Items + intrinsics: {m.visible_total:,} (items {m.from_items:,} + intrinsics {m.from_intrinsics:,})",
+        f"Estimated total: {m.estimated_total:,} (estimate; adds star chart {m.from_starchart:,}, "
+        f"Steel Path {m.from_steel_path:,}, junctions {m.from_junctions:,})",
         f"Rank {m.rank} needs {m.rank_threshold:,}; rank {m.rank + 1} needs {m.next_rank_threshold:,}",
         m.note,
     ] + report.notes
     for i, line in enumerate(lines, start=1):
         c = ws.cell(row=row + i, column=2, value=line)
-        c.font = Font(color=MUTED if i > 2 else INK, size=10)
+        c.font = Font(color=MUTED if i > 3 else INK, size=10)
     ws.cell(
         row=row + len(lines) + 2,
         column=2,

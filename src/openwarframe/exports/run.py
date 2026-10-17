@@ -28,7 +28,15 @@ class ExportResult:
 
 
 def run_exports(
-    report: Report, out_dir: Path, formats: list[str], *, brief_budget: str = "compact"
+    report: Report,
+    out_dir: Path,
+    formats: list[str],
+    *,
+    brief_budget: str = "compact",
+    guide_pdf: bool = True,
+    guide_docx: bool = True,
+    copy_to: list[str] | None = None,
+    share: bool = False,
 ) -> list[ExportResult]:
     unknown = set(formats) - set(FORMATS)
     if unknown:
@@ -55,11 +63,23 @@ def run_exports(
             md, js, tokens = write_brief(report, out_dir, brief_budget)
             results.append(ExportResult("llm", md, f"{brief_budget}, about {tokens:,} tokens (+ {js.name})"))
         elif fmt == "guide":
-            from ..guide import build_mastery_plan, load_kb, write_mastery_html
+            from ..guide import build_mastery_plan, load_kb, write_guide_bundle
 
             plan = build_mastery_plan(report, load_kb())
-            p = write_mastery_html(plan, out_dir / "mastery-plan.html")
-            results.append(
-                ExportResult("guide", p, f"road to MR {plan.target_rank}, {len(plan.phases)} phases")
+            bundle = write_guide_bundle(
+                plan, out_dir, pdf=guide_pdf, docx=guide_docx, copy_to=copy_to, share=share
             )
+            results.append(
+                ExportResult(
+                    "guide", bundle.html, f"road to MR {plan.target_rank}, {len(plan.phases)} phases"
+                )
+            )
+            if bundle.docx:
+                results.append(ExportResult("guide-docx", bundle.docx, "Word version of the guide"))
+            if bundle.pdf:
+                results.append(ExportResult("guide-pdf", bundle.pdf, "PDF version of the guide"))
+            for target, folder in bundle.cloud.items():
+                results.append(ExportResult(f"copy-{target}", folder, "guide files copied for sync"))
+            for w in bundle.warnings:
+                results.append(ExportResult("warning", bundle.html, w))
     return results

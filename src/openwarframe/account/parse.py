@@ -1,10 +1,12 @@
 """Turn a raw profile payload into a Snapshot.
 
 Mastery math (per the wiki and FrameHub): affinity to rank r is 1000·r² for
-Warframes, Archwings, Necramechs and companions and 500·r² for everything else;
-each rank is worth 200 or 100 mastery XP respectively; ranks above 30 (up to 40)
-count. The profile gives PlayerLevel directly, so item mastery is an estimate used
-for "what is left", not the source of the rank.
+Warframes, Archwings, Necramechs, companions and K-Drives and 500·r² for everything
+else; each rank is worth 200 or 100 mastery XP respectively. The profile keeps
+counting affinity past the cap, so ranks are clamped: 30 for ordinary items, 40 for
+the few that can be ranked past 30 (see ``max_rank``). The profile gives PlayerLevel
+directly, so item mastery is an estimate used for "what is left", not the source of
+the rank.
 """
 
 from __future__ import annotations
@@ -26,7 +28,16 @@ from .model import (
     SourceInfo,
 )
 
-MAX_RANK = 40
+MAX_RANK = 30
+MAX_RANK_EXTENDED = 40
+
+# Items that can be ranked past 30 (up to 40): adversary weapons (Kuva, Tenet, Coda),
+# Paracesis and Necramechs. Matched on the display name, the codex category, and as a
+# fallback without a codex, the uniqueName path.
+EXTENDED_RANK_PREFIXES = ("Kuva ", "Tenet ", "Coda ", "Dual Coda ")
+EXTENDED_RANK_NAMES = {"Paracesis"}
+EXTENDED_RANK_CATEGORIES = {"Necramech"}
+EXTENDED_RANK_PATHS = ("/KuvaLich/", "/InfestedLich/", "/Powersuits/EntratiMech/")
 
 # Fallbacks when the codex is not available or does not know the item.
 _PATH_HINTS = (
@@ -52,11 +63,23 @@ def category_from_path(path: str) -> str:
     return "Weapon"
 
 
-def rank_from_xp(xp: int, suit: bool) -> int:
+def max_rank(name: str, category: str, path: str = "") -> int:
+    """Highest rank an item can reach: 40 for the extended-rank items, else 30."""
+    if (
+        name.startswith(EXTENDED_RANK_PREFIXES)
+        or name in EXTENDED_RANK_NAMES
+        or category in EXTENDED_RANK_CATEGORIES
+        or any(p in path for p in EXTENDED_RANK_PATHS)
+    ):
+        return MAX_RANK_EXTENDED
+    return MAX_RANK
+
+
+def rank_from_xp(xp: int, suit: bool, cap: int = MAX_RANK) -> int:
     per = 1000 if suit else 500
     if xp <= 0:
         return 0
-    return min(MAX_RANK, int(math.isqrt(xp // per)))
+    return min(cap, int(math.isqrt(xp // per)))
 
 
 def mastery_for(rank: int, suit: bool) -> int:
@@ -100,7 +123,7 @@ def parse_profile(
         path, xp = e.get("ItemType", ""), int(e.get("XP", 0))
         name, cat = item_meta.get(path, (path.rsplit("/", 1)[-1], category_from_path(path)))
         suit = cat in SUIT_CATEGORIES
-        rank = rank_from_xp(xp, suit)
+        rank = rank_from_xp(xp, suit, max_rank(name, cat, path))
         items.append(
             ItemXP(
                 item=path,

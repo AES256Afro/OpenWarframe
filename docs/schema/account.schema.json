@@ -276,7 +276,7 @@
    "type": "object"
   },
   "MasteryEstimate": {
-   "description": "Mastery XP we can see. Star chart and junction XP are not in the profile, so the\nestimate is a floor, not the account's true total.",
+   "description": "Mastery XP from items and intrinsics (``visible_total``), plus an estimated total\nthat adds star chart, Steel Path and junction mastery from completed nodes. The\nprofile does not report node mastery, so ``estimated_total`` is an approximation.",
    "properties": {
     "rank": {
      "title": "Rank",
@@ -300,6 +300,26 @@
     },
     "visible_total": {
      "title": "Visible Total",
+     "type": "integer"
+    },
+    "from_starchart": {
+     "default": 0,
+     "title": "From Starchart",
+     "type": "integer"
+    },
+    "from_steel_path": {
+     "default": 0,
+     "title": "From Steel Path",
+     "type": "integer"
+    },
+    "from_junctions": {
+     "default": 0,
+     "title": "From Junctions",
+     "type": "integer"
+    },
+    "estimated_total": {
+     "default": 0,
+     "title": "Estimated Total",
      "type": "integer"
     },
     "note": {

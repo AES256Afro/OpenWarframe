@@ -79,8 +79,12 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
         f"- Syndicates at max rank: {h.syndicates_maxed}. Achievements tracked: {h.achievements_tracked}."
     )
     out.append(
-        f"- Mastery XP visible {ms.visible_total:,}; rank {ms.rank} needs {ms.rank_threshold:,}, "
-        f"rank {ms.rank + 1} needs {ms.next_rank_threshold:,}. {ms.note}"
+        f"- Mastery XP from items {ms.from_items:,} + intrinsics {ms.from_intrinsics:,} = {ms.visible_total:,}; "
+        f"rank {ms.rank} needs {ms.rank_threshold:,}, rank {ms.rank + 1} needs {ms.next_rank_threshold:,}."
+    )
+    out.append(
+        f"- Estimated total mastery XP (ESTIMATE) about {ms.estimated_total:,}: adds star chart "
+        f"{ms.from_starchart:,}, Steel Path {ms.from_steel_path:,} and junctions {ms.from_junctions:,}. {ms.note}"
     )
     for n in report.notes:
         out.append(f"- Data note: {n}")

@@ -56,7 +56,11 @@ def _profile() -> dict:
                 "LoadOutInventory": {
                     "XPInfo": [{"ItemType": BRATON, "XP": 450_000}, {"ItemType": RHINO, "XP": 250_000}]
                 },
-                "Missions": [{"Tag": "SolNode94", "Completes": 2, "Tier": 1}],
+                "Missions": [
+                    {"Tag": "SolNode94", "Completes": 2, "Tier": 1},
+                    {"Tag": "EarthToMarsJunction", "Completes": 1, "Tier": 1},
+                    {"Tag": "MarsToCeresJunction", "Completes": 1},
+                ],
                 "Affiliations": [{"Tag": "ArbitersSyndicate", "Standing": 1000, "Title": 5}],
                 "PlayerSkills": {"LPS_GUNNERY": 2},
                 "ChallengeProgress": [{"Name": "X", "Progress": 4}, {"Name": "BladeMastery1", "Progress": 2}],
@@ -85,7 +89,13 @@ def test_report_contents(report: Report):
     assert soma.above_your_mr and soma.wiki_url.endswith("/Soma")
     rhino = next(o for o in report.owned if o.unique_name == RHINO)
     assert not rhino.mastered and rhino.xp_to_30 == 900_000 - 250_000
-    assert report.mastery.from_intrinsics == 3000
+    ms = report.mastery
+    assert ms.from_intrinsics == 3000
+    assert ms.from_items == 3000 + 3000  # Braton rank 30, Rhino rank 15
+    assert ms.visible_total == ms.from_items + ms.from_intrinsics
+    assert ms.from_starchart == 60 and ms.from_steel_path == 60  # one node, about 60 each
+    assert ms.from_junctions == 3000  # two junctions + one Steel Path junction
+    assert ms.estimated_total == ms.visible_total + 60 + 60 + 3000
     assert report.nodes[0].completed and report.nodes[0].steel_path
     assert {a.name for a in report.achievements} == {"Archivist", "Blade Mastery1"}
     assert report.usage[0].equip_hours == 2.0
@@ -119,6 +129,7 @@ def test_all_formats(report: Report, tmp_path: Path):
 
     md = (out / "account-brief.md").read_text(encoding="utf-8")
     assert md.startswith("---\nschema: openwarframe.brief/1") and "# Mastery by category" in md
+    assert f"Estimated total mastery XP (ESTIMATE) about {report.mastery.estimated_total:,}" in md
     brief = json.loads((out / "account-brief.json").read_text(encoding="utf-8"))
     assert brief["headline"]["mastery_rank"] == 3
 
@@ -149,3 +160,11 @@ def test_syndicate_labels():
     assert syndicate_label("Nightwave", "RadioLegion3Syndicate", True) == "Nightwave Series 3"
     assert syndicate_label("Ostron", "CetusSyndicate", False) == "Ostron"
     assert syndicate_label("Same", "OtherSyndicate", True) == "Same (Other)"
+
+
+def test_starchart_mastery_estimate():
+    from openwarframe.report.build import starchart_mastery
+
+    assert starchart_mastery(0) == 0
+    assert starchart_mastery(241) == 14_569
+    assert starchart_mastery(300) == 14_569  # capped at the mastery nodes

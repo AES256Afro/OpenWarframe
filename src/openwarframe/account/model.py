@@ -13,8 +13,9 @@ from pydantic import BaseModel, Field
 
 SCHEMA = "openwarframe.snapshot/1"
 
-# Categories that level like a Warframe (200 mastery per rank); everything else 100.
-SUIT_CATEGORIES = {"Warframe", "Archwing", "Necramech", "Companion"}
+# Categories that level like a Warframe (1000·r² affinity, 200 mastery per rank);
+# everything else levels at 500·r² for 100 mastery per rank.
+SUIT_CATEGORIES = {"Warframe", "Archwing", "Necramech", "Companion", "K-Drive"}
 
 
 class ItemXP(BaseModel):

@@ -86,6 +86,13 @@ def mastery_for(rank: int, suit: bool) -> int:
     return rank * (200 if suit else 100)
 
 
+def clean_display_name(name: str | None) -> str | None:
+    """Drop the platform icon DE appends to cross-platform names (Private Use Area glyphs)."""
+    if not name:
+        return name
+    return "".join(ch for ch in name if not 0xE000 <= ord(ch) <= 0xF8FF).strip() or name
+
+
 def _mongo_date(v) -> datetime | None:
     try:
         ms = int(v["$date"]["$numberLong"])
@@ -199,7 +206,7 @@ def parse_profile(
         loadout=loadout,
     )
     identity = Identity(
-        display_name=r.get("DisplayName"),
+        display_name=clean_display_name(r.get("DisplayName")),
         account_id=(r.get("AccountId") or {}).get("$oid")
         if isinstance(r.get("AccountId"), dict)
         else r.get("AccountId"),

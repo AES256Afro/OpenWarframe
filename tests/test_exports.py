@@ -104,7 +104,7 @@ def test_report_contents(report: Report):
 
 def test_all_formats(report: Report, tmp_path: Path):
     out = tmp_path / "out"
-    results = run_exports(report, out, ["json", "sqlite", "csv", "xlsx", "llm"])
+    results = run_exports(report, out, ["json", "sqlite", "csv", "xlsx", "llm"], guide_pdf=False)
     assert [r.format for r in results] == ["json", "sqlite", "csv", "xlsx", "llm"]
 
     data = json.loads((out / "account.json").read_text(encoding="utf-8"))
@@ -168,3 +168,33 @@ def test_starchart_mastery_estimate():
     assert starchart_mastery(0) == 0
     assert starchart_mastery(241) == 14_569
     assert starchart_mastery(300) == 14_569  # capped at the mastery nodes
+
+
+def test_brief_markdown_to_html():
+    from openwarframe.exports.brief_pdf import markdown_to_html
+
+    md = (
+        "---\nschema: openwarframe.brief/1\nsnapshot: 2026-11-13T14:51\n---\n\n"
+        "# Account\n\n- MR 23 <b>\n- 979 h\n\nSome text\nmore text\n\n"
+        "| category | mastered |\n|---|---|\n| Warframe | 69 |\n\n## Sub\n\n- item\n"
+    )
+    html = markdown_to_html(md, title="T")
+    assert '<table class="meta">' in html and "openwarframe.brief/1" in html
+    assert "<h1>Account</h1>" in html and "<h2>Sub</h2>" in html
+    assert "<li>MR 23 &lt;b&gt;</li>" in html  # escaped
+    assert "<p>Some text more text</p>" in html
+    assert (
+        "<th>category</th>" in html
+        and "<td>Warframe</td>" in html
+        and "---" not in html.split("</table>", 1)[1]
+    )
+
+
+def test_brief_documents_without_pdf(report, tmp_path: Path):
+    from openwarframe.exports.brief import write_brief
+    from openwarframe.exports.brief_pdf import write_brief_documents
+
+    md, _js, _tokens = write_brief(report, tmp_path)
+    html_path, pdf_path, warning = write_brief_documents(md, pdf=False)
+    assert html_path.exists() and pdf_path is None and warning is None
+    assert "Mastery by category" in html_path.read_text(encoding="utf-8")

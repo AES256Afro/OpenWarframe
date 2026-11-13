@@ -20,6 +20,7 @@ better item names and categories reach old snapshots too.
 | `csv/*.csv` | Same tables as SQLite, UTF-8 with BOM so Excel opens them cleanly. |
 | `OpenWarframe-<date>.xlsx` | Styled workbook: Summary sheet with KPI tiles, category table and a stacked bar chart, then one filterable sheet per table with conditional formatting. Internal ids sit in hidden columns. |
 | `account-brief.md` + `.json` | LLM planning brief. Compact is about 6–8k tokens; full lists everything. |
+| `account-brief.html` + `.pdf` | The same brief as a printable page and a text-selectable PDF, for agents and tools that take file uploads. Needs Chrome or Edge for the PDF; `--no-pdf` skips it. |
 | `mastery-plan.html` | Road to Mastery 30: rank table, tonight's checklist, a phased plan per rank, mood cards, a mastery budget and test cards. Also `openwarframe guide mastery`. See [KNOWLEDGE_BASE.md](KNOWLEDGE_BASE.md#mastery-guide). |
 
 ## Tables

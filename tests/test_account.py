@@ -153,3 +153,11 @@ def test_profile_url_and_config(tmp_path: Path, monkeypatch):
     s2 = load_settings()
     assert (s2.account_id, s2.platform) == ("b" * 24, "xb1")
     assert isinstance(s2, Settings)
+
+
+def test_clean_display_name_strips_platform_icon():
+    from openwarframe.account.parse import clean_display_name
+
+    assert clean_display_name("Tester") == "Tester"
+    assert clean_display_name("Plain") == "Plain"
+    assert clean_display_name(None) is None

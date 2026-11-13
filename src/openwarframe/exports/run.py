@@ -62,6 +62,16 @@ def run_exports(
         elif fmt == "llm":
             md, js, tokens = write_brief(report, out_dir, brief_budget)
             results.append(ExportResult("llm", md, f"{brief_budget}, about {tokens:,} tokens (+ {js.name})"))
+            from .brief_pdf import write_brief_documents
+
+            who = report.identity.display_name or "Account"
+            _html, pdf_path, warning = write_brief_documents(
+                md, pdf=guide_pdf, title=f"{who} - planning brief"
+            )
+            if pdf_path:
+                results.append(ExportResult("llm-pdf", pdf_path, "planning brief as PDF, for agents"))
+            if warning:
+                results.append(ExportResult("warning", md, warning))
         elif fmt == "guide":
             from ..guide import build_mastery_plan, load_kb, write_guide_bundle
 

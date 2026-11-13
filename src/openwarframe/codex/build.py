@@ -63,6 +63,19 @@ PE_ITEM_MANIFESTS: dict[str, list[tuple[str, str]]] = {
     "ExportFusionBundles": [("Endo Bundle", "ExportFusionBundles")],
 }
 
+# export-plus files whose items fill names the Public Export lacks: new content often
+# lands there first (arcanes, mods), and boosters, bundles, booster packs and pickup
+# caches are not in the Public Export at all. None of these categories earns mastery.
+PLUS_ITEM_FILES: dict[str, str] = {
+    "ExportArcanes": "Arcane",
+    "ExportUpgrades": "Mod",
+    "ExportCustoms": "Cosmetic",
+    "ExportBoosters": "Booster",
+    "ExportBundles": "Bundle",
+    "ExportBoosterPacks": "Booster Pack",
+    "ExportCreditBundles": "Pickup Cache",
+}
+
 WEAPON_SLOTS = {
     "LongGuns": "Primary",
     "Pistols": "Secondary",
@@ -220,6 +233,48 @@ def load_items(conn: sqlite3.Connection, pe: PublicExport, resolver: NameResolve
     for label, uid in (("Endo", CURRENCY_ITEMS["endo"]), ("Credits", CURRENCY_ITEMS["credits"])):
         rows.append((uid, label, "Currency", None, None, None, f"{label} (currency, pseudo item)", "{}"))
         resolver.add_item(label, uid)
+    conn.executemany("INSERT OR REPLACE INTO item VALUES (?,?,?,?,?,?,?,?)", rows)
+    return len(rows)
+
+
+def load_plus_items(
+    conn: sqlite3.Connection, pe: PublicExport, plus: PlusExport, resolver: NameResolver
+) -> int:
+    """Add export-plus items whose uniqueName the Public Export does not have.
+
+    For items both exports have, the export-plus name is registered as a second name
+    when it differs ("Arbiter of Hexis Sigil" vs "Arbiters of Hexis Sigil"). Runs
+    after ``load_items`` and the resolver keeps the first writer, so official names
+    keep priority.
+    """
+    images = {m["uniqueName"]: m.get("textureLocation") for m in pe.get("ExportManifest").get("Manifest", [])}
+    known = {r[0] for r in conn.execute("SELECT unique_name FROM item")}
+    rows = []
+    for file, category in PLUS_ITEM_FILES.items():
+        for uid, rec in plus.files.get(file, {}).items():
+            if not isinstance(rec, dict):
+                continue
+            name = plus.text(rec.get("name"), "")
+            if not name or name.startswith("/Lotus/") or "|" in name:
+                continue  # untranslated key or a formatted title template
+            clean_name = strip_decorations(name)
+            resolver.add_item(clean_name, uid)
+            if uid in known:
+                continue
+            img = images.get(uid)
+            rows.append(
+                (
+                    uid,
+                    clean_name,
+                    category,
+                    None,
+                    None,
+                    (IMAGE_BASE + img) if img else None,
+                    plus.text(rec.get("description"), "") or None,
+                    json.dumps(rec, ensure_ascii=False),
+                )
+            )
+            known.add(uid)
     conn.executemany("INSERT OR REPLACE INTO item VALUES (?,?,?,?,?,?,?,?)", rows)
     return len(rows)
 
@@ -594,6 +649,7 @@ def build_codex(conn: sqlite3.Connection, payloads: CodexPayloads) -> BuildRepor
 
     with conn:
         report.counts["item"] = load_items(conn, pe, resolver)
+        report.counts["item"] += load_plus_items(conn, pe, plus, resolver)
         report.counts["recipe"] = load_recipes(conn, pe, resolver)
         report.counts["relic"] = load_relics(conn, pe, plus, resolver)
         report.counts["node"] = load_nodes(conn, pe, plus)

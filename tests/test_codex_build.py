@@ -362,3 +362,58 @@ def test_modular_parts_classification():
         == "Companion"
     )
     assert modular_category("/Lotus/Weapons/Tenno/Pistol/Lex") is None
+
+
+def test_export_plus_fills_items_the_public_export_lacks(tmp_path: Path):
+    """New arcanes, boosters and bundles come from export-plus; official names keep priority."""
+    plus = _plus()
+    plus.files["ExportArcanes"] = {
+        "/Lotus/Upgrades/CosmeticEnhancers/Antiques/UltimateInvisibilty": {"name": "/L/ZidAnSekEel"},
+        # already in the Public Export under its official name
+        "/Lotus/Upgrades/CosmeticEnhancers/ArcaneX": {"name": "/L/ArcaneXOldName"},
+    }
+    plus.files["ExportBoosters"] = {
+        "/Lotus/Types/StoreItems/Boosters/AffinityBoosterStoreItem": {"name": "/L/AffinityBooster"}
+    }
+    plus.files["ExportBundles"] = {
+        "/Lotus/Types/StoreItems/Packages/FormaPack": {"name": "/L/FormaBundle", "description": "/L/Desc"},
+        # an export-plus name that collides with an official one does not take it over
+        "/Lotus/Types/StoreItems/Packages/CellPack": {"name": "/L/OrokinCell"},
+        "/Lotus/Types/StoreItems/Packages/Untranslated": {"name": "/Lotus/Language/Missing"},
+    }
+    plus.dictionary.update(
+        {
+            "/L/ZidAnSekEel": "Zid-an Sek-eel",
+            "/L/ArcaneXOldName": "Arcane Warden",
+            "/L/AffinityBooster": "Affinity Booster",
+            "/L/FormaBundle": "Forma Bundle",
+            "/L/Desc": "Three Forma.",
+            "/L/OrokinCell": "Orokin Cell",
+        }
+    )
+    drops = _drops()
+    drops.data["sortieRewards"] = [
+        {"itemName": name, "rarity": "Common", "chance": 1}
+        for name in ("Zid-An Sek-Eel", "Arcane Warden", "Affinity Booster", "Forma Bundle", "Orokin Cell")
+    ]
+    conn = sqlite3.connect(tmp_path / "codex.sqlite")
+    report = build_codex(conn, CodexPayloads(public_export=_pe(), plus=plus, drops=drops))
+    resolved = dict(conn.execute("SELECT item_name, item FROM transient_reward WHERE objective = 'Sortie'"))
+    categories = dict(conn.execute("SELECT unique_name, category FROM item"))
+    description = conn.execute(
+        "SELECT description FROM item WHERE unique_name = '/Lotus/Types/StoreItems/Packages/FormaPack'"
+    ).fetchone()[0]
+    conn.close()
+
+    assert report.counts["item"] == 9 + 4  # sek-eel, booster, forma bundle, cell pack
+    assert resolved["Zid-An Sek-Eel"] == "/Lotus/Upgrades/CosmeticEnhancers/Antiques/UltimateInvisibilty"
+    assert resolved["Arcane Warden"] == "/Lotus/Upgrades/CosmeticEnhancers/ArcaneX"  # second name, same item
+    assert resolved["Affinity Booster"] == "/Lotus/Types/StoreItems/Boosters/AffinityBoosterStoreItem"
+    assert resolved["Forma Bundle"] == "/Lotus/Types/StoreItems/Packages/FormaPack"
+    assert resolved["Orokin Cell"] == CELL
+    assert categories["/Lotus/Upgrades/CosmeticEnhancers/Antiques/UltimateInvisibilty"] == "Arcane"
+    assert categories["/Lotus/Upgrades/CosmeticEnhancers/ArcaneX"] == "Arcane"  # official row untouched
+    assert categories["/Lotus/Types/StoreItems/Packages/FormaPack"] == "Bundle"
+    assert "/Lotus/Types/StoreItems/Packages/Untranslated" not in categories
+    assert description == "Three Forma."
+    assert not report.unresolved.keys() & set(resolved)

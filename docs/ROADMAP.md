@@ -11,7 +11,10 @@ Progress: **M0 done** and **M1 done** on 2026-10-16 (DG0 resolved: MIT). The cod
 loads 17k items, 1,885 recipes, 795 relics, 269 nodes, 10k node rewards, 9.9k enemy
 drops, 4.7k vendor offers and 3.9k market items in about 6 s from a cold cache; 49
 drop-table names (mostly bundles and boosters) stay unresolved and are listed by
-`openwarframe codex info --unresolved`.
+`openwarframe codex info --unresolved`. On 2026-11-13 new content had pushed that to
+353 names; extra name rules and an export-plus fallback for items the Public Export
+lacks (arcanes, mods, boosters, bundles, booster packs) brought it to 15 names (852
+rows, 809 of them the drop data's "Region Resource" placeholder).
 
 **M2 done** on 2026-10-16: `account set/show/howto`, `sync` (public profile → snapshot
 with items, ranks, estimated mastery, star chart, syndicates, intrinsics, achievements,

@@ -25,6 +25,14 @@ FILES = [
     "ExportChallenges",
     "ExportMissionTypes",
     "ExportBounties",
+    # item names the Public Export lacks (see codex.build.PLUS_ITEM_FILES)
+    "ExportArcanes",
+    "ExportUpgrades",
+    "ExportCustoms",
+    "ExportBoosters",
+    "ExportBundles",
+    "ExportBoosterPacks",
+    "ExportCreditBundles",
 ]
 DICT_FILE = "dict.en.json"
 

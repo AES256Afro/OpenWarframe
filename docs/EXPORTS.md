@@ -5,7 +5,7 @@ uv run openwarframe export
 ```
 
 Exports the latest snapshot into `%LOCALAPPDATA%\OpenWarframe\exports\<snapshot time>\full`.
-Options: `--format json,sqlite,csv,xlsx,llm,guide` (any subset), `--out <dir>`,
+Options: `--format json,sqlite,csv,xlsx,llm,dashboard,guide` (any subset), `--no-pdf`, `--out <dir>`,
 `--snapshot <ref>`, `--share` (strip display name, clan and raw payloads; writes to
 `...\share`), `--budget compact|full` for the LLM brief.
 
@@ -21,6 +21,7 @@ better item names and categories reach old snapshots too.
 | `OpenWarframe-<date>.xlsx` | Styled workbook: Summary sheet with KPI tiles, category table and a stacked bar chart, then one filterable sheet per table with conditional formatting. Internal ids sit in hidden columns. |
 | `account-brief.md` + `.json` | LLM planning brief. Compact is about 6–8k tokens; full lists everything. |
 | `account-brief.html` + `.pdf` | The same brief as a printable page and a text-selectable PDF, for agents and tools that take file uploads. Needs Chrome or Edge for the PDF; `--no-pdf` skips it. |
+| `dashboard.html` + `.pdf` + `.docx` | The account dashboard: mastery ring and KPIs, arsenal by category, closest to done, most used, get next, star chart with Steel Path, syndicates and a data-coverage panel. One self-contained page with light, dark and print themes; the PDF is the page printed in A4 landscape; the Word file has the same sections as tables. |
 | `mastery-plan.html` | Road to Mastery 30: rank table, tonight's checklist, a phased plan per rank, mood cards, a mastery budget and test cards. Also `openwarframe guide mastery`. See [KNOWLEDGE_BASE.md](KNOWLEDGE_BASE.md#mastery-guide). |
 
 ## Tables

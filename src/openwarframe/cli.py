@@ -50,10 +50,10 @@ def version() -> None:
 @app.command()
 def export(
     formats: str = typer.Option(
-        "json,sqlite,csv,xlsx,llm,guide",
+        "json,sqlite,csv,xlsx,llm,dashboard,guide",
         "--format",
         "-f",
-        help="Comma-separated: json, sqlite, csv, xlsx, llm, guide.",
+        help="Comma-separated: json, sqlite, csv, xlsx, llm, dashboard, guide.",
     ),
     out: Path | None = typer.Option(
         None, "--out", "-o", help="Output directory (default: data dir/exports/<date>)."

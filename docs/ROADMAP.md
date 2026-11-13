@@ -29,6 +29,18 @@ codex learned which modular parts count for mastery and which relics drop right 
 and the "in game" totals gap noted under M2 is closed (817 masterable items).
 See `docs/EXPORTS.md`.
 
+**M5 done** on 2026-11-13: `export -f dashboard` writes `dashboard.html` (single
+file, light and dark themes, phone layout verified at 375 px), `dashboard.pdf`
+(printed with the user's Chrome or Edge, white A4 landscape theme) and
+`dashboard.docx`. Sections: mastery ring and KPIs, arsenal by category, closest to
+done, most used, get next (farmable relics, vendors, drops within MR), star chart per
+planet with Steel Path, syndicates (Nightwave seasons on their 30-rank scale) and a
+"what this can and cannot see" panel. The planning brief also prints to
+`account-brief.pdf` for agents that take file uploads. DG2 resolved without a new
+dependency: PDFs come from the installed Chromium-based browser rather than
+Playwright or WeasyPrint. Not built from M5's original list: item icons and the
+foundry backlog and relic shelf, which need inventory data (M3).
+
 ```
 M0 Foundation ─┬─ M1 Codex ──┬─ M2 Profile ──┬─ M4 Exports ── M5 Reports ── M9 Share & package
                │             │               │

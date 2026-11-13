@@ -198,3 +198,39 @@ def test_brief_documents_without_pdf(report, tmp_path: Path):
     html_path, pdf_path, warning = write_brief_documents(md, pdf=False)
     assert html_path.exists() and pdf_path is None and warning is None
     assert "Mastery by category" in html_path.read_text(encoding="utf-8")
+
+
+def test_dashboard_html_and_docx(report, tmp_path: Path):
+    from docx import Document
+
+    from openwarframe.exports.dashboard import dashboard_data, render_dashboard_html, write_dashboard
+
+    d = dashboard_data(report)
+    assert d.title == "Tester" and 0.0 <= d.rank_progress <= 1.0
+    assert [o.unique_name for o in d.closest] == [RHINO]
+    html = render_dashboard_html(report)
+    for needle in (
+        "Arsenal",
+        "Closest to done",
+        "Get next",
+        "Star chart",
+        "Syndicates",
+        "Most used",
+        "Tester",
+    ):
+        assert needle in html
+    assert "<script src" not in html  # self-contained apart from optional fonts
+    files = write_dashboard(report, tmp_path, pdf=False, docx=True)
+    assert files.html.exists() and files.pdf is None and files.docx and files.docx.exists()
+    text = " ".join(p.text for p in Document(files.docx).paragraphs)
+    assert "Tester" in text and "Arsenal" in text
+    assert 'href="dashboard.docx"' in files.html.read_text(encoding="utf-8")
+
+
+def test_dashboard_share_mode_hides_identity(tmp_path: Path):
+    from openwarframe.exports.dashboard import render_dashboard_html
+
+    cx = _codex(tmp_path)
+    snap = parse_profile(_profile(), codex=cx, taken_at=datetime(2026, 10, 16, tzinfo=UTC))
+    html = render_dashboard_html(build_report(snap, cx, anonymize=True))
+    assert "Tester" not in html and "Clan" not in html and "share mode" in html

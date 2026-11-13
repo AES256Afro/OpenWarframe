@@ -16,11 +16,12 @@ live world state, and turns it into things you can actually use:
 | **Planner** | What to farm next, which *active* fissures, invasions, alerts and bounties matter to *you*, which frames and weapons you own but never leveled, daily and weekly checklists, and goals on the road to MR 30 and beyond. |
 | **Guide** | A curated knowledge base of systems, unlocks and "things even veterans never knew about", shown only when they apply to your account. |
 
-Status: **M0, M1, M2 and M4 done** (2026-10-16). The codex answers "where do I get X"
-and "what does X need"; `sync` snapshots your account from the public profile, `diff`
-shows what changed between play sessions, and `export` writes JSON, SQLite, CSV, a
-styled Excel workbook and an LLM planning brief ([details](docs/EXPORTS.md)). The
-HTML dashboard, PDF and DOCX reports come next (M5).
+Status: **M0, M1, M2, M4 and M5 done** (2026-11-13). The codex answers "where do I
+get X" and "what does X need"; `sync` snapshots your account from the public profile,
+`diff` shows what changed between play sessions, and `export` writes JSON, SQLite, CSV,
+a styled Excel workbook, an LLM planning brief (Markdown, JSON and PDF), the account
+dashboard (HTML, PDF and Word) and the Road to Mastery 30 guide
+([details](docs/EXPORTS.md)). Inventory adapters (M3) and farm intelligence (M6) are next.
 Read the [roadmap](docs/ROADMAP.md) and the [mockups](docs/mockups/README.md).
 
 ## Try it now

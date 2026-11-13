@@ -11,7 +11,7 @@ from .data import write_csv, write_json, write_sqlite
 from .tables import build_tables
 from .xlsx import write_xlsx
 
-FORMATS = ("json", "sqlite", "csv", "xlsx", "llm", "guide")
+FORMATS = ("json", "sqlite", "csv", "xlsx", "llm", "dashboard", "guide")
 
 
 @dataclass
@@ -72,6 +72,17 @@ def run_exports(
                 results.append(ExportResult("llm-pdf", pdf_path, "planning brief as PDF, for agents"))
             if warning:
                 results.append(ExportResult("warning", md, warning))
+        elif fmt == "dashboard":
+            from .dashboard import write_dashboard
+
+            files = write_dashboard(report, out_dir, pdf=guide_pdf, docx=guide_docx)
+            results.append(ExportResult("dashboard", files.html, "account dashboard, single HTML file"))
+            if files.pdf:
+                results.append(ExportResult("dashboard-pdf", files.pdf, "dashboard as PDF"))
+            if files.docx:
+                results.append(ExportResult("dashboard-docx", files.docx, "dashboard as Word document"))
+            for w in files.warnings:
+                results.append(ExportResult("warning", files.html, w))
         elif fmt == "guide":
             from ..guide import build_mastery_plan, load_kb, write_guide_bundle
 

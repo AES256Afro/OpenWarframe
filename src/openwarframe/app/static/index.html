@@ -262,8 +262,8 @@ function liveSub(){ return F.sub||"fissures"; }
 var mins=function(v){ if(v==null) return '<span class="muted">-</span>'; var h=Math.floor(v/60); return (h?h+'h ':'')+(v%60)+'m'; };
 var relicCell=function(v,r){
   if(!v) return '<span class="muted">none</span>';
-  var own=r.best_relic_count!=null?' · you have '+r.best_relic_count:'';
-  return '<b>'+esc(v)+'</b><span class="muted"> ('+r.best_relic_needed+' needed'+own+')</span>';
+  if(r.best_relic_count==null) return '<span class="muted">e.g. </span>'+esc(v)+'<span class="muted"> (if you have it)</span>';
+  return '<b>'+esc(v)+'</b><span class="muted"> ('+r.best_relic_needed+' needed · you have '+r.best_relic_count+')</span>';
 };
 var FISSURE_COLS=[
   {k:"tier",l:"Tier"},{k:"mission",l:"Mission",fmt:function(v,r){return esc(v)+(r.fast?' <span class="pill p-owned">quick</span>':'')}},
@@ -298,7 +298,7 @@ function liveHeader(){
   if(LIVE.error) return '<div class="now"><div class="eyebrow">Live</div><div class="what">'+esc(LIVE.error)+'</div></div>';
   var h='<div class="now"><div class="eyebrow">Right now</div>';
   var best=(LIVE.fissures||[]).filter(function(f){return f.useful_relics})[0];
-  if(best) h+='<div class="what">'+esc(best.tier)+' '+esc(best.mission)+' fissure on '+esc(best.where)+(best.steel_path?' (Steel Path)':'')+', '+mins(best.minutes_left)+' left</div><div class="why">Bring '+esc(best.best_relic)+': it holds '+best.best_relic_needed+' part'+(best.best_relic_needed===1?'':'s')+' you need'+(best.best_relic_count!=null?' and you have '+best.best_relic_count:'')+'.</div>';
+  if(best) h+='<div class="what">'+esc(best.tier)+' '+esc(best.mission)+' fissure on '+esc(best.where)+(best.steel_path?' (Steel Path)':'')+', '+mins(best.minutes_left)+' left</div><div class="why">'+(LIVE.inventory?'Bring '+esc(best.best_relic)+': it holds '+best.best_relic_needed+' part'+(best.best_relic_needed===1?'':'s')+' you need and you have '+best.best_relic_count+'.':esc(best.tier)+' relics like '+esc(best.best_relic)+' hold parts you need. Load your inventory to see which you own.')+'</div>';
   else h+='<div class="what">No open fissure matches your relics right now.</div>';
   h+='<div class="also">';
   if(LIVE.here) h+='<span>You are here: <b>'+esc(LIVE.here.where||LIVE.here.node)+'</b>'+(LIVE.here.mission?' · '+esc(LIVE.here.mission):'')+(LIVE.here.fissure?' · fissure':'')+'</span>';
@@ -725,6 +725,7 @@ function skip(id){ PREFS.skipped=PREFS.skipped||{}; PREFS.skipped[id]=dayKey(); 
 
 function suggestions(){
   var out=[], f=DATA.farm||{}, inv=DATA.meta.inventory;
+  if(!inv) out.push({id:"inventory", what:"Load your inventory so ideas match what you own", where:"Warframe running, you in your Orbiter", why:(DATA.meta.inventory_error||"Right now relic, blueprint and Foundry ideas are guesses, because the app cannot see what you own.")+" Then click Get inventory from game.", m:1, action:"grab"});
   var ready=(DATA.foundry||[]).filter(function(x){return x.ready});
   if(ready.length) out.push({id:"foundry", what:"Claim "+ready.length+" finished item"+(ready.length===1?"":"s")+" in your Foundry", where:"Your Orbiter, Foundry", why:ready.map(function(x){return x.name}).slice(0,4).join(", "), m:2, go:"foundry", routine:"d", rid:"foundry_d"});
   (PREFS.goals||[]).forEach(function(gid){
@@ -733,7 +734,10 @@ function suggestions(){
     out.push({id:"goal:"+gid+":"+p.name, what:"Get "+p.name+" for "+c.name, where:(p.sources[0]||"").split(":")[0], why:"Your goal. "+(p.sources[0]||"No drop source recorded"), m:10, go:"farm"});
   });
   if(LIVE&&LIVE.fissures){ var fz=LIVE.fissures.filter(function(x){return x.useful_relics && x.best_relic && (!inv || x.best_relic_count)})[0];
-    if(fz) out.push({id:"fissure:"+fz.id, what:"Run the "+fz.tier+" "+fz.mission+" fissure on "+fz.where, where:fz.where+(fz.steel_path?" (Steel Path)":""), why:"Bring "+fz.best_relic+": it holds "+fz.best_relic_needed+" part"+(fz.best_relic_needed===1?"":"s")+" you need. "+fz.minutes_left+" min left.", m:fz.fast?5:10, go:"live"}); }
+    if(fz){
+      var why=inv?("Bring "+fz.best_relic+": you have "+fz.best_relic_count+", and it holds "+fz.best_relic_needed+" part"+(fz.best_relic_needed===1?"":"s")+" you need. "+fz.minutes_left+" min left.")
+                 :(fz.useful_relics+" "+fz.tier+" relics hold parts you need, "+fz.best_relic+" most of all, if you have it. "+fz.minutes_left+" min left. Load your inventory to see which you own.");
+      out.push({id:"fissure:"+fz.id, what:inv?("Run the "+fz.tier+" "+fz.mission+" fissure on "+fz.where):("If you have "+fz.tier+" relics: run the "+fz.mission+" fissure on "+fz.where), where:fz.where+(fz.steel_path?" (Steel Path)":""), why:why, m:fz.fast?5:10, go:"live"}); } }
   if(LIVE&&LIVE.baro&&LIVE.baro.here){ var duc=(DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0);
     if(duc) out.push({id:"baro", what:"Turn spare Prime parts into ducats, then visit Baro", where:LIVE.baro.where, why:duc+" ducats from spares. Baro leaves in "+LIVE.baro.hours_left+" h.", m:10, go:"sell"}); }
   var one=(f.finish||[]).filter(function(x){return x.missing===1 && !isGoal(x.id)}).slice(0,3);
@@ -746,7 +750,7 @@ function suggestions(){
   if(EASY) out=out.map(function(s,i){return [s,i]}).sort(function(a,b){return (a[0].m-b[0].m)||(a[1]-b[1])}).map(function(x){return x[0]});
   return out;
 }
-function doneSuggestion(s){ if(s.routine){ var k=s.routine==="d"?dayKey():weekKey(); PREFS.checks=PREFS.checks||{}; PREFS.checks[k]=PREFS.checks[k]||{}; PREFS.checks[k][s.rid]=true; } skip(s.id); toast("Nice. Next one is up."); }
+function doneSuggestion(s){ if(s.action==="grab"){ grab(false); return; } if(s.routine){ var k=s.routine==="d"?dayKey():weekKey(); PREFS.checks=PREFS.checks||{}; PREFS.checks[k]=PREFS.checks[k]||{}; PREFS.checks[k][s.rid]=true; } skip(s.id); toast("Nice. Next one is up."); }
 function renderFocusBar(){
   var el=$("fbar");
   if(!DATA||VIEW==="focus"||(PREFS.settings||{}).bar===false){ el.hidden=true; return; }
@@ -820,6 +824,7 @@ function renderFocus(){
   $("view").innerHTML=h;
   if(s){
     $("fx-done").onclick=function(){ doneSuggestion(s); };
+    if(s.action==="grab") $("fx-done").textContent="Get inventory from game";
     $("fx-skip").onclick=function(){ skip(s.id); };
     $("fx-tired").onclick=function(){ EASY=!EASY; renderAll(); toast(EASY?"Quickest things first. Click again to switch back.":"Back to the usual order."); };
     if($("fx-go")) $("fx-go").onclick=function(){ VIEW=s.go; F={}; renderAll(); };
@@ -905,6 +910,13 @@ $("csv").onclick=function(){
 };
 setInterval(function(){ fetch("/api/ping").catch(function(){}); }, 10000);
 setInterval(function(){ if(VIEW==="live") loadLive(true); }, 60000);
+var DATA_VERSION=null;
+setInterval(function(){
+  api("/api/version").then(function(v){
+    if(DATA_VERSION===null){ DATA_VERSION=v.version; return; }
+    if(v.version!==DATA_VERSION){ DATA_VERSION=v.version; api("/api/data").then(function(d){ load(d); toast("New profile or inventory data loaded."); }); }
+  }).catch(function(){});
+}, 30000);
 try{ VIEW=localStorage.getItem("owf-view")||"focus"; }catch(e){}
 api("/api/prefs").then(function(p){ PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{}); if((PREFS.settings||{}).start!=="last") VIEW="focus"; applySettings(); }).catch(function(){})
 .then(function(){ return api("/api/data"); }).then(load).catch(function(){ $("view").innerHTML='<div class="empty">Could not reach the OpenWarframe server. Start it again with: openwarframe gui</div>'; });

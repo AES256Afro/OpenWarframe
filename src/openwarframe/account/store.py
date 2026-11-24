@@ -32,14 +32,15 @@ class SnapshotStore:
         return self.load(paths[-1]) if paths else None
 
     def _resolve(self, ref: str | Path) -> Path:
-        p = Path(ref)
-        if p.exists():
-            return p
         candidates = self.list()
+        # keywords first: a stray file called "latest" in the current folder must not win
         if ref == "latest" and candidates:
             return candidates[-1]
         if ref == "previous" and len(candidates) >= 2:
             return candidates[-2]
+        p = Path(ref)
+        if p.suffix.lower() == ".json" and p.is_file():
+            return p
         for c in candidates:
             if c.stem.startswith(str(ref)):
                 return c

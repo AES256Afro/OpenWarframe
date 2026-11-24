@@ -83,6 +83,7 @@ def test_app_data_with_inventory_tracks_relics_and_blueprint_parts(codex_path: P
 def server(tmp_path: Path):
     state = AppState(Settings(home=tmp_path))
     state.cache = {"meta": {"mr": 1}, "items": [], "relics": [], "blueprints": []}
+    state.cache_fp = state._fingerprint()
     srv = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(state))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     yield f"http://127.0.0.1:{srv.server_port}", state
@@ -160,3 +161,28 @@ def test_prefs_are_saved_merged_and_filtered(tmp_path: Path):
     assert json.loads(state.prefs_path.read_text(encoding="utf-8"))["goals"] == ["/a"]
     with pytest.raises(ValueError):
         state.save_prefs(b"[1, 2]")
+
+
+def test_fingerprint_changes_when_new_data_lands(tmp_path: Path):
+    s = Settings(home=tmp_path)
+    s.ensure_dirs()
+    state = AppState(s)
+    before = state._fingerprint()
+    (s.snapshots_dir / "2026-11-24T181907Z.json").write_text("{}", encoding="utf-8")
+    after_snapshot = state._fingerprint()
+    assert after_snapshot != before
+    state.inventory_path.write_text(json.dumps(INVENTORY), encoding="utf-8")
+    assert state._fingerprint() != after_snapshot
+
+
+def test_latest_keyword_beats_a_stray_file_named_latest(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    from openwarframe.account.store import SnapshotStore
+
+    store = SnapshotStore(tmp_path / "snaps")
+    (store.directory / "2026-10-17T201719Z.json").write_text("{}", encoding="utf-8")
+    (store.directory / "2026-11-24T181907Z.json").write_text("{}", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "latest").write_text("not a snapshot", encoding="utf-8")
+    assert store._resolve("latest").name == "2026-11-24T181907Z.json"
+    assert store._resolve("previous").name == "2026-10-17T201719Z.json"
+    assert store._resolve("2026-10").name == "2026-10-17T201719Z.json"

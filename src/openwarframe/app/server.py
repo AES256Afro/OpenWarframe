@@ -28,6 +28,7 @@ class AppState:
         self.settings = settings
         self.lock = threading.Lock()
         self.cache: dict | None = None
+        self.cache_fp: tuple | None = None
         self.last_ping = time.time()
         self.prices: dict[str, dict] = {}
         from .rewards import RewardWatcher
@@ -38,9 +39,30 @@ class AppState:
     def inventory_path(self) -> Path:
         return self.settings.home / "inventory.json"
 
+    def _fingerprint(self) -> tuple:
+        """Changes whenever a newer snapshot, inventory or game database lands on disk."""
+        s = self.settings
+
+        def stamp(p: Path):
+            try:
+                st = p.stat()
+                return (st.st_mtime_ns, st.st_size)
+            except OSError:
+                return None
+
+        snaps = sorted(s.snapshots_dir.glob("*.json")) if s.snapshots_dir.exists() else []
+        latest = snaps[-1] if snaps else None
+        return (
+            latest.name if latest else None,
+            stamp(latest) if latest else None,
+            stamp(self.inventory_path),
+            stamp(s.codex_path),
+        )
+
     def build(self, *, force: bool = False) -> dict:
         with self.lock:
-            if self.cache is not None and not force:
+            fp = self._fingerprint()
+            if self.cache is not None and not force and fp == self.cache_fp:
                 return self.cache
             from ..account.store import SnapshotStore
             from ..account.sync import reparse
@@ -57,13 +79,19 @@ class AppState:
             except FileNotFoundError:
                 return {"error": "No snapshot yet. Click Refresh profile, or run: openwarframe sync"}
             codex = Codex(s.codex_path)
+            inv_error = None
             try:
                 inv = load_inventory(self.inventory_path) if self.inventory_path.exists() else None
-            except (ValueError, OSError) as exc:
+            except Exception as exc:  # noqa: BLE001 - shown in the app instead of silently ignored
                 log.warning("inventory unreadable: %s", exc)
-                inv = None
+                inv, inv_error = (
+                    None,
+                    f"Your inventory file could not be read ({exc}). Get it from the game again.",
+                )
             report = build_report(reparse(snap, codex), codex)
             self.cache = build_app_data(report, codex, inv)
+            self.cache["meta"]["inventory_error"] = inv_error
+            self.cache_fp = fp
             codex.close()
             return self.cache
 
@@ -225,6 +253,8 @@ def make_handler(state: AppState):
                 self._json(state.rewards.status())
             elif self.path == "/mini":
                 self._send(200, _page("static/mini.html"), "text/html; charset=utf-8")
+            elif self.path == "/api/version":
+                self._json({"version": repr(state._fingerprint())})
             elif self.path == "/api/ping":
                 self._json({"ok": True})
             else:

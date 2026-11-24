@@ -24,6 +24,20 @@ dashboard (HTML, PDF and Word) and the Road to Mastery 30 guide
 ([details](docs/EXPORTS.md)). Inventory adapters (M3) and farm intelligence (M6) are next.
 Read the [roadmap](docs/ROADMAP.md) and the [mockups](docs/mockups/README.md).
 
+## Install
+
+On Windows, paste this into PowerShell. It installs [uv](https://docs.astral.sh/uv/) if needed, the
+latest OpenWarframe release and a desktop shortcut:
+
+```powershell
+irm https://raw.githubusercontent.com/AES256Afro/OpenWarframe/main/packaging/install.ps1 | iex
+```
+
+No Python wanted? Each [release](https://github.com/AES256Afro/OpenWarframe/releases/latest) also
+has a standalone `OpenWarframe-<version>-windows.zip`. It is not code-signed, so Windows SmartScreen
+asks you to click **More info**, then **Run anyway**. [docs/INSTALL.md](docs/INSTALL.md) covers both
+routes, checking the download's SHA-256 checksum and antivirus false positives.
+
 ## Try it now
 
 ```bash

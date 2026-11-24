@@ -2,7 +2,7 @@
 
 # OpenWarframe
 
-OpenWarframe is a free Windows app for Warframe players. It reads your account and shows what
+OpenWarframe is a free Windows and macOS app for Warframe players. It reads your account and shows what
 you own, what you are missing, and where to get it. You can keep it open next to the game.
 
 The screenshots below show a real account (MR 24, PC).
@@ -48,6 +48,17 @@ The app opens in its own window, with its own taskbar button you can pin. The wi
 Microsoft Edge WebView2, which comes with Windows 10 and 11. If WebView2 is missing, the app
 opens in Chrome or Edge instead. [docs/INSTALL.md](docs/INSTALL.md) covers checking the
 download, antivirus warnings and uninstalling.
+
+### macOS
+
+Download `OpenWarframe-<version>-macos.zip` from the same release, unzip it and drag
+**OpenWarframe.app** to Applications. It is not notarized, so the first time macOS blocks it: open
+**System Settings > Privacy & Security** and click **Open Anyway**. Reading the inventory from the
+running game is Windows only; on a Mac use **Load inventory file**. The reward helper uses Apple's
+text recognition and asks for Screen Recording permission. Details in
+[docs/INSTALL.md](docs/INSTALL.md#installing-openwarframe-on-macos).
+
+![macOS](docs/screenshots/macos.png)
 
 ![First start](docs/screenshots/first-run.png)
 
@@ -175,7 +186,8 @@ More screenshots are in [docs/screenshots](docs/screenshots).
 - **Live events:** Digital Extremes' official world state feed.
 - **Prices:** [warframe.market](https://warframe.market), only when you ask for them.
 
-Your data is saved in `%LOCALAPPDATA%\OpenWarframe` on your PC. Details:
+Your data is saved in `%LOCALAPPDATA%\OpenWarframe` on Windows and
+`~/Library/Application Support/OpenWarframe` on macOS. Details:
 [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
 
 ## Privacy and risk
@@ -226,7 +238,7 @@ uv run openwarframe gui
 uv run pytest -q
 ```
 
-Release zips are built by [.github/workflows/release.yml](.github/workflows/release.yml) when a
+Release zips (Windows and macOS) are built by [.github/workflows/release.yml](.github/workflows/release.yml) when a
 version tag is pushed. The icon and logo come from [docs/brand/icon.svg](docs/brand/icon.svg); run
 `uv run python packaging/render_brand.py` after changing it.
 

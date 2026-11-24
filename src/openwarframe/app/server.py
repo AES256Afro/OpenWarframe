@@ -194,14 +194,16 @@ class AppState:
         the profile is fetched too, so one click sets everything up.
         """
         from ..config import save_settings
-        from ..sources.account.session import RISK_TEXT, grab_session
+        from ..sources.account import session
 
+        if not session.SUPPORTED:
+            raise session.SessionError(session.UNSUPPORTED_TEXT)
         if not self.session_ok:
             if not accept:
-                return {"needs_consent": True, "risk": RISK_TEXT}
+                return {"needs_consent": True, "risk": session.RISK_TEXT}
             self.settings.extra["session_reader_ok"] = True
             save_settings(self.settings)
-        account, data = grab_session(self.settings.account_id)
+        account, data = session.grab_session(self.settings.account_id)
         self._store_inventory(data)
         if not self.settings.account_id:
             self.settings.account_id = account

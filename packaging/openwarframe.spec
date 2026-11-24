@@ -1,7 +1,11 @@
-# PyInstaller spec: one-folder Windows build with two executables sharing one runtime.
+# PyInstaller spec: one-folder build with two executables sharing one runtime.
 #
 #   uv run --with pyinstaller pyinstaller packaging/openwarframe.spec --noconfirm
 #
+# On macOS the same spec also wraps the folder in dist/OpenWarframe.app (see the end);
+# the CLI is then OpenWarframe.app/Contents/MacOS/openwarframe-cli.
+#
+# Windows output:
 # Output: dist/OpenWarframe/
 #   OpenWarframe.exe      windowed desktop app (openwarframe.app:main)
 #   openwarframe-cli.exe  console CLI (openwarframe.cli:app)
@@ -12,15 +16,27 @@
 # UPX stays off; packed binaries trip more antivirus heuristics.
 
 import re
+import sys
 from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_submodules
-from PyInstaller.utils.win32 import versioninfo as vi
+
+MAC = sys.platform == "darwin"
+if not MAC:
+    from PyInstaller.utils.win32 import versioninfo as vi
 
 ROOT = Path(SPECPATH).parent  # noqa: F821 - SPECPATH is injected by PyInstaller
 SRC = ROOT / "src"
 HERE = ROOT / "packaging"
 ICON = str(SRC / "openwarframe" / "app" / "static" / "icon.ico")
+if MAC:
+    # .icns made from the 512 px brand icon (Pillow writes the icon sizes macOS needs)
+    from PIL import Image
+
+    ICNS = Path(workpath) / "OpenWarframe.icns"  # noqa: F821 - injected by PyInstaller
+    ICNS.parent.mkdir(parents=True, exist_ok=True)
+    Image.open(ROOT / "docs" / "brand" / "icon-512.png").save(ICNS)
+    ICON = str(ICNS)
 
 datas = [
     (str(SRC / "openwarframe" / "app" / "static"), "openwarframe/app/static"),
@@ -36,6 +52,8 @@ _nums = (_nums + (0, 0, 0, 0))[:4]
 
 
 def version_info(original_name, description):
+    if MAC:
+        return None
     strings = [
         vi.StringStruct("CompanyName", "OpenWarframe contributors"),
         vi.StringStruct("FileDescription", description),
@@ -60,7 +78,7 @@ def analysis(script):
         [str(HERE / script)],
         pathex=[str(SRC)],
         datas=datas,
-        hiddenimports=hidden,
+        hiddenimports=hidden + (["webview.platforms.cocoa"] if MAC else []),
         excludes=["tkinter", "pytest"],
         noarchive=False,
     )
@@ -92,7 +110,7 @@ cli_exe = EXE(  # noqa: F821
     version=version_info("openwarframe-cli.exe", "OpenWarframe command line"),
 )
 
-COLLECT(  # noqa: F821
+coll = COLLECT(  # noqa: F821
     app_exe,
     cli_exe,
     app_a.binaries,
@@ -102,3 +120,26 @@ COLLECT(  # noqa: F821
     upx=False,
     name="OpenWarframe",
 )
+
+if MAC:
+    BUNDLE(  # noqa: F821
+        coll,
+        name="OpenWarframe.app",
+        icon=ICON,
+        bundle_identifier="io.github.aes256afro.openwarframe",
+        version=VERSION,
+        info_plist={
+            "CFBundleName": "OpenWarframe",
+            "CFBundleDisplayName": "OpenWarframe",
+            "CFBundleShortVersionString": VERSION,
+            "CFBundleVersion": VERSION,
+            "LSMinimumSystemVersion": "11.0",
+            "LSApplicationCategoryType": "public.app-category.utilities",
+            "NSHighResolutionCapable": True,
+            "NSHumanReadableCopyright": "MIT License",
+            # the reward helper screenshots the game window
+            "NSScreenCaptureUsageDescription": (
+                "OpenWarframe reads the relic reward names from the game window."
+            ),
+        },
+    )

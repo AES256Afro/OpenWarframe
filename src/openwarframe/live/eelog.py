@@ -65,8 +65,9 @@ CANDIDATE_RE = re.compile(
 
 
 def default_log_path() -> Path:
-    base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
-    return Path(base) / "Warframe" / "EE.log"
+    from .paths import warframe_dir
+
+    return warframe_dir() / "EE.log"
 
 
 @dataclass

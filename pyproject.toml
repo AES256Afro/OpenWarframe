@@ -24,7 +24,9 @@ dependencies = [
   "winrt-windows-globalization>=4!10.0.28000.2957 ; sys_platform == 'win32'",
   "winrt-windows-foundation>=4!10.0.28000.2957 ; sys_platform == 'win32'",
   "winrt-windows-foundation-collections>=4!10.0.28000.2957 ; sys_platform == 'win32'",
-  "pywebview>=6.2 ; sys_platform == 'win32'",
+  "pywebview>=6.2 ; sys_platform == 'win32' or sys_platform == 'darwin'",
+  "pyobjc-framework-Vision>=10.3 ; sys_platform == 'darwin'",
+  "pyobjc-framework-Quartz>=10.3 ; sys_platform == 'darwin'",
 ]
 
 [project.scripts]

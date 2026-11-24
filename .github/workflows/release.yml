@@ -1,8 +1,9 @@
 name: Release
 
-# On a version tag, build the standalone Windows app with PyInstaller and attach
-# OpenWarframe-<tag>-windows.zip plus SHA256SUMS.txt to the GitHub release.
-# The build is unsigned; docs/INSTALL.md explains SmartScreen and checksum checks.
+# On a version tag, build the standalone apps with PyInstaller and attach
+# OpenWarframe-<tag>-windows.zip, OpenWarframe-<tag>-macos.zip and SHA256SUMS*.txt to the
+# GitHub release. The builds are unsigned (the Mac app is ad-hoc signed only);
+# docs/INSTALL.md explains SmartScreen, Gatekeeper and checksum checks.
 
 on:
   push:
@@ -85,3 +86,68 @@ jobs:
             gh release create $env:TAG --title "OpenWarframe $env:TAG" --generate-notes --verify-tag
           }
           gh release upload $env:TAG $env:ZIP SHA256SUMS.txt --clobber
+
+  macos:
+    # Apple Silicon build; the native Mac Warframe client is Apple Silicon only too.
+    runs-on: macos-14
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check tag matches package version
+        run: |
+          v=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' src/openwarframe/__init__.py)
+          [ "v$v" = "$TAG" ] || { echo "Tag $TAG does not match __version__ $v"; exit 1; }
+
+      - run: uv sync --all-groups
+      - name: Test
+        run: uv run pytest -q
+
+      - name: Build with PyInstaller
+        run: uv run --with pyinstaller pyinstaller packaging/openwarframe.spec --noconfirm
+
+      - name: Smoke test
+        run: |
+          cli="dist/OpenWarframe.app/Contents/MacOS/openwarframe-cli"
+          "$cli" --help > /dev/null
+          "$cli" version
+          export OPENWARFRAME_HOME="$RUNNER_TEMP/owhome"
+          "$cli" gui --no-window --port 8765 & pid=$!
+          ok=0
+          for i in $(seq 1 30); do
+            sleep 1
+            if curl -sf http://127.0.0.1:8765/api/ping > /dev/null; then ok=1; break; fi
+          done
+          [ $ok = 1 ] || { kill $pid; echo "app server did not answer /api/ping"; exit 1; }
+          curl -sf -o /dev/null http://127.0.0.1:8765/ || { kill $pid; echo "index.html not served"; exit 1; }
+          kill $pid
+
+      - name: Zip and checksum
+        run: |
+          zip="OpenWarframe-$TAG-macos.zip"
+          cp LICENSE docs/INSTALL.md dist/
+          # ditto keeps the bundle's symlinks, permissions and signature intact
+          (cd dist && ditto -c -k --sequesterRsrc --keepParent OpenWarframe.app "../$zip")
+          (cd dist && zip -q "../$zip" LICENSE INSTALL.md)
+          shasum -a 256 "$zip" > SHA256SUMS-macos.txt
+          cat SHA256SUMS-macos.txt
+          echo "ZIP=$zip" >> "$GITHUB_ENV"
+
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # the Windows job may be creating the release at the same moment
+          for i in 1 2 3 4 5 6; do
+            gh release view "$TAG" > /dev/null 2>&1 && break
+            gh release create "$TAG" --title "OpenWarframe $TAG" --generate-notes --verify-tag && break
+            sleep 10
+          done
+          gh release upload "$TAG" "$ZIP" SHA256SUMS-macos.txt --clobber

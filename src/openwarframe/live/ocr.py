@@ -29,7 +29,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import ctypes
-import os
 import re
 import sys
 import threading
@@ -115,8 +114,9 @@ def read_ui_scale(cfg: Path | None = None) -> float:
     WFInfo reads ``Flash.FlashDrawScale`` (Ocr.cs ``ReadUiScaleFromConfig``).
     """
     if cfg is None:
-        base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
-        cfg = Path(base) / "Warframe" / "EE.cfg"
+        from .paths import warframe_dir
+
+        cfg = warframe_dir() / "EE.cfg"
     try:
         text = cfg.read_text(encoding="utf-8", errors="replace")
     except OSError:
@@ -142,10 +142,16 @@ def prepare(crop: Image.Image) -> Image.Image:
     return g
 
 
-# -- Windows OCR --------------------------------------------------------------------------
+# -- Windows OCR (macOS uses Apple Vision, below) ----------------------------------
 
 
 def ocr_available() -> bool:
+    if sys.platform == "darwin":
+        try:
+            import Vision  # noqa: F401
+        except Exception:
+            return False
+        return True
     if sys.platform != "win32":
         return False
     try:
@@ -200,8 +206,42 @@ def _run(coro):
 
 
 def ocr_lines(img: Image.Image, language: str | None = None) -> list[str]:
-    """Text lines Windows OCR finds in an image."""
+    """Text lines the system OCR (Windows.Media.Ocr or Apple Vision) finds in an image."""
+    if sys.platform == "darwin":
+        return _recognize_vision(img, language)
     return _run(_recognize(img, language))
+
+
+# -- macOS OCR (Apple Vision, built into macOS 10.15+) -----------------------------------
+
+
+def _recognize_vision(img: Image.Image, language: str | None) -> list[str]:
+    import io
+
+    import Vision
+    from Foundation import NSData
+
+    buf = io.BytesIO()
+    img.convert("RGB").save(buf, "PNG")
+    raw = buf.getvalue()
+    data = NSData.dataWithBytes_length_(raw, len(raw))
+    handler = Vision.VNImageRequestHandler.alloc().initWithData_options_(data, None)
+    req = Vision.VNRecognizeTextRequest.alloc().init()
+    req.setRecognitionLevel_(Vision.VNRequestTextRecognitionLevelAccurate)
+    req.setUsesLanguageCorrection_(False)  # item names are not dictionary words
+    if language:
+        req.setRecognitionLanguages_([language])
+    ok, err = handler.performRequests_error_([req], None)
+    if not ok:
+        raise RuntimeError(f"macOS text recognition failed: {err}")
+    found = []
+    for obs in req.results() or []:
+        cands = obs.topCandidates_(1)
+        if not cands:
+            continue
+        bb = obs.boundingBox()  # normalised, origin bottom-left
+        found.append((-bb.origin.y, bb.origin.x, str(cands[0].string())))
+    return [t for _, _, t in sorted(found)]
 
 
 def read_slots(
@@ -267,8 +307,65 @@ def _exe_of(hwnd: int) -> str:
         kernel32.CloseHandle(h)
 
 
+def _find_game_window_mac() -> GameWindow | None:
+    """The largest on-screen window owned by Warframe (native or under CrossOver/Wine).
+
+    Box is in screen points; ``capture`` returns real pixels (2x on Retina).
+    Window titles are only visible with Screen Recording permission, so the owner
+    (process) name is matched first.
+    """
+    import Quartz
+
+    opts = Quartz.kCGWindowListOptionOnScreenOnly | Quartz.kCGWindowListExcludeDesktopElements
+    found: list[GameWindow] = []
+    for w in Quartz.CGWindowListCopyWindowInfo(opts, Quartz.kCGNullWindowID) or []:
+        if int(w.get("kCGWindowLayer", 0)) != 0:
+            continue
+        owner = str(w.get("kCGWindowOwnerName") or "")
+        title = str(w.get("kCGWindowName") or "")
+        if "warframe" not in owner.lower() and title != "Warframe":
+            continue
+        b = w.get("kCGWindowBounds") or {}
+        x, y = int(b.get("X", 0)), int(b.get("Y", 0))
+        width, height = int(b.get("Width", 0)), int(b.get("Height", 0))
+        if width < 200 or height < 200:
+            continue
+        found.append(
+            GameWindow(int(w.get("kCGWindowNumber", 0)), title, owner, Box(x, y, x + width, y + height))
+        )
+    if not found:
+        return None
+    return max(found, key=lambda w: w.box.width * w.box.height)
+
+
+def _capture_mac(win: GameWindow) -> Image.Image:
+    """Copy just the game window's pixels, even when another window covers part of it."""
+    import Quartz
+
+    cg = Quartz.CGWindowListCreateImage(
+        Quartz.CGRectNull,
+        Quartz.kCGWindowListOptionIncludingWindow,
+        win.hwnd,
+        Quartz.kCGWindowImageBoundsIgnoreFraming | Quartz.kCGWindowImageBestResolution,
+    )
+    if cg is None:
+        raise RuntimeError(
+            "macOS did not allow a screenshot of the game. Give OpenWarframe Screen Recording "
+            "permission in System Settings > Privacy & Security, then restart it."
+        )
+    w, h = Quartz.CGImageGetWidth(cg), Quartz.CGImageGetHeight(cg)
+    stride = Quartz.CGImageGetBytesPerRow(cg)
+    data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(cg))
+    return Image.frombuffer("RGB", (w, h), bytes(data), "raw", "BGRX", stride, 1)
+
+
 def find_game_window() -> GameWindow | None:
     """The visible top-level window owned by Warframe.x64.exe, or None."""
+    if sys.platform == "darwin":
+        try:
+            return _find_game_window_mac()
+        except ImportError:
+            return None
     if sys.platform != "win32":
         return None
     from ctypes import wintypes
@@ -306,6 +403,8 @@ def capture(win: GameWindow) -> Image.Image:
 
     Exclusive fullscreen can come back black; the game's own borderless mode works.
     """
+    if sys.platform == "darwin":
+        return _capture_mac(win)
     import mss
 
     b = win.box

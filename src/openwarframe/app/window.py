@@ -1,4 +1,4 @@
-"""The app's own window on Windows: an Edge WebView2 window owned by OpenWarframe.
+"""The app's own window: Edge WebView2 on Windows, WKWebView (Cocoa) on macOS.
 
 Opening the page in a Chrome or Edge ``--app`` window works, but Windows then treats
 the window as Chrome's: it sits under Chrome's taskbar button and pinning it pins
@@ -6,7 +6,8 @@ Chrome. With this window OpenWarframe has its own taskbar button and icon, and p
 it starts OpenWarframe again. WebView2 ships with Windows 10 and 11.
 
 If pywebview or the WebView2 runtime is missing, ``available()`` is False and the
-server falls back to the Chrome or Edge app window.
+server falls back to the Chrome or Edge app window. On macOS pywebview uses the system
+WebKit, which is always present, so the window only needs pywebview and pyobjc.
 """
 
 from __future__ import annotations
@@ -32,7 +33,16 @@ def icon_path() -> str:
 
 
 def available() -> bool:
-    """True when the native window can be used on this PC."""
+    """True when the native window can be used on this computer."""
+    if sys.platform == "darwin":
+        try:
+            import webview  # noqa: F401
+            from webview.platforms import cocoa  # noqa: F401
+
+            return True
+        except Exception as exc:  # noqa: BLE001
+            log.info("native window not available: %s", exc)
+            return False
     if sys.platform != "win32":
         return False
     try:
@@ -213,7 +223,7 @@ class NativeWindows:
         self.main.events.closed += self._close_others
         self.storage.mkdir(parents=True, exist_ok=True)
         webview.start(
-            gui="edgechromium",
+            gui="cocoa" if sys.platform == "darwin" else "edgechromium",
             private_mode=False,  # keep the remembered tab and settings between runs
             storage_path=str(self.storage),
             icon=icon_path(),

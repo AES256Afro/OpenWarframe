@@ -89,7 +89,7 @@ jobs:
 
   macos:
     # Apple Silicon build; the native Mac Warframe client is Apple Silicon only too.
-    runs-on: macos-14
+    runs-on: macos-latest
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:

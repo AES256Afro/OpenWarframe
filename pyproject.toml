@@ -1,6 +1,6 @@
 [project]
 name = "openwarframe"
-version = "0.1.0"
+version = "0.2.0"
 description = "Export, explain and plan your Warframe account: Excel, PDF, JSON, SQLite and LLM briefs."
 readme = "README.md"
 license = "MIT"
@@ -19,6 +19,9 @@ dependencies = [
 
 [project.scripts]
 openwarframe = "openwarframe.cli:app"
+
+[project.gui-scripts]
+openwarframe-app = "openwarframe.app:main"
 
 [dependency-groups]
 dev = [

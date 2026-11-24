@@ -61,6 +61,35 @@ characters render oddly.
 
 ---
 
+## Desktop app (Windows, no installer, nothing to sign)
+
+OpenWarframe has a small app window for browsing your account while you play:
+
+- **Warframes, Weapons, Companions & more:** every masterable item, with its status (mastered, leveling, never leveled; owned or not once an inventory is loaded), mastery rank requirement, how to get it and whether you can get it right now.
+- **Relics:** every relic with the parts you still need, how many of its rewards are vaulted gear, and an on-demand warframe.market price check so you can see which of your relics are worth the most.
+- **Blueprints:** owned blueprints with each missing part and the relics you own that drop it.
+- **Can't get yet:** items gated by Mastery Rank, syndicate standing, vaulting or events.
+
+Every table sorts by clicking a column, filters with the chips and search box, and exports what you see to CSV.
+
+Install once (needs [uv](https://docs.astral.sh/uv/)), then add a desktop shortcut:
+
+```bash
+uv tool install git+https://github.com/AES256Afro/OpenWarframe
+```
+
+```bash
+openwarframe gui --shortcut
+```
+
+Or start it from a terminal with `openwarframe gui`. The app runs on your own machine
+only (`127.0.0.1`) and opens in a Chrome or Edge app window. It stops by itself a minute
+after you close the window.
+
+Relic counts, owned blueprints and owned-but-unleveled gear come from your inventory, which
+the public profile does not include. Load an inventory JSON file with the **Load inventory
+file** button, by dragging it onto the window, or with `openwarframe inventory import <file>`.
+
 ## How it gets your data (the honest version)
 
 Warframe has no official "export my account" button. OpenWarframe uses three kinds of

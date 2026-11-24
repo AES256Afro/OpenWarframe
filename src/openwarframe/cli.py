@@ -21,6 +21,8 @@ codex_app = typer.Typer(
 account_app = typer.Typer(help="Which account to snapshot.", no_args_is_help=True)
 app.add_typer(codex_app, name="codex")
 app.add_typer(account_app, name="account")
+inventory_app = typer.Typer(help="Load your full inventory from a JSON file.", no_args_is_help=True)
+app.add_typer(inventory_app, name="inventory")
 guide_app = typer.Typer(help="Guides built from your snapshot and the knowledge base.", no_args_is_help=True)
 app.add_typer(guide_app, name="guide")
 console = Console()
@@ -134,6 +136,86 @@ def plan() -> None:
 def _not_yet(cmd: str, milestone: str) -> int:
     console.print(f"[yellow]`openwarframe {cmd}` arrives in {milestone}. See docs/ROADMAP.md.[/yellow]")
     return 2
+
+
+# -- desktop app -------------------------------------------------------------------------
+
+
+SHORTCUT_PS = r"""
+$s = (New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}')
+$s.TargetPath = '{target}'
+$s.WorkingDirectory = '{cwd}'
+$s.Description = 'OpenWarframe'
+$s.Save()
+"""
+
+
+@app.command()
+def gui(
+    port: int = typer.Option(0, "--port", help="Port to listen on (default: any free port)."),
+    no_window: bool = typer.Option(
+        False, "--no-window", help="Only start the server; open the URL yourself."
+    ),
+    shortcut: bool = typer.Option(
+        False, "--shortcut", help="Put an OpenWarframe shortcut on your desktop and exit."
+    ),
+) -> None:
+    """Open the OpenWarframe app window: frames, weapons, relics and blueprints you can sort and filter."""
+    if shortcut:
+        import shutil
+        import subprocess
+
+        target = shutil.which("openwarframe-app") or shutil.which("openwarframe")
+        if not target:
+            console.print("[red]Install the command first: uv tool install --editable .[/red]")
+            raise typer.Exit(code=1)
+        desktop = Path.home() / "Desktop"
+        onedrive_desktop = Path.home() / "OneDrive" / "Desktop"
+        if not desktop.exists() and onedrive_desktop.exists():
+            desktop = onedrive_desktop
+        lnk = desktop / "OpenWarframe.lnk"
+        script = SHORTCUT_PS.format(lnk=str(lnk), target=target, cwd=str(Path.home()))
+        subprocess.run(["powershell", "-NoProfile", "-Command", script], check=True)  # noqa: S603, S607
+        console.print(f"[green]Shortcut created:[/green] {lnk}")
+        return
+    from .app import run_app
+
+    run_app(port=port, open_window=not no_window)
+
+
+@inventory_app.command("import")
+def inventory_import(
+    path: Path = typer.Argument(..., exists=True, dir_okay=False, help="Inventory JSON file."),
+) -> None:
+    """Copy an inventory JSON file into OpenWarframe so the app can show relics and blueprints."""
+    import json
+
+    from .inventory import load_inventory
+
+    s = load_settings()
+    try:
+        inv = load_inventory(path)
+    except (ValueError, json.JSONDecodeError) as exc:
+        console.print(f"[red]Could not read {path}: {exc}[/red]")
+        raise typer.Exit(code=1) from None
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    if isinstance(data, dict) and "InventoryJson" in data:
+        raw = data["InventoryJson"]
+        data = json.loads(raw) if isinstance(raw, str) else raw
+    (s.home / "inventory.json").write_text(json.dumps(data), encoding="utf-8")
+    console.print(
+        f"[green]Inventory loaded:[/green] {len(inv.equipment)} built items, {len(inv.recipes)} blueprints, "
+        f"{sum(sum(v.values()) for v in inv.relics.values())} relics"
+    )
+
+
+@inventory_app.command("clear")
+def inventory_clear() -> None:
+    """Forget the loaded inventory file."""
+    p = load_settings().home / "inventory.json"
+    if p.exists():
+        p.unlink()
+    console.print("Inventory cleared.")
 
 
 # -- guides ------------------------------------------------------------------------------

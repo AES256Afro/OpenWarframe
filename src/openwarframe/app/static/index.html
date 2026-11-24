@@ -92,6 +92,7 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
   <div id="tabs" role="tablist"></div>
   <div class="spacer"></div>
   <button class="btn" id="refresh" type="button">Refresh profile</button>
+  <button class="btn primary" id="grab" type="button">Get inventory from game</button>
   <button class="btn" id="loadinv" type="button">Load inventory file…</button>
   <input type="file" id="invfile" accept=".json,application/json" hidden>
 </nav>
@@ -107,6 +108,7 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 </main>
 <div class="drop" id="dropzone" hidden>Drop your inventory JSON to load it</div>
 <div class="toast" id="toast" hidden></div>
+<div class="drop" id="consent" hidden><div class="card" style="max-width:560px; display:grid; gap:12px"><b style="font-size:16px">Read your game session?</b><p id="risktext" style="margin:0"></p><div style="display:flex; gap:8px; justify-content:flex-end"><button class="btn" type="button" id="consent-no">Cancel</button><button class="btn primary" type="button" id="consent-yes">I accept the risk, continue</button></div></div></div>
 
 <script>
 (function(){
@@ -313,8 +315,8 @@ function renderNotice(){
   var old=document.querySelector(".notice"); if(old) old.remove();
   if(DATA.meta.inventory||!(VIEW==="relics"||VIEW==="blueprints"||VIEW==="overview")) return;
   var n=document.createElement("div"); n.className="notice";
-  n.innerHTML='<p><b>Your public profile shows what you have leveled, not what you own.</b> Relic counts, owned blueprints and owned-but-unleveled gear need your inventory file. Load it here or drag it onto the window.</p><button class="btn primary" type="button">Load inventory file…</button>';
-  n.querySelector("button").onclick=function(){ $("invfile").click(); };
+  n.innerHTML='<p><b>Your public profile shows what you have leveled, not what you own.</b> With Warframe running and you in your Orbiter, click Get inventory from game to load relic counts, owned blueprints and owned gear.</p><button class="btn primary" type="button">Get inventory from game</button>';
+  n.querySelector("button").onclick=grab;
   $("filters").after(n);
 }
 function renderAll(){
@@ -348,6 +350,18 @@ function api(path, opts){ return fetch(path, opts).then(function(r){ return r.js
 $("q").oninput=function(){ Q=this.value.trim().toLowerCase(); if(VIEW==="overview"){ VIEW="all"; } renderAll(); };
 $("refresh").onclick=function(){ toast("Fetching your profile…", 20000); api("/api/sync",{method:"POST"}).then(function(d){ load(d); toast(d.error?d.error:"Profile refreshed"); }); };
 $("loadinv").onclick=function(){ $("invfile").click(); };
+function grab(accept){
+  toast("Reading the game session and downloading your inventory…", 60000);
+  api("/api/inventory/grab",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accept:accept===true})})
+    .then(function(d){
+      if(d.needs_consent){ $("toast").hidden=true; $("risktext").textContent=d.risk; $("consent").hidden=false; return; }
+      if(d.error){ toast(d.error,10000); return; }
+      load(d); toast("Inventory loaded from the game");
+    }).catch(function(){ toast("Could not reach the OpenWarframe server."); });
+}
+$("grab").onclick=function(){ grab(false); };
+$("consent-yes").onclick=function(){ $("consent").hidden=true; grab(true); };
+$("consent-no").onclick=function(){ $("consent").hidden=true; };
 function sendInventory(file){
   file.text().then(function(txt){ toast("Reading inventory…",20000); return api("/api/inventory",{method:"POST",headers:{"Content-Type":"application/json"},body:txt}); })
     .then(function(d){ if(d.error){ toast(d.error,8000); return; } load(d); toast("Inventory loaded"); });

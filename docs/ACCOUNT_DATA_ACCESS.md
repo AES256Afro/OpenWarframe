@@ -149,3 +149,24 @@ like `13.649 Sys [Info]: Logged in <name>`. Verified useful lines today:
 Not present: API URLs with session parameters, account ID, inventory contents.
 Present and sensitive: IP addresses and the login e-mail (per the wiki warning), which
 is why the tail stays local and only derived events are stored.
+
+## Decision (2026-11-24): read the game session
+
+The owner chose to build an inventory reader after being told the trade-offs (DG1).
+Password sign-in was ruled out: the owner logs in through Steam, Steam-created accounts
+often have no Warframe password, and the old companion-app login also needed a captcha and
+an email code. Every maintained community tool (Cephalon Kronos, FrameForge, Sainan's
+warframe-api-helper) instead reads the session key from the running game.
+
+`openwarframe.sources.account.session` does the same, conservatively:
+
+- Opens `Warframe.x64.exe` with `PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_VM_READ` only.
+- Scans committed, private, readable memory for `?accountId=<24 hex>&nonce=<digits>`,
+  preferring matches for the configured account ID.
+- Requests `inventory.php` from `mobile.warframe.com` (then `api.warframe.com`) once.
+- Never writes to the process, never injects, never stores the nonce.
+- Requires explicit consent the first time (CLI prompt or in-app panel), recorded as
+  `session_reader_ok = true` in `config.toml`.
+
+This is the method the EULA most directly names. It stays opt-in and the warning stays
+visible in the README, the CLI and the app.

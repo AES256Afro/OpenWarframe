@@ -104,6 +104,23 @@ class AppState:
                 r["price"] = self.prices[r["id"]]["typical"]
         return out
 
+    @property
+    def session_ok(self) -> bool:
+        return bool(self.settings.extra.get("session_reader_ok"))
+
+    def grab(self, accept: bool) -> dict:
+        """Read the game session and download the inventory. Needs consent once."""
+        from ..config import save_settings
+        from ..sources.account.session import RISK_TEXT, grab_inventory
+
+        if not self.session_ok:
+            if not accept:
+                return {"needs_consent": True, "risk": RISK_TEXT}
+            self.settings.extra["session_reader_ok"] = True
+            save_settings(self.settings)
+        data = grab_inventory(self.settings.account_id)
+        return self.save_inventory(json.dumps(data).encode("utf-8"))
+
     def sync(self) -> dict:
         from ..account.sync import sync_profile
 
@@ -165,6 +182,9 @@ def make_handler(state: AppState):
                     self._json(state.sync())
                 elif self.path == "/api/inventory":
                     self._json(state.save_inventory(body))
+                elif self.path == "/api/inventory/grab":
+                    req = json.loads(body.decode("utf-8") or "{}")
+                    self._json(state.grab(bool(req.get("accept"))))
                 elif self.path == "/api/prices":
                     ids = json.loads(body.decode("utf-8") or "[]")
                     self._json(state.fetch_prices([str(i) for i in ids]))

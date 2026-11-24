@@ -87,8 +87,16 @@ only (`127.0.0.1`) and opens in a Chrome or Edge app window. It stops by itself 
 after you close the window.
 
 Relic counts, owned blueprints and owned-but-unleveled gear come from your inventory, which
-the public profile does not include. Load an inventory JSON file with the **Load inventory
-file** button, by dragging it onto the window, or with `openwarframe inventory import <file>`.
+the public profile does not include. With Warframe running and you in your Orbiter, click
+**Get inventory from game** (or run `openwarframe inventory grab`). OpenWarframe reads the
+running game's memory, read-only, to find your session key, downloads your inventory from
+Digital Extremes with it, and discards the key. Nothing in the game is changed.
+
+**Risk:** Digital Extremes' EULA names software that reads the game's memory, and their
+policy is that third-party tools are used at your own risk. The app shows this warning and
+asks once before the first use. Other community tools work the same way, but nothing
+guarantees DE will keep tolerating it. If you have an inventory JSON from elsewhere, **Load
+inventory file** or `openwarframe inventory import <file>` work without reading the game.
 
 ## How it gets your data (the honest version)
 

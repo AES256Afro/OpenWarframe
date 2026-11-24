@@ -209,6 +209,38 @@ def inventory_import(
     )
 
 
+@inventory_app.command("grab")
+def inventory_grab(
+    yes: bool = typer.Option(False, "--yes", help="Accept the risk without asking (after the first time)."),
+) -> None:
+    """Read the running game's session (read-only) and download your full inventory."""
+    import json
+
+    from .config import save_settings
+    from .inventory import parse_inventory
+    from .sources.account.session import RISK_TEXT, SessionError, grab_inventory
+
+    s = load_settings()
+    if not s.extra.get("session_reader_ok"):
+        console.print(f"[yellow]{RISK_TEXT}[/yellow]")
+        if not yes and not typer.confirm("Continue?", default=False):
+            raise typer.Exit(code=1)
+        s.extra["session_reader_ok"] = True
+        save_settings(s)
+    try:
+        with console.status("Reading the game session and downloading your inventory..."):
+            data = grab_inventory(s.account_id)
+    except SessionError as exc:
+        console.print(f"[red]{exc}[/red]")
+        raise typer.Exit(code=1) from None
+    inv = parse_inventory(data, source="game session")
+    (s.home / "inventory.json").write_text(json.dumps(data), encoding="utf-8")
+    console.print(
+        f"[green]Inventory downloaded:[/green] {len(inv.equipment)} built items, {len(inv.recipes)} blueprints, "
+        f"{sum(sum(v.values()) for v in inv.relics.values())} relics"
+    )
+
+
 @inventory_app.command("clear")
 def inventory_clear() -> None:
     """Forget the loaded inventory file."""

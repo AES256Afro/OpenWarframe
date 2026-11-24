@@ -232,7 +232,7 @@ def test_outdated_database_is_updated_before_building(
     out = AppState(s).build()
     assert calls == [s.codex_path]
     assert codex_mod.codex_schema_version(s.codex_path) == SCHEMA_VERSION
-    assert "ducats" not in out.get("error", "") and "snapshot" in out["error"].lower()
+    assert "ducats" not in out.get("error", "") and out.get("setup") is True
 
 
 def test_failed_database_update_is_reported_not_raised(
@@ -277,3 +277,41 @@ def test_second_launch_finds_the_running_app(server):
     assert _running_instance(state.settings) == port
     (state.settings.home / "app.lock").write_text('{"port": 1, "pid": 1}', encoding="utf-8")
     assert _running_instance(state.settings) is None
+
+
+def test_no_account_shows_setup_instead_of_an_error(tmp_path: Path, codex_path: Path):  # noqa: F811
+    home = tmp_path / "home"
+    home.mkdir()
+    s = Settings(home=home)
+    s.codex_path.write_bytes(codex_path.read_bytes())
+    out = AppState(s).build()
+    assert out["setup"] is True and out["has_account"] is False and "can_update" not in out
+
+
+def test_typed_account_id_is_checked_saved_and_fetched(server, monkeypatch: pytest.MonkeyPatch):
+    base, state = server
+    monkeypatch.setattr(state, "sync", lambda: {"synced": True})
+
+    def post(body: dict):
+        req = urllib.request.Request(base + "/api/account", data=json.dumps(body).encode(), method="POST")
+        return json.loads(urllib.request.urlopen(req).read())
+
+    with pytest.raises(urllib.error.HTTPError) as err:
+        post({"id": "not-an-id"})
+    assert err.value.code == 400 and "24 characters" in json.loads(err.value.read())["error"]
+    assert state.settings.account_id is None
+    assert post({"id": "AB" * 12, "platform": "pc"}) == {"synced": True}
+    assert state.settings.account_id == "ab" * 12
+    assert "ab" * 12 in (state.settings.home / "config.toml").read_text(encoding="utf-8")
+
+
+def test_first_grab_saves_the_account_and_fetches_the_profile(server, monkeypatch: pytest.MonkeyPatch):
+    from openwarframe.sources.account import session
+
+    base, state = server
+    state.settings.extra["session_reader_ok"] = True
+    monkeypatch.setattr(session, "grab_session", lambda expected=None: ("cd" * 12, INVENTORY))
+    monkeypatch.setattr(state, "sync", lambda: {"synced": True})
+    assert state.grab(accept=False) == {"synced": True}
+    assert state.settings.account_id == "cd" * 12
+    assert load_inventory(state.inventory_path).owns(RHINO)

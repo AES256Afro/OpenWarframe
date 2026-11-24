@@ -1,191 +1,243 @@
 # OpenWarframe
 
-**Your whole Warframe account: exported, explained, and planned.**
+**Your whole Warframe account in one window: what you own, what you're missing, and what to do next.**
 
-OpenWarframe is a local, open-source tool that pulls everything knowable about your
-Warframe account, joins it with the game's official item and drop databases and the
-live world state, and turns it into things you can actually use:
+OpenWarframe is a free, open-source Windows app that runs next to the game. It reads your account,
+joins it with the game's own item and drop data and the live world state, and turns it into plain
+answers: which relics to crack, which missions drop what you need, which reward to pick, and what
+to do in the next 15 minutes on the road to Mastery Rank 30.
 
-| Output | What it is for |
-| --- | --- |
-| **Account dashboard** (single HTML file) | A visually rich overview of the scope and scale of your account: mastery, arsenal, foundry, star chart, syndicates, achievements. Shareable. |
-| **Excel workbook** (`.xlsx`) | Every item, blueprint, relic, mod and resource you own, with filters, totals and a farm plan sheet. |
-| **Report** (`.pdf` / `.docx`) | A designed, printable account report with a foundry backlog and "where to go next" pages. |
-| **Machine data** (`.json`, `.sqlite`, `.csv`) | Feed it into your own database, scripts or spreadsheets. |
-| **LLM planning brief** (`.md` + JSON schema) | A compact, token-budgeted description of your account for ChatGPT, Claude or a local model to plan with. |
-| **Planner** | What to farm next, which *active* fissures, invasions, alerts and bounties matter to *you*, which frames and weapons you own but never leveled, daily and weekly checklists, and goals on the road to MR 30 and beyond. |
-| **Guide** | A curated knowledge base of systems, unlocks and "things even veterans never knew about", shown only when they apply to your account. |
+![The Focus view: one next action, a session planner, goals and daily and weekly checklists](docs/screenshots/focus.png)
 
-Status: **M0, M1, M2, M4 and M5 done** (2026-11-13). The codex answers "where do I
-get X" and "what does X need"; `sync` snapshots your account from the public profile,
-`diff` shows what changed between play sessions, and `export` writes JSON, SQLite, CSV,
-a styled Excel workbook, an LLM planning brief (Markdown, JSON and PDF), the account
-dashboard (HTML, PDF and Word) and the Road to Mastery 30 guide
-([details](docs/EXPORTS.md)). Inventory adapters (M3) and farm intelligence (M6) are next.
-Read the [roadmap](docs/ROADMAP.md) and the [mockups](docs/mockups/README.md).
+## Download
 
-## Install
+**[Download the latest release](https://github.com/AES256Afro/OpenWarframe/releases/latest)**
+and get `OpenWarframe-<version>-windows.zip`. Unzip it and run `OpenWarframe.exe`. You don't need
+Python, an installer or admin rights.
 
-On Windows, paste this into PowerShell. It installs [uv](https://docs.astral.sh/uv/) if needed, the
-latest OpenWarframe release and a desktop shortcut:
+The app is not code-signed, so Windows SmartScreen asks you to click **More info**, then
+**Run anyway**, the first time. Or install with one line in PowerShell (it also makes a desktop icon
+and makes updates easy):
 
 ```powershell
 irm https://raw.githubusercontent.com/AES256Afro/OpenWarframe/main/packaging/install.ps1 | iex
 ```
 
-No Python wanted? Each [release](https://github.com/AES256Afro/OpenWarframe/releases/latest) also
-has a standalone `OpenWarframe-<version>-windows.zip`. It is not code-signed, so Windows SmartScreen
-asks you to click **More info**, then **Run anyway**. [docs/INSTALL.md](docs/INSTALL.md) covers both
-routes, checking the download's SHA-256 checksum and antivirus false positives.
+[docs/INSTALL.md](docs/INSTALL.md) covers both routes, checking the download's checksum and
+antivirus false positives.
 
-## Try it now
+On first start the app downloads the game database (about a minute), then helps you connect your
+account. With Warframe running, one click finds your account in the game. Or type your account ID.
+
+![First start: find your account in the running game, or type your account ID](docs/screenshots/first-run.png)
+
+## What it does
+
+### Focus: one thing at a time
+
+Built for players who get overwhelmed by Warframe's to-do pile, including people with ADHD or
+autism. Focus shows **one next action** with where to go and why. It also has **Not now**
+and **I'm tired, give me something easy** buttons. A session planner fits a short list into 15,
+30, 60 or 90 minutes. You also get daily and weekly checklists that reset on the game's clock,
+goals with progress bars, and comfort settings (larger text, higher contrast, no motion). A slim
+**Next** bar keeps the current suggestion on every other tab.
+
+### What to farm
+
+Every mission node ranked by how many of the things *you* still need it drops. Each row shows the
+best rotation and relic tiers, with popular community farms marked. **Finish an item** lists the
+frames and weapons you are one or two parts away from, with each missing piece and what it costs
+to buy instead.
+
+![What to farm: missions ranked by the parts you still need](docs/screenshots/farm.png)
+
+### Live
+
+The current void fissures, void storms, invasions and Baro Ki'Teer, matched against your
+inventory. "Run the Neo Rescue on Triton and bring Neo L1: it holds 4 parts you need and you have
+2." It also shows which mission you are in right now, read from the game's own log.
+
+![Live: fissures matched to the relics you own](docs/screenshots/live.png)
+
+### Relic reward helper
+
+When the fissure reward screen opens, OpenWarframe reads the four reward names off your screen
+with Windows' built-in OCR. It then picks the best one for *your* account: parts you need first,
+then vaulted parts, then market price, then ducats. A small pop-out window stays on top of the game,
+so you can see the pick without alt-tabbing.
+
+![Reward helper with a sample screen](docs/screenshots/rewards.png)
+
+![The always-on-top pop-out](docs/screenshots/reward-popout.png)
+
+### Your whole collection
+
+- **Warframes, Weapons, Companions & more:** every masterable item. Each shows whether it's mastered,
+  leveling, never leveled or not owned, its MR requirement, how to get it, and whether you can get it now.
+- **Relics:** every relic, with how many you own at each refinement, the parts you still need, how
+  many rewards are vaulted, and live warframe.market prices.
+- **Blueprints, Foundry, Resources:** what's ready to claim, what's missing for each build and the
+  relics you own that drop it, and resource shortfalls.
+- **Earnings and Sell list:** ducats and platinum you could make from spare parts, relics and mods,
+  keeping one of anything you still need.
+- **Can't get yet:** items gated by Mastery Rank, syndicate standing, vaulting or events.
+
+Every table sorts by column, filters with chips and search, and exports to CSV.
+
+![Relics: what you own, what you need, and what is vaulted](docs/screenshots/relics.png)
+
+![Warframes: owned, mastered, missing](docs/screenshots/warframes.png)
+
+![Overview: mastery, collection, foundry and wallet at a glance](docs/screenshots/overview.png)
+
+### Exports and the Road to MR 30 guide
+
+From the command line, `openwarframe export` writes your account as JSON, SQLite, CSV, a styled
+Excel workbook, an account dashboard (HTML, PDF, Word) and an **LLM planning brief** for ChatGPT,
+Claude or a local model. `openwarframe guide mastery --pdf --docx` builds a personal Road to MR 30
+guide covering every remaining rank test, with "if you're tired, do this instead" fallbacks. Details:
+[docs/EXPORTS.md](docs/EXPORTS.md).
+
+## How it works
+
+```mermaid
+flowchart LR
+  subgraph Internet
+    PE[Public Export<br/>items, recipes]
+    DROPS[Drop tables]
+    WS[World state<br/>fissures, Baro]
+    PROF[Your public profile]
+    INV[Your inventory]
+    MKT[warframe.market prices]
+  end
+  subgraph PC[Your PC]
+    CODEX[(Game database<br/>SQLite)]
+    DATA[(Your data folder<br/>snapshots, inventory)]
+    GAME[Warframe<br/>EE.log, screen]
+    SRV[Local app server<br/>127.0.0.1 only]
+    WIN[App window<br/>Chrome or Edge]
+  end
+  PE --> CODEX
+  DROPS --> CODEX
+  PROF --> DATA
+  INV --> DATA
+  GAME -. log and screen, read-only .-> SRV
+  CODEX --> SRV
+  DATA --> SRV
+  WS --> SRV
+  MKT --> SRV
+  SRV --> WIN
+```
+
+1. **Game database.** On first start, and whenever the app's code needs a newer format,
+   OpenWarframe downloads Digital Extremes' official Public Export, the community
+   [warframe-public-export-plus](https://github.com/calamity-inc/warframe-public-export-plus) data
+   and the official drop tables. It joins them into one SQLite file on the game's internal item
+   paths (for example `/Lotus/Powersuits/Rhino/RhinoPrime`).
+2. **Your account** comes from two places:
+   - The **public profile**: the same read-only endpoint the in-game profile viewer uses. It needs
+     only your account ID and gives mastery rank, XP on every item you ever leveled, star chart
+     progress, syndicates and intrinsics. **Refresh profile** fetches it again.
+   - Your **inventory** (relics, blueprints, resources, the Foundry, mods, credits and platinum) is
+     not public. With the game running, **Get inventory from game** reads the running game's
+     memory, read-only, to find your session key. It downloads your inventory from Digital Extremes
+     with that key, then discards the key. If you'd rather not, **Load inventory file** imports an
+     inventory JSON from another tool.
+3. **Live signals.** The official world state feed gives fissures, storms, invasions and Baro. The
+   game's own `EE.log` tells the app which mission you're in and when the reward screen opens.
+   The reward helper then captures the game window and reads it with Windows OCR, all on your PC.
+4. **The app** is a small web server bound to `127.0.0.1`, so nothing else on your network can
+   reach it. Its window is Chrome or Edge in app mode, with no tabs and no address bar. It stops by
+   itself shortly after you close the window. Your data lives in `%LOCALAPPDATA%\OpenWarframe`.
+
+## Privacy and risk, plainly
+
+- **What leaves your PC:** requests to Digital Extremes (profile, inventory, world state, Public
+  Export), GitHub and drops.warframestat.us (game data), and warframe.market (prices, only when you
+  ask for them). There is no telemetry, no OpenWarframe account and no server of ours.
+- **Reading game memory** happens only when you click **Get inventory from game**. It is read-only
+  and opt-in, and the app shows this warning and asks once before the first use. Digital Extremes'
+  EULA mentions software that reads the game's memory, and their policy is that third-party tools
+  are used at your own risk. Other community tools work the same way, but nothing guarantees DE
+  will keep tolerating it. Everything else in OpenWarframe works without it.
+- **The reward helper** reads only the log file and screenshots of the game window. It never
+  touches game memory or sends input. Screens it reads are saved in your data folder (`live`) so
+  reading accuracy can be checked. Delete them whenever you like.
+- OpenWarframe never stores your password, never injects into the game and never automates
+  in-game actions.
+
+Full detail on account data access: [docs/ACCOUNT_DATA_ACCESS.md](docs/ACCOUNT_DATA_ACCESS.md).
+
+## Command line
+
+The app covers day-to-day use. The CLI (`openwarframe`, or `openwarframe-cli.exe` in the zip) is
+there for exports and scripting:
+
+| Command | What it does |
+| --- | --- |
+| `gui` | Open the app (`--shortcut` adds a desktop icon) |
+| `sync` | Fetch your public profile and store a snapshot |
+| `inventory grab` / `import <file>` | Get your inventory from the running game, or from a file |
+| `export` | JSON, SQLite, CSV, Excel, dashboard and LLM brief |
+| `guide mastery` | Your Road to MR 30 guide (`--pdf`, `--docx`) |
+| `codex update` / `sources "<item>"` / `tree "<item>"` | Game database: update it, where to get an item, what it needs |
+| `live watch` / `live record` | Follow game events; save reward screens to check reading accuracy |
+| `diff`, `snapshots`, `summary` | What changed between play sessions |
+
+Run `openwarframe --help` for everything.
+
+## Where the game data comes from
+
+| Source | Gives us |
+| --- | --- |
+| Public Export (official) | Every weapon, frame, recipe with ingredients, resource, relic, mod, node, quest |
+| [warframe-public-export-plus](https://github.com/calamity-inc/warframe-public-export-plus) (community, MIT) | Relic rewards, mission types, vendors, syndicates, challenges, Nightwave, bounties |
+| Official drop tables via [WFCD warframe-drop-data](https://github.com/WFCD/warframe-drop-data) (MIT) | Mission, relic, enemy, bounty, sortie and syndicate drop chances |
+| Official world state | Fissures, storms, invasions, Baro, sorties, Archon Hunt, Nightwave |
+| [warframe.market](https://warframe.market) | Live prices for tradeable items |
+| This repo's knowledge base (`kb/`) | Farming routes, popular relic farms, guides |
+
+Details, URLs and licenses: [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). OpenWarframe is a fan
+project and is not affiliated with or endorsed by Digital Extremes.
+
+## Build from source
+
+Needs [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync --all-groups
 ```
 
 ```bash
-uv run openwarframe codex update
+uv run openwarframe gui
 ```
 
 ```bash
-uv run openwarframe codex sources "Rhino Prime Chassis"
+uv run pytest -q
 ```
 
-```bash
-uv run openwarframe codex tree "Rhino Prime"
-```
-
-```bash
-uv run openwarframe account howto
-```
-
-```bash
-uv run openwarframe sync
-```
-
-```bash
-uv run openwarframe export
-```
-
-Other commands: `codex info|search|item`, `account set|show`, `summary`, `snapshots`,
-`diff`, `export --share`, `schema`. Data lands in `%LOCALAPPDATA%\OpenWarframe` (override with
-`OPENWARFRAME_HOME`). On Windows terminals set `PYTHONIOENCODING=utf-8` if box
-characters render oddly.
-
----
-
-## Desktop app (Windows, no installer, nothing to sign)
-
-OpenWarframe has a small app window for browsing your account while you play:
-
-- **Warframes, Weapons, Companions & more:** every masterable item, with its status (mastered, leveling, never leveled; owned or not once an inventory is loaded), mastery rank requirement, how to get it and whether you can get it right now.
-- **Relics:** every relic with the parts you still need, how many of its rewards are vaulted gear, and an on-demand warframe.market price check so you can see which of your relics are worth the most.
-- **Blueprints:** owned blueprints with each missing part and the relics you own that drop it.
-- **Can't get yet:** items gated by Mastery Rank, syndicate standing, vaulting or events.
-
-Every table sorts by clicking a column, filters with the chips and search box, and exports what you see to CSV.
-
-Install once (needs [uv](https://docs.astral.sh/uv/)), then add a desktop shortcut:
-
-```bash
-uv tool install git+https://github.com/AES256Afro/OpenWarframe
-```
-
-```bash
-openwarframe gui --shortcut
-```
-
-Or start it from a terminal with `openwarframe gui`. The app runs on your own machine
-only (`127.0.0.1`) and opens in a Chrome or Edge app window. It stops by itself a minute
-after you close the window.
-
-Relic counts, owned blueprints and owned-but-unleveled gear come from your inventory, which
-the public profile does not include. With Warframe running and you in your Orbiter, click
-**Get inventory from game** (or run `openwarframe inventory grab`). OpenWarframe reads the
-running game's memory, read-only, to find your session key, downloads your inventory from
-Digital Extremes with it, and discards the key. Nothing in the game is changed.
-
-**Risk:** Digital Extremes' EULA names software that reads the game's memory, and their
-policy is that third-party tools are used at your own risk. The app shows this warning and
-asks once before the first use. Other community tools work the same way, but nothing
-guarantees DE will keep tolerating it. If you have an inventory JSON from elsewhere, **Load
-inventory file** or `openwarframe inventory import <file>` work without reading the game.
-
-## How it gets your data (the honest version)
-
-Warframe has no official "export my account" button. OpenWarframe uses three kinds of
-sources, each documented in [docs/ACCOUNT_DATA_ACCESS.md](docs/ACCOUNT_DATA_ACCESS.md):
-
-1. **Public profile (Tier 1, official, read-only).** The same endpoint the in-game
-   profile viewer uses. It needs only your account ID and gives mastery rank, XP on
-   every item you ever leveled, star chart completion, syndicate standing,
-   intrinsics, achievements, loadout and lifetime stats. No credentials, no client
-   interaction. Verified working on 2026-10-16.
-2. **Full inventory (Tier 2, opt-in).** Resource counts, owned blueprints, foundry
-   queue, relics, mods, quests, credits and platinum only exist in the game's
-   inventory JSON. There is no official public way to read it. OpenWarframe defines an
-   `InventorySource` adapter interface and ships a plain **JSON file import** first.
-   Other adapters are a decision for you, with the trade-offs laid out in the doc.
-3. **Live signals.** The official world state feed (fissures, invasions, alerts,
-   sorties, Archon Hunt, Nightwave, Baro, bounties, events) and, optionally, a
-   read-only tail of the game's own `EE.log` for "what mission am I in right now".
-   The log contains no session tokens (verified), and OpenWarframe never uploads it.
-
-Everything is joined on the game's internal item path (`uniqueName`, for example
-`/Lotus/Powersuits/Rhino/RhinoPrime`), which the Public Export, the drop tables,
-warframe.market and the profile all share.
-
-**Safety stance.** OpenWarframe never reads game memory, never injects, never
-automates in-game actions and never stores your password. Digital Extremes' policy
-is "use external software at your own risk" with no allow-list, so the choice of
-Tier 2 adapter stays yours, documented and off by default.
-
-## Where the game data comes from
-
-| Source | Gives us | Verified |
-| --- | --- | --- |
-| Public Export (official) | 16 manifests: every weapon, frame, recipe with ingredients, resource, relic, mod, region/node, quest, gear | 2026-10-16 |
-| warframe-public-export-plus (community, MIT) | Superset with relics, enemies, mission types, rewards, vendors, syndicates, challenges/achievements, Nightwave, bounties | 2026-10-16 |
-| Official drop tables via WFCD warframe-drop-data (MIT) | Mission, relic, enemy, bounty, sortie and syndicate drop chances | 2026-10-16 |
-| Official world state (`worldState.php`) | 42 sections of live data | 2026-10-16 |
-| warframe.market v2 | Prices for 3,893 tradeable items, keyed by `gameRef` | 2026-10-16 |
-| Our own curated knowledge base (YAML in this repo) | Farming routes, hidden systems, overlooked achievements, stage-based guides | ongoing |
-
-Details, URLs and licenses: [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
-
-## Planned stack
-
-Python 3.12+ managed with `uv`. `httpx` + `pydantic` for sources and models, SQLite
-for the local codex and snapshots, `openpyxl` for Excel, `python-docx` for Word,
-headless Chromium (Playwright) to print the HTML dashboard to PDF, `Jinja2` for
-templates, `Typer` for the CLI. Rationale and alternatives in
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## Repository layout
+The Windows zip is built by [.github/workflows/release.yml](.github/workflows/release.yml) with
+PyInstaller ([packaging/openwarframe.spec](packaging/openwarframe.spec)) whenever a version tag is
+pushed.
 
 ```
-openwarframe/
-  src/openwarframe/
-    sources/      # static (public export, drops, market), account (profile, inventory), live (worldstate, eelog)
-    codex/        # normalized game database (SQLite) + queries ("where can I get X")
-    account/      # snapshot model, diffing, coverage
-    analysis/     # gaps, farm ranking, planner, affinity, goals
-    kb/           # knowledge base loader + rules engine
-    exports/      # json, sqlite, csv, xlsx, html, pdf, docx, llm brief
-    cli.py
-  kb/             # curated YAML knowledge base (guides, tips, routes)
-  docs/           # roadmap, architecture, data sources, mockups
-  spikes/         # throwaway proofs of concept that de-risk milestones
-  tests/
+src/openwarframe/
+  app/        desktop app: local server, page, farm ranking, live matching, reward helper
+  codex/      game database build and queries
+  account/    profile snapshots, diffs, summaries
+  inventory/  inventory parsing
+  sources/    Public Export, drop tables, market, profile, game session reader
+  live/       EE.log follower, screen capture, OCR, reward matching
+  guide/      Road to MR 30 guide (HTML, Word, PDF)
+  exports/    JSON, SQLite, CSV, Excel, dashboard, LLM brief
+  report/     account report used by the app and exports
+kb/           curated knowledge base (routes, guides, popular farms)
+docs/         install, architecture, data sources, roadmap, screenshots
+tests/
 ```
-
-## Mockups
-
-Rendered previews of the planned outputs live in [docs/mockups](docs/mockups/README.md):
-account dashboard, Excel workbook, PDF report, planner, and CLI.
 
 ## Contributing and license
 
-MIT licensed; see [CONTRIBUTING.md](CONTRIBUTING.md). Third-party data keeps its own
-license and is credited in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md).
+MIT licensed; see [CONTRIBUTING.md](CONTRIBUTING.md). Third-party data keeps its own license and is
+credited in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). Plans and ideas live in
+[docs/ROADMAP.md](docs/ROADMAP.md) and [docs/PLAN.md](docs/PLAN.md).

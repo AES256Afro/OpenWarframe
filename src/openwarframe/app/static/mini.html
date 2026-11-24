@@ -16,6 +16,7 @@ body{margin:0; background:var(--bg); color:var(--fg); font:14px/1.35 "Segoe UI",
 .pick .n{font:700 20px "Segoe UI", system-ui, sans-serif}
 .pick .w{color:var(--muted)}
 ol{margin:0; padding-left:1.3em; display:grid; gap:3px; font-size:13px}
+ol li{min-width:0; overflow-wrap:anywhere}
 ol .w{color:var(--muted)}
 .need{color:var(--ok)}
 .vault{color:var(--violet)}
@@ -36,7 +37,7 @@ ol .w{color:var(--muted)}
     var key=r.time+r.source; if(key===shown) return; shown=key;
     var p=r.pick, h='';
     if(p) h+='<div class="pick"><div class="k">PICK'+(r.source==="sample"?' (sample screen)':'')+'</div><div class="n">'+esc(p.name)+'</div><div class="w">'+esc(p.why)+'</div></div>';
-    h+='<ol>'+r.ranked.slice(1).map(function(x){ var cls=x.why.indexOf("needed")>=0?"need":(x.why.indexOf("vaulted")>=0?"vault":""); return '<li class="'+cls+'">'+esc(x.name)+' <span class="w">· '+esc(x.why)+'</span></li>'; }).join('')+'</ol>';
+    h+='<ol start="2">'+r.ranked.slice(1).map(function(x){ var cls=x.why.indexOf("needed")>=0?"need":(x.why.indexOf("vaulted")>=0?"vault":""); return '<li class="'+cls+'">'+esc(x.name)+' <span class="w">· '+esc(x.why)+'</span></li>'; }).join('')+'</ol>';
     document.getElementById("out").className=""; document.getElementById("out").innerHTML=h;
   }
   function poll(){ fetch("/api/reward").then(function(r){return r.json()}).then(draw).catch(function(){ document.getElementById("state").textContent="OpenWarframe is not running."; }); }

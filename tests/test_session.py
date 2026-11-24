@@ -102,7 +102,8 @@ def test_app_asks_for_consent_once_then_saves(tmp_path: Path, monkeypatch: pytes
     monkeypatch.setenv("OPENWARFRAME_HOME", str(tmp_path))
     state = AppState(load_settings())
     monkeypatch.setattr(state, "build", lambda force=False: {"ok": True})
-    monkeypatch.setattr(sess, "grab_inventory", lambda account=None: INVENTORY)
+    monkeypatch.setattr(sess, "grab_session", lambda account=None: ("ab" * 12, INVENTORY))
+    monkeypatch.setattr(state, "sync", lambda: {"ok": True})  # never touch the network
 
     first = state.grab(accept=False)
     assert first["needs_consent"] and "own risk" in first["risk"]

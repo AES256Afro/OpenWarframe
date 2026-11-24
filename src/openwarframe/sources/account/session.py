@@ -216,6 +216,11 @@ def fetch_inventory(session: Session, client: httpx.Client | None = None) -> dic
 
 def grab_inventory(expected_account: str | None = None) -> dict:
     """Find the game, read its session, download the inventory. Returns the inventory JSON."""
+    return grab_session(expected_account)[1]
+
+
+def grab_session(expected_account: str | None = None) -> tuple[str, dict]:
+    """Like grab_inventory, and also returns the account ID the game is signed in to."""
     pid = find_game_pid()
     if not pid:
         raise SessionError("Warframe is not running. Start the game, log in, then try again.")
@@ -228,4 +233,4 @@ def grab_inventory(expected_account: str | None = None) -> dict:
         raise SessionError(
             "The running game is signed in to a different account than the one OpenWarframe is set up for."
         )
-    return fetch_inventory(session)
+    return session.account_id, fetch_inventory(session)

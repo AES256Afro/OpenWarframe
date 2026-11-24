@@ -24,25 +24,14 @@ The script ([packaging/install.ps1](../packaging/install.ps1), read it first if 
 2. installs the latest OpenWarframe release with `uv tool install`,
 3. puts an **OpenWarframe** shortcut on your desktop.
 
-Then, in a new PowerShell window:
+Then double-click **OpenWarframe** on the desktop. The first start downloads the game database
+(about a minute) and shows a welcome screen. With Warframe running, click **Find my account in the
+game**, or type your account ID there (the screen explains how to find it).
 
-```powershell
-openwarframe account howto
-```
+Prefer the command line? In a new PowerShell window, `openwarframe account howto`, then
+`openwarframe account set --id <your 24-character account id>`, then `openwarframe sync`.
 
-```powershell
-openwarframe account set --id <your 24-character account id>
-```
-
-```powershell
-openwarframe codex update
-```
-
-```powershell
-openwarframe sync
-```
-
-and double-click **OpenWarframe** on the desktop. To update later, run the install command again.
+To update later, run the install command again.
 To install a specific version, set `$env:OPENWARFRAME_REF = "v0.3.0"` first.
 
 To uninstall: `uv tool uninstall openwarframe` and delete the desktop shortcut. Your data lives in
@@ -63,6 +52,8 @@ To uninstall: `uv tool uninstall openwarframe` and delete the desktop shortcut. 
 3. Right-click the zip, **Extract All**, and open the `OpenWarframe` folder.
 4. Double-click **OpenWarframe.exe**. Because the app is not code-signed, Windows SmartScreen may say
    "Windows protected your PC". Click **More info**, then **Run anyway**. You only need to do this once.
+   The first start downloads the game database (about a minute), then a welcome screen helps you
+   connect your account.
 5. For command-line use, run `openwarframe-cli.exe` from that folder in PowerShell, for example
    `.\openwarframe-cli.exe codex update` and `.\openwarframe-cli.exe sync`. It is the same program as
    the `openwarframe` command in option 1. (It has a different name because Windows file names

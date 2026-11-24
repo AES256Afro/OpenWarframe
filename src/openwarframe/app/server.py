@@ -109,7 +109,13 @@ class AppState:
             try:
                 snap = SnapshotStore(s.snapshots_dir).load("latest")
             except FileNotFoundError:
-                return {"error": "No snapshot yet. Click Refresh profile, or run: openwarframe sync"}
+                return {
+                    "error": "Connect your Warframe account to get started."
+                    if not s.account_id
+                    else "Your profile has not been fetched yet.",
+                    "setup": True,
+                    "has_account": bool(s.account_id),
+                }
             inv_error = None
             try:
                 inv = load_inventory(self.inventory_path) if self.inventory_path.exists() else None
@@ -180,17 +186,52 @@ class AppState:
         return bool(self.settings.extra.get("session_reader_ok"))
 
     def grab(self, accept: bool) -> dict:
-        """Read the game session and download the inventory. Needs consent once."""
+        """Read the game session and download the inventory. Needs consent once.
+
+        On first run (no account set) the account ID the game is signed in to is saved and
+        the profile is fetched too, so one click sets everything up.
+        """
         from ..config import save_settings
-        from ..sources.account.session import RISK_TEXT, grab_inventory
+        from ..sources.account.session import RISK_TEXT, grab_session
 
         if not self.session_ok:
             if not accept:
                 return {"needs_consent": True, "risk": RISK_TEXT}
             self.settings.extra["session_reader_ok"] = True
             save_settings(self.settings)
-        data = grab_inventory(self.settings.account_id)
-        return self.save_inventory(json.dumps(data).encode("utf-8"))
+        account, data = grab_session(self.settings.account_id)
+        self._store_inventory(data)
+        if not self.settings.account_id:
+            self.settings.account_id = account
+            save_settings(self.settings)
+        if not self._has_snapshot():
+            return self.sync()
+        return self.build(force=True)
+
+    def _has_snapshot(self) -> bool:
+        d = self.settings.snapshots_dir
+        return d.exists() and any(d.glob("*.json"))
+
+    def set_account(self, body: bytes) -> dict:
+        """Save an account ID typed into the app, then fetch that profile."""
+        from ..config import save_settings
+        from ..sources.account.profile import HOSTS, ProfileError, validate_account_id
+
+        req = json.loads(body.decode("utf-8") or "{}")
+        platform = str(req.get("platform") or "pc")
+        if platform not in HOSTS:
+            raise ValueError(f"Unknown platform {platform!r}.")
+        try:
+            account = validate_account_id(str(req.get("id", "")))
+        except ProfileError:
+            raise ValueError(
+                "That is not an account ID. It is 24 characters long, using only digits and the letters a to f."
+            ) from None
+        if self.settings.account_id and self.settings.account_id != account and self.inventory_path.exists():
+            self.inventory_path.unlink()  # that inventory belongs to the previous account
+        self.settings.account_id, self.settings.platform = account, platform
+        save_settings(self.settings)
+        return self.sync()
 
     def live(self) -> dict:
         """World state matched against the account (cached about a minute)."""
@@ -238,15 +279,17 @@ class AppState:
         sync_profile(self.settings)
         return self.build(force=True)
 
-    def save_inventory(self, body: bytes) -> dict:
+    def _store_inventory(self, data) -> None:
         from ..inventory import parse_inventory
 
-        data = json.loads(body.decode("utf-8-sig"))
         if isinstance(data, dict) and "InventoryJson" in data:
             raw = data["InventoryJson"]
             data = json.loads(raw) if isinstance(raw, str) else raw
         parse_inventory(data)  # validates
         self.inventory_path.write_text(json.dumps(data), encoding="utf-8")
+
+    def save_inventory(self, body: bytes) -> dict:
+        self._store_inventory(json.loads(body.decode("utf-8-sig")))
         return self.build(force=True)
 
 
@@ -337,6 +380,8 @@ def make_handler(state: AppState):
                 elif self.path == "/api/reward/popout":
                     _open_popout(f"http://127.0.0.1:{self.server.server_port}/mini", state.settings)
                     self._json({"ok": True})
+                elif self.path == "/api/account":
+                    self._json(state.set_account(body))
                 elif self.path == "/api/codex/update":
                     from ..codex import update_codex
 

@@ -74,6 +74,11 @@ tr.detail td{background:var(--panel); cursor:default}
 .drops .need{color:var(--ok); font-weight:600}
 .drops .done{color:var(--muted); text-decoration:line-through}
 .empty{padding:40px 18px; color:var(--muted); text-align:center}
+.setup{padding:24px 18px; max-width:760px; display:grid; gap:14px}
+.setup h1{margin:0; font:700 24px var(--body)}
+.setup ol{margin:0; padding-left:1.3em; display:grid; gap:4px}
+.setup input{background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:8px 10px; font:14px var(--mono); width:260px}
+.setup .row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
 footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px solid var(--line); color:var(--muted); font-size:12px; background:var(--panel)}
 .overview{padding:18px; display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; align-content:start}
 .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
@@ -536,7 +541,7 @@ function counts(){
 function renderTabs(){
   var c=counts();
   $("tabs").innerHTML=VIEWS.map(function(v){ return '<button class="tab" role="tab" type="button" data-v="'+v.id+'" aria-selected="'+(VIEW===v.id)+'">'+esc(v.label)+'<span class="n">'+c[v.id]+'</span></button>'; }).join("");
-  $("tabs").querySelectorAll(".tab").forEach(function(b){ b.onclick=function(){ VIEW=b.dataset.v; F={}; OPEN={}; try{localStorage.setItem("owf-view",VIEW)}catch(e){} renderAll(); }; });
+  $("tabs").querySelectorAll(".tab").forEach(function(b){ b.onclick=function(){ VIEW=b.dataset.v; F={}; OPEN={}; try{localStorage.setItem("owf-view",VIEW); history.replaceState(null,"","#"+VIEW);}catch(e){} renderAll(); }; });
 }
 function renderNotice(){
   var old=document.querySelector(".notice"); if(old) old.remove();
@@ -858,10 +863,11 @@ function renderAll(){
   $("foot").innerHTML='<span>'+rows.length+' shown</span><span>Profile '+new Date(DATA.meta.snapshot).toLocaleString()+'</span><span>'+(DATA.meta.inventory?"Inventory loaded "+new Date(DATA.meta.inventory.loaded).toLocaleString():"No inventory loaded")+'</span><span>Click a row for details. Click a column to sort.</span>';
 }
 function load(data){
+  if(data.error&&data.setup){ renderSetup(data); return; }
   if(data.error){
-    $("view").innerHTML='<div class="empty"><p>'+esc(data.error)+'</p><p><button class="btn primary" type="button" id="err-update">Update game data</button> <button class="btn" type="button" id="err-retry">Try again</button></p></div>';
+    $("view").innerHTML='<div class="empty"><p>'+esc(data.error)+'</p><p>'+(data.can_update?'<button class="btn primary" type="button" id="err-update">Update game data</button> ':'')+'<button class="btn" type="button" id="err-retry">Try again</button></p></div>';
     $("who").textContent="";
-    $("err-update").onclick=function(){ $("view").innerHTML='<div class="empty">Updating the game database. This can take a minute…</div>'; api("/api/codex/update",{method:"POST"}).then(load).catch(function(){ $("view").innerHTML='<div class="empty">The update failed. Check your internet connection and try again.</div>'; }); };
+    if(data.can_update) $("err-update").onclick=function(){ $("view").innerHTML='<div class="empty">Updating the game database. This can take a minute…</div>'; api("/api/codex/update",{method:"POST"}).then(load).catch(function(){ $("view").innerHTML='<div class="empty">The update failed. Check your internet connection and try again.</div>'; }); };
     $("err-retry").onclick=function(){ $("view").innerHTML='<div class="empty">Loading…</div>'; api("/api/data").then(load); };
     return;
   }
@@ -880,6 +886,28 @@ function checkPrices(){
       SORT[VIEW]={k:"price",dir:-1}; renderAll();
       toast("Prices loaded for "+Object.keys(p).length+" relics. Sorted by market value. Filter or sort, then check again for more.");
     }).catch(function(){ toast("Could not reach warframe.market."); });
+}
+function renderSetup(d){
+  $("who").textContent=""; $("title").textContent="Get started"; $("csv").hidden=true;
+  var h='<div class="setup"><h1>Welcome to OpenWarframe</h1><p class="muted">'+esc(d.error)+'</p>';
+  if(d.has_account){
+    h+='<div class="box"><p>Your account is set. Fetch your public profile to fill the app.</p><div class="row"><button class="btn primary" type="button" id="setup-refresh">Fetch my profile</button></div></div>';
+  } else {
+    h+='<div class="box"><h2>From the running game (Windows PC)</h2><p>Start Warframe, log in and wait until you are in your Orbiter. Then click the button. OpenWarframe finds your account and loads your full inventory (relics, blueprints, resources) in one go.</p><div class="row"><button class="btn primary" type="button" id="setup-grab">Find my account in the game</button></div></div>'
+      +'<div class="box"><h2>Or type your account ID</h2><ol><li>Log in at warframe.com in your browser.</li><li>Press F12 and open the Application tab (Storage in Firefox).</li><li>Under Cookies, pick www.warframe.com and copy the value of <b>gid</b>.</li></ol>'
+      +'<p class="muted">It works like a user name, not a password: it only opens the same read-only profile anyone can view in the game.</p>'
+      +'<div class="row"><label for="setup-id" class="muted">Account ID</label><input id="setup-id" autocomplete="off" spellcheck="false" maxlength="40" placeholder="24 characters, 0-9 and a-f"><select id="setup-plat" aria-label="Platform"><option value="pc">PC</option><option value="ps4">PlayStation</option><option value="xb1">Xbox</option><option value="swi">Nintendo Switch</option><option value="mob">iOS</option><option value="and">Android</option></select><button class="btn" type="button" id="setup-save">Save and fetch</button></div></div>';
+  }
+  $("view").innerHTML=h+'</div>';
+  if(d.has_account){ $("setup-refresh").onclick=function(){ $("refresh").click(); }; return; }
+  $("setup-grab").onclick=function(){ grab(false); };
+  $("setup-save").onclick=function(){
+    var id=$("setup-id").value.trim();
+    if(!id){ $("setup-id").focus(); return; }
+    toast("Fetching your profile…", 20000);
+    api("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id, platform:$("setup-plat").value})})
+      .then(function(r){ if(r.error&&!r.setup){ toast(r.error,10000); return; } load(r); if(!r.error) toast("Profile loaded"); });
+  };
 }
 function api(path, opts){ return fetch(path, opts).then(function(r){ return r.json(); }); }
 
@@ -924,9 +952,12 @@ setInterval(function(){
   }).catch(function(){});
 }, 30000);
 try{ VIEW=localStorage.getItem("owf-view")||"focus"; }catch(e){}
+// deep links: http://127.0.0.1:<port>/#relics opens that tab
+function hashView(){ var h=decodeURIComponent((location.hash||"").slice(1)).toLowerCase(), hit=null; VIEWS.forEach(function(v){ if(v.id.toLowerCase()===h) hit=v.id; }); return hit; }
+window.addEventListener("hashchange", function(){ var hv=hashView(); if(hv&&hv!==VIEW){ VIEW=hv; F={}; OPEN={}; if(DATA) renderAll(); } });
 $("view").innerHTML='<div class="empty" id="boot">Loading your account…</div>';
 var bootTimer=setInterval(function(){ if(DATA||!$("boot")){ clearInterval(bootTimer); return; } api("/api/status").then(function(s){ var b=$("boot"); if(b&&s.status) b.textContent=s.status; }).catch(function(){}); }, 1500);
-api("/api/prefs").then(function(p){ PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{}); if((PREFS.settings||{}).start!=="last") VIEW="focus"; applySettings(); }).catch(function(){})
+api("/api/prefs").then(function(p){ PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{}); if((PREFS.settings||{}).start!=="last") VIEW="focus"; var hv=hashView(); if(hv) VIEW=hv; applySettings(); }).catch(function(){})
 .then(function(){ return api("/api/data"); }).then(load).catch(function(e){
   var net=e&&e.name==="TypeError"&&/fetch/i.test(e.message||"");
   $("view").innerHTML='<div class="empty">'+(net?"Could not reach the OpenWarframe server. Close this window and open OpenWarframe again.":"Something went wrong showing your data: "+esc(String((e&&e.message)||e)))+'</div>';

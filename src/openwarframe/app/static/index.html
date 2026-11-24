@@ -962,10 +962,27 @@ function sendInventory(file){
     .then(function(d){ if(d.error){ toast(d.error,8000); return; } load(d); toast("Inventory loaded"); });
 }
 $("invfile").onchange=function(){ if(this.files[0]) sendInventory(this.files[0]); this.value=""; };
-var dz=$("dropzone");
-window.addEventListener("dragover",function(e){ e.preventDefault(); dz.hidden=false; });
-dz.addEventListener("dragleave",function(){ dz.hidden=true; });
-window.addEventListener("drop",function(e){ e.preventDefault(); dz.hidden=true; var f=e.dataTransfer.files[0]; if(f) sendInventory(f); });
+// Drop an inventory file anywhere. The overlay shows only while a file is dragged over the
+// window, and hides itself once dragover stops arriving (drag ended, cancelled or left),
+// so selecting and dragging text never leaves it stuck.
+var dz=$("dropzone"), dzTimer=null;
+function hideDrop(){ dz.hidden=true; clearTimeout(dzTimer); }
+function dragHasFile(e){ var t=e.dataTransfer&&e.dataTransfer.types; return !!t && Array.prototype.indexOf.call(t,"Files")>=0; }
+window.addEventListener("dragover",function(e){
+  if(!dragHasFile(e)) return;
+  e.preventDefault(); dz.hidden=false;
+  clearTimeout(dzTimer); dzTimer=setTimeout(hideDrop, 400);
+});
+window.addEventListener("dragleave",function(e){ if(!e.relatedTarget) hideDrop(); });
+window.addEventListener("dragend",hideDrop);
+window.addEventListener("keydown",function(e){ if(e.key==="Escape"&&!dz.hidden) hideDrop(); });
+dz.addEventListener("click",hideDrop);
+window.addEventListener("drop",function(e){
+  hideDrop();
+  if(!dragHasFile(e)) return;
+  e.preventDefault();
+  var f=e.dataTransfer.files[0]; if(f) sendInventory(f);
+});
 $("csv").onclick=function(){
   var spec=currentSpec(), rows=sorted(filtered());
   var cols=spec.cols.map(function(c){return c.k});

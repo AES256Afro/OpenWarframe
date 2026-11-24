@@ -858,7 +858,13 @@ function renderAll(){
   $("foot").innerHTML='<span>'+rows.length+' shown</span><span>Profile '+new Date(DATA.meta.snapshot).toLocaleString()+'</span><span>'+(DATA.meta.inventory?"Inventory loaded "+new Date(DATA.meta.inventory.loaded).toLocaleString():"No inventory loaded")+'</span><span>Click a row for details. Click a column to sort.</span>';
 }
 function load(data){
-  if(data.error){ $("view").innerHTML='<div class="empty">'+esc(data.error)+'</div>'; $("who").textContent=""; return; }
+  if(data.error){
+    $("view").innerHTML='<div class="empty"><p>'+esc(data.error)+'</p><p><button class="btn primary" type="button" id="err-update">Update game data</button> <button class="btn" type="button" id="err-retry">Try again</button></p></div>';
+    $("who").textContent="";
+    $("err-update").onclick=function(){ $("view").innerHTML='<div class="empty">Updating the game database. This can take a minute…</div>'; api("/api/codex/update",{method:"POST"}).then(load).catch(function(){ $("view").innerHTML='<div class="empty">The update failed. Check your internet connection and try again.</div>'; }); };
+    $("err-retry").onclick=function(){ $("view").innerHTML='<div class="empty">Loading…</div>'; api("/api/data").then(load); };
+    return;
+  }
   DATA=data;
   $("who").innerHTML='<b>'+esc((data.meta.player||"Your account").replace(/[-]/g,""))+'</b><br>MR '+data.meta.mr+' · '+esc((data.meta.platform||"").toUpperCase());
   renderAll();
@@ -918,8 +924,13 @@ setInterval(function(){
   }).catch(function(){});
 }, 30000);
 try{ VIEW=localStorage.getItem("owf-view")||"focus"; }catch(e){}
+$("view").innerHTML='<div class="empty" id="boot">Loading your account…</div>';
+var bootTimer=setInterval(function(){ if(DATA||!$("boot")){ clearInterval(bootTimer); return; } api("/api/status").then(function(s){ var b=$("boot"); if(b&&s.status) b.textContent=s.status; }).catch(function(){}); }, 1500);
 api("/api/prefs").then(function(p){ PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{}); if((PREFS.settings||{}).start!=="last") VIEW="focus"; applySettings(); }).catch(function(){})
-.then(function(){ return api("/api/data"); }).then(load).catch(function(){ $("view").innerHTML='<div class="empty">Could not reach the OpenWarframe server. Start it again with: openwarframe gui</div>'; });
+.then(function(){ return api("/api/data"); }).then(load).catch(function(e){
+  var net=e&&e.name==="TypeError"&&/fetch/i.test(e.message||"");
+  $("view").innerHTML='<div class="empty">'+(net?"Could not reach the OpenWarframe server. Close this window and open OpenWarframe again.":"Something went wrong showing your data: "+esc(String((e&&e.message)||e)))+'</div>';
+});
 })();
 </script>
 </body>

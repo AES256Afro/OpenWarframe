@@ -186,3 +186,94 @@ def test_latest_keyword_beats_a_stray_file_named_latest(tmp_path: Path, monkeypa
     assert store._resolve("latest").name == "2026-11-24T181907Z.json"
     assert store._resolve("previous").name == "2026-10-17T201719Z.json"
     assert store._resolve("2026-10").name == "2026-10-17T201719Z.json"
+
+
+def _old_codex(src: Path, dest: Path) -> None:
+    """A copy of the fixture database as an older release left it: schema 1, no ducats."""
+    import sqlite3
+
+    dest.write_bytes(src.read_bytes())
+    conn = sqlite3.connect(dest)
+    conn.execute("ALTER TABLE recipe DROP COLUMN ducats")
+    conn.execute("UPDATE source_version SET version = '1' WHERE source = 'schema'")
+    conn.commit()
+    conn.close()
+
+
+def test_schema_version_is_read_from_disk(tmp_path: Path, codex_path: Path):  # noqa: F811
+    from openwarframe.codex import codex_schema_version
+    from openwarframe.codex.schema import SCHEMA_VERSION
+
+    assert codex_schema_version(tmp_path / "missing.sqlite") == 0
+    assert codex_schema_version(codex_path) == SCHEMA_VERSION
+    (tmp_path / "junk.sqlite").write_bytes(b"not a database")
+    assert codex_schema_version(tmp_path / "junk.sqlite") == 0
+
+
+def test_outdated_database_is_updated_before_building(
+    tmp_path: Path,
+    codex_path: Path,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+):
+    import openwarframe.codex as codex_mod
+    from openwarframe.codex.schema import SCHEMA_VERSION
+
+    home = tmp_path / "home"
+    home.mkdir()
+    s = Settings(home=home)
+    _old_codex(codex_path, s.codex_path)
+    calls = []
+
+    def fake_update(settings, **_):
+        calls.append(settings.codex_path)
+        settings.codex_path.write_bytes(codex_path.read_bytes())
+
+    monkeypatch.setattr(codex_mod, "update_codex", fake_update)
+    out = AppState(s).build()
+    assert calls == [s.codex_path]
+    assert codex_mod.codex_schema_version(s.codex_path) == SCHEMA_VERSION
+    assert "ducats" not in out.get("error", "") and "snapshot" in out["error"].lower()
+
+
+def test_failed_database_update_is_reported_not_raised(
+    tmp_path: Path,
+    codex_path: Path,  # noqa: F811
+    monkeypatch: pytest.MonkeyPatch,
+):
+    import openwarframe.codex as codex_mod
+
+    home = tmp_path / "home"
+    home.mkdir()
+    s = Settings(home=home)
+    _old_codex(codex_path, s.codex_path)
+
+    def offline(settings, **_):
+        raise OSError("no network")
+
+    monkeypatch.setattr(codex_mod, "update_codex", offline)
+    out = AppState(s).build()
+    assert "could not be updated" in out["error"] and "no network" in out["error"]
+    assert out["can_update"] is True
+
+
+def test_data_errors_come_back_as_json(server, monkeypatch: pytest.MonkeyPatch):
+    base, state = server
+
+    def boom(**_):
+        raise RuntimeError("no such column: ducats")
+
+    monkeypatch.setattr(state, "build", boom)
+    out = json.loads(urllib.request.urlopen(base + "/api/data").read())
+    assert "no such column: ducats" in out["error"] and out["can_update"] is True
+
+
+def test_second_launch_finds_the_running_app(server):
+    from openwarframe.app.server import _running_instance
+
+    base, state = server
+    assert _running_instance(state.settings) is None
+    port = int(base.rsplit(":", 1)[1])
+    (state.settings.home / "app.lock").write_text(json.dumps({"port": port, "pid": 1}), encoding="utf-8")
+    assert _running_instance(state.settings) == port
+    (state.settings.home / "app.lock").write_text('{"port": 1, "pid": 1}', encoding="utf-8")
+    assert _running_instance(state.settings) is None

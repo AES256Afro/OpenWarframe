@@ -7,8 +7,10 @@ The server stops on its own a short while after the window is closed.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
+import os
 import subprocess
 import threading
 import time
@@ -29,6 +31,7 @@ class AppState:
         self.lock = threading.Lock()
         self.cache: dict | None = None
         self.cache_fp: tuple | None = None
+        self.status = ""
         self.last_ping = time.time()
         self.prices: dict[str, dict] = {}
         from .rewards import RewardWatcher
@@ -59,11 +62,40 @@ class AppState:
             stamp(s.codex_path),
         )
 
+    def ensure_codex(self) -> str | None:
+        """Build or update the game database when it is missing or older than this code.
+
+        Returns an error message, or None when the database is ready.
+        """
+        from ..codex import codex_schema_version, update_codex
+        from ..codex.schema import SCHEMA_VERSION
+
+        have = codex_schema_version(self.settings.codex_path)
+        if have >= SCHEMA_VERSION:
+            return None
+        self.status = "Updating the game database (first run after an update can take a minute)…"
+        try:
+            update_codex(self.settings)
+        except PermissionError:
+            return (
+                "The game database is out of date but is in use by another OpenWarframe window. "
+                "Close every OpenWarframe window, then open it again."
+            )
+        except Exception as exc:  # noqa: BLE001
+            return f"The game database is out of date and could not be updated ({exc}). Check your internet connection."
+        finally:
+            self.status = ""
+        return None
+
     def build(self, *, force: bool = False) -> dict:
         with self.lock:
             fp = self._fingerprint()
             if self.cache is not None and not force and fp == self.cache_fp:
                 return self.cache
+            problem = self.ensure_codex()
+            if problem:
+                return {"error": problem, "can_update": True}
+            fp = self._fingerprint()  # the database may have just been replaced
             from ..account.store import SnapshotStore
             from ..account.sync import reparse
             from ..codex import Codex
@@ -78,7 +110,6 @@ class AppState:
                 snap = SnapshotStore(s.snapshots_dir).load("latest")
             except FileNotFoundError:
                 return {"error": "No snapshot yet. Click Refresh profile, or run: openwarframe sync"}
-            codex = Codex(s.codex_path)
             inv_error = None
             try:
                 inv = load_inventory(self.inventory_path) if self.inventory_path.exists() else None
@@ -88,11 +119,14 @@ class AppState:
                     None,
                     f"Your inventory file could not be read ({exc}). Get it from the game again.",
                 )
-            report = build_report(reparse(snap, codex), codex)
-            self.cache = build_app_data(report, codex, inv)
-            self.cache["meta"]["inventory_error"] = inv_error
-            self.cache_fp = fp
-            codex.close()
+            codex = Codex(s.codex_path)
+            try:  # always close, so a failed build never leaves the database file locked
+                report = build_report(reparse(snap, codex), codex)
+                data = build_app_data(report, codex, inv)
+            finally:
+                codex.close()
+            data["meta"]["inventory_error"] = inv_error
+            self.cache, self.cache_fp = data, fp
             return self.cache
 
     def fetch_prices(self, ids: list[str], limit: int = 80, kind: str = "relics") -> dict:
@@ -241,7 +275,15 @@ def make_handler(state: AppState):
             if self.path in ("/", "/index.html"):
                 self._send(200, _page(), "text/html; charset=utf-8")
             elif self.path == "/api/data":
-                self._json(state.build())
+                try:
+                    self._json(state.build())
+                except Exception as exc:  # noqa: BLE001 - show the real problem instead of a dropped connection
+                    log.exception("building app data failed")
+                    self._json(
+                        {"error": f"OpenWarframe hit a problem loading your data: {exc}", "can_update": True}
+                    )
+            elif self.path == "/api/status":
+                self._json({"status": state.status})
             elif self.path == "/api/live":
                 try:
                     self._json(state.live())
@@ -295,6 +337,12 @@ def make_handler(state: AppState):
                 elif self.path == "/api/reward/popout":
                     _open_popout(f"http://127.0.0.1:{self.server.server_port}/mini", state.settings)
                     self._json({"ok": True})
+                elif self.path == "/api/codex/update":
+                    from ..codex import update_codex
+
+                    with state.lock:
+                        update_codex(state.settings)
+                    self._json(state.build(force=True))
                 elif self.path == "/api/inventory/clear":
                     if state.inventory_path.exists():
                         state.inventory_path.unlink()
@@ -351,11 +399,36 @@ def _open_window(url: str, settings: Settings) -> None:
         webbrowser.open(url)
 
 
+def _running_instance(settings: Settings) -> int | None:
+    """Port of an OpenWarframe server that is already running for this data folder."""
+    import urllib.request
+
+    lock = settings.home / "app.lock"
+    try:
+        port = int(json.loads(lock.read_text(encoding="utf-8"))["port"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/api/ping", timeout=1.5) as r:
+            return port if r.status == 200 else None
+    except OSError:
+        return None
+
+
 def run_app(*, port: int = 0, open_window: bool = True, settings: Settings | None = None) -> None:
     settings = settings or load_settings()
+    existing = _running_instance(settings) if open_window and not port else None
+    if existing:
+        # a second double-click: show the app that is already running instead of starting another
+        _open_window(f"http://127.0.0.1:{existing}/", settings)
+        return
     state = AppState(settings)
     server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(state))
     url = f"http://127.0.0.1:{server.server_port}/"
+    lock = settings.home / "app.lock"
+    if open_window:
+        with contextlib.suppress(OSError):
+            lock.write_text(json.dumps({"port": server.server_port, "pid": os.getpid()}), encoding="utf-8")
     print(f"OpenWarframe is running at {url}  (close the window to stop)")
     threading.Thread(target=state.build, daemon=True).start()  # warm the cache
     if state.get_prefs().get("settings", {}).get("reward_watch"):
@@ -378,3 +451,9 @@ def run_app(*, port: int = 0, open_window: bool = True, settings: Settings | Non
         pass
     finally:
         server.server_close()
+        if open_window:
+            try:
+                if json.loads(lock.read_text(encoding="utf-8")).get("pid") == os.getpid():
+                    lock.unlink()
+            except (OSError, ValueError):
+                pass

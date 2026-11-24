@@ -69,8 +69,14 @@ Run `openwarframe live record` during a few fissure missions, then share the fol
    (`--lang`, plus CJK line height, which `ocr.name_band(cjk=True)` supports but nothing
    selects yet).
 
-## Not done here
+## In the app (done)
 
-The app UI and the always-on-top window (other 0.7 rows) and platinum prices: `rank`
-accepts a price dict keyed by name, market slug or uniqueName, but nothing fetches prices
-yet.
+- **Reward helper tab:** Start watching runs the watcher in the app; the newest screen shows
+  the pick, each slot's reading and match confidence, and recent screens.
+- **Pop-out window:** a small window (`/mini`) marked always-on-top with `SetWindowPos`, so
+  the pick shows over a borderless or windowed game.
+- **Prices:** the four matched rewards are priced on warframe.market (cached 6 h) before
+  ranking, so the reason shows platinum next to ducats.
+- **Try with a sample screen:** draws a reward screen, reads it with Windows OCR and ranks
+  it, to confirm OCR works on a given PC. Sample screens are never saved.
+- Real reward screens are saved to `live/recordings` while tuning continues (see above).

@@ -79,9 +79,9 @@ Effort: S = hours, M = a day or two, L = several days. Each item lists how we kn
 
 | Item | Effort | Done when |
 | --- | --- | --- |
-| Detect the reward screen from `EE.log` | M | Verified on recorded fissure runs, solo and squad |
-| Read the four reward names with Windows' built-in OCR from a screenshot of the game window | L | 95 % name accuracy at 1080p and 1440p on recorded runs |
-| Rank the picks: parts you need, vaulted, platinum, ducats; show in the app and an optional small always-on-top window | M | Pick shown within 3 seconds of the screen appearing |
+| Detect the reward screen from `EE.log` (built, checked on one real run) | M | Verified on recorded fissure runs, solo and squad |
+| Read the four reward names with Windows' built-in OCR from a screenshot of the game window (built; needs real recordings to reach 95 %) | L | 95 % name accuracy at 1080p and 1440p on recorded runs |
+| Rank the picks: parts you need, vaulted, platinum, ducats; show in the app and an optional small always-on-top window (built) | M | Pick shown within 3 seconds of the screen appearing |
 
 The helper only reads the log and the screen, never game memory. It needs one or two
 recorded fissure runs from the owner to tune.

@@ -156,6 +156,7 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 <script>
 (function(){
 "use strict";
+var REWARD=null, REWARD_POLL=null;
 var PREFS={goals:[],checks:{},settings:{},skipped:{}}, SESSION=null, SESSION_TICKS={}, EASY=false;
 var DATA=null, LIVE=null, LIVE_AT=0, VIEW="overview", SORT={}, Q="", F={}, OPEN={};
 var $=function(id){return document.getElementById(id)};
@@ -167,6 +168,7 @@ var VIEWS=[
   {id:"overview", label:"Overview"},
   {id:"farm", label:"What to farm"},
   {id:"live", label:"Live"},
+  {id:"rewards", label:"Reward helper"},
   {id:"Warframes", label:"Warframes", group:"Warframes"},
   {id:"Weapons", label:"Weapons", group:"Weapons"},
   {id:"Companions", label:"Companions & more", group:"Companions & more"},
@@ -362,7 +364,7 @@ function chipGroup(label, field, values, counts){
 function countBy(rows, k){ var c={}; rows.forEach(function(r){ c[r[k]]=(c[r[k]]||0)+1 }); return c; }
 function renderFilters(){
   var el=$("filters"); var h="";
-  if(VIEW==="overview"||VIEW==="earn"){ el.hidden=true; return; }
+  if(VIEW==="overview"||VIEW==="earn"||VIEW==="rewards"){ el.hidden=true; return; }
   el.hidden=false;
   var spec=currentSpec();
   if(VIEW==="live"){
@@ -522,7 +524,7 @@ function counts(){
   c.farm=((DATA.farm||{}).finish||[]).filter(function(x){return x.missing<=1}).length+' close';
   c.live=LIVE&&LIVE.fissures?(LIVE.fissures.filter(function(f){return f.useful_relics}).length+' for you'):'';
   c.earn=DATA.meta.inventory?((DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0).toLocaleString()+' d'):'–';
-  c.focus="";
+  c.focus=""; c.rewards=REWARD&&(REWARD.state==="watching"||REWARD.state==="reading")?"on":"";
   var inv=!!DATA.meta.inventory;
   c.foundry=inv?(DATA.foundry||[]).filter(function(f){return f.ready}).length+' ready':'–';
   c.resources=inv?(DATA.resources||[]).filter(function(r){return r.short}).length:'–';
@@ -640,6 +642,53 @@ function renderEarnings(){
   };
   return [];
 }
+// ===== reward helper ====================================================================
+function rewardPoll(on){
+  if(on && !REWARD_POLL){ REWARD_POLL=setInterval(function(){ api("/api/reward").then(function(d){ var changed=JSON.stringify(d)!==JSON.stringify(REWARD); REWARD=d; if(changed&&VIEW==="rewards") renderAll(); }); }, 1500); }
+  if(!on && REWARD_POLL){ clearInterval(REWARD_POLL); REWARD_POLL=null; }
+}
+function rewardSlots(r){
+  return '<ol style="margin:0;padding-left:1.3em;display:grid;gap:6px">'+r.ranked.map(function(x,i){
+    var slot=r.slots[x.slot]||{};
+    var conf=slot.score!=null?Math.round(slot.score*100)+'% match':'';
+    return '<li><b>'+esc(x.name)+'</b> <span class="muted">· '+esc(x.why)+'</span><div class="muted" style="font-size:12px">Read as "'+esc(slot.raw||'')+'" '+(conf?'('+conf+')':'')+(slot["for"]?' · part of '+esc(slot["for"]):'')+'</div></li>';
+  }).join('')+'</ol>';
+}
+function renderRewards(){
+  rewardPoll(true);
+  if(!REWARD){ api("/api/reward").then(function(d){ REWARD=d; renderAll(); }); $("view").innerHTML='<div class="empty">Loading…</div>'; return []; }
+  var d=REWARD, on=d.state==="watching"||d.state==="reading"||d.state==="starting";
+  var h='<div class="focus">';
+  h+='<div class="big"><div class="eyebrow" style="font:600 11px var(--mono);letter-spacing:.14em;color:var(--gold)">RELIC REWARD HELPER</div>';
+  h+='<div class="what">'+(on?'Watching for fissure reward screens':'Not watching')+'</div><div class="why">'+esc(d.message||'When the reward screen opens, the helper reads the four names off your screen and picks the best one for your account.')+'</div>';
+  h+='<div class="acts"><button class="btn primary" type="button" id="rw-toggle">'+(on?'Stop watching':'Start watching')+'</button><button class="btn" type="button" id="rw-pop">Open pop-out window</button><button class="btn" type="button" id="rw-demo">Try with a sample screen</button></div>';
+  if(!d.ocr) h+='<div class="why"><b>Windows text recognition is not available here.</b> The helper needs Windows 10 or 11 with an English OCR language pack.</div>';
+  h+='</div>';
+  if(d.last){
+    var r=d.last, p=r.pick;
+    h+='<div class="big" style="border-color:var(--ok)"><div class="eyebrow" style="font:600 11px var(--mono);letter-spacing:.14em;color:var(--ok)">'+(r.source==="sample"?'SAMPLE SCREEN':'LAST REWARD SCREEN')+' · '+new Date(r.time).toLocaleTimeString()+' · '+r.players+' player'+(r.players===1?'':'s')+'</div>';
+    if(p) h+='<div class="what">Pick: '+esc(p.name)+'</div><div class="why">'+esc(p.why)+'</div>';
+    h+=rewardSlots(r);
+    if(r.sample_names) h+='<div class="why">Drawn names: '+esc(r.sample_names.join(", "))+'. If they match the list above, reading works on this PC.</div>';
+    if(r.saved_to) h+='<div class="why">Screenshot saved for tuning: '+esc(r.saved_to)+'</div>';
+    h+='</div>';
+  }
+  h+='<div class="row2"><div class="box"><h2>How it works</h2><ul style="margin:0;padding-left:1.1em;display:grid;gap:6px;font-size:13px">'+
+     '<li>Start watching before you load into a fissure. The Next bar keeps working as usual.</li>'+
+     '<li>Run Warframe in <b>borderless</b> or windowed mode. Exclusive fullscreen can make screenshots come back black.</li>'+
+     '<li>The pick order: parts you need for something you have not mastered, then vaulted parts, then market price, then ducats.</li>'+
+     '<li>The pop-out window stays on top of the game, so you can see the pick without alt-tabbing.</li>'+
+     '<li>It only reads the game log and the screen, never game memory.</li>'+
+     '<li><b>Still being tuned.</b> Every real reward screen is saved with what it read, so wrong names can be fixed. Share those folders to improve it.</li></ul></div>';
+  h+='<div class="box"><h2>Recent screens <span class="muted">'+(d.history||[]).length+'</span></h2>'+((d.history||[]).length?(d.history||[]).map(function(r){return '<div class="goal"><b>'+esc(r.pick?r.pick.name:'(unreadable)')+'</b><span class="muted">'+new Date(r.time).toLocaleTimeString()+' · '+esc(r.source)+' · '+r.ranked.map(function(x){return esc(x.name)}).join(', ')+'</span></div>'}).join(''):'<p class="muted">Nothing yet.</p>')+'</div></div>';
+  h+='</div>';
+  $("view").innerHTML=h;
+  $("rw-toggle").onclick=function(){ api("/api/reward/watch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:!on})}).then(function(x){ REWARD=x; renderAll(); toast(on?"Stopped watching.":"Watching. Load into a fissure and the pick appears here and in the pop-out."); }); };
+  $("rw-pop").onclick=function(){ api("/api/reward/popout",{method:"POST"}).then(function(){ toast("Pop-out window opening. It stays on top of the game."); }); };
+  $("rw-demo").onclick=function(){ toast("Drawing a sample reward screen and reading it…",20000); api("/api/reward/demo",{method:"POST"}).then(function(x){ if(x.error){ toast(x.error,8000); return; } api("/api/reward").then(function(dd){ REWARD=dd; renderAll(); toast("Sample read. Compare the names."); }); }); };
+  return [];
+}
+
 // ===== focus mode =====================================================================
 var DAILY=[
   {id:"sortie", t:"Sortie", m:20, why:"Three missions for a riven, Kuva or Endo roll"},
@@ -789,6 +838,7 @@ function renderFocus(){
 
 function renderAll(){
   if(!DATA) return;
+  if(VIEW!=="rewards") rewardPoll(false);
   var v=VIEWS.find(function(x){return x.id===VIEW})||VIEWS[0];
   $("title").textContent=v.label; renderTabs(); renderFilters(); renderNotice(); renderFocusBar();
   if(VIEW==="focus"){ $("filters").hidden=true; $("csv").hidden=true; renderFocus(); $("foot").innerHTML='<span>Goals, ticks and settings are saved in your OpenWarframe folder.</span>'; return; }
@@ -797,6 +847,7 @@ function renderAll(){
   var rows;
   if(VIEW==="farm"&&farmSub()==="finish"){ rows=renderFinish(); }
   else if(VIEW==="earn"){ rows=renderEarnings(); $("csv").hidden=true; }
+  else if(VIEW==="rewards"){ rows=renderRewards(); $("csv").hidden=true; }
   else if(VIEW==="live"){ loadLive(false); rows=renderTable(); $("view").insertAdjacentHTML("afterbegin", liveHeader()); }
   else { rows=renderTable(); if(VIEW==="farm") $("view").insertAdjacentHTML("afterbegin", nowCard()); }
   $("foot").innerHTML='<span>'+rows.length+' shown</span><span>Profile '+new Date(DATA.meta.snapshot).toLocaleString()+'</span><span>'+(DATA.meta.inventory?"Inventory loaded "+new Date(DATA.meta.inventory.loaded).toLocaleString():"No inventory loaded")+'</span><span>Click a row for details. Click a column to sort.</span>';

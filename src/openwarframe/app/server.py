@@ -30,6 +30,9 @@ class AppState:
         self.cache: dict | None = None
         self.last_ping = time.time()
         self.prices: dict[str, dict] = {}
+        from .rewards import RewardWatcher
+
+        self.rewards = RewardWatcher(settings)
 
     @property
     def inventory_path(self) -> Path:
@@ -185,8 +188,8 @@ class AppState:
         return self.build(force=True)
 
 
-def _page() -> bytes:
-    return resources.files("openwarframe.app").joinpath("static/index.html").read_bytes()
+def _page(name: str = "static/index.html") -> bytes:
+    return resources.files("openwarframe.app").joinpath(name).read_bytes()
 
 
 def make_handler(state: AppState):
@@ -218,6 +221,10 @@ def make_handler(state: AppState):
                     self._json({"error": f"Could not load the world state: {exc}"})
             elif self.path == "/api/prefs":
                 self._json(state.get_prefs())
+            elif self.path == "/api/reward":
+                self._json(state.rewards.status())
+            elif self.path == "/mini":
+                self._send(200, _page("static/mini.html"), "text/html; charset=utf-8")
             elif self.path == "/api/ping":
                 self._json({"ok": True})
             else:
@@ -246,6 +253,18 @@ def make_handler(state: AppState):
                     self._json(state.fetch_prices(ids, kind=str(req.get("kind", "relics"))))
                 elif self.path == "/api/prefs":
                     self._json(state.save_prefs(body))
+                elif self.path == "/api/reward/watch":
+                    req = json.loads(body.decode("utf-8") or "{}")
+                    on = bool(req.get("on"))
+                    prefs = state.get_prefs()
+                    settings_ = {**prefs.get("settings", {}), "reward_watch": on}
+                    state.save_prefs(json.dumps({"settings": settings_}).encode())
+                    self._json(state.rewards.start() if on else state.rewards.stop())
+                elif self.path == "/api/reward/demo":
+                    self._json(state.rewards.demo())
+                elif self.path == "/api/reward/popout":
+                    _open_popout(f"http://127.0.0.1:{self.server.server_port}/mini", state.settings)
+                    self._json({"ok": True})
                 elif self.path == "/api/inventory/clear":
                     if state.inventory_path.exists():
                         state.inventory_path.unlink()
@@ -256,6 +275,29 @@ def make_handler(state: AppState):
                 self._json({"error": str(exc)}, 400)
 
     return Handler
+
+
+def _open_popout(url: str, settings: Settings) -> None:
+    """Small always-on-top window that shows the latest reward pick."""
+    from ..guide.documents import find_browser
+    from .rewards import keep_on_top
+
+    browser = find_browser()
+    if not browser:
+        webbrowser.open(url)
+        return
+    subprocess.Popen(  # noqa: S603
+        [
+            str(browser),
+            f"--app={url}",
+            f"--user-data-dir={settings.home / 'app-window'}",
+            "--window-size=440,300",
+            "--window-position=40,40",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    threading.Thread(target=keep_on_top, args=("OpenWarframe reward pick",), daemon=True).start()
 
 
 def _open_window(url: str, settings: Settings) -> None:
@@ -286,6 +328,8 @@ def run_app(*, port: int = 0, open_window: bool = True, settings: Settings | Non
     url = f"http://127.0.0.1:{server.server_port}/"
     print(f"OpenWarframe is running at {url}  (close the window to stop)")
     threading.Thread(target=state.build, daemon=True).start()  # warm the cache
+    if state.get_prefs().get("settings", {}).get("reward_watch"):
+        state.rewards.start()
     if open_window:
         _open_window(url, settings)
 

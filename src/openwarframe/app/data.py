@@ -273,6 +273,8 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             "sell": build_sell(conn, inventory, final, mastered_ids, item_names),
         }
 
+    farm = build_farm(report, codex, inventory, relics)
+
     m = report.mastery
     return {
         "meta": {
@@ -297,6 +299,7 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
         "items": items,
         "relics": relics,
         "blueprints": blueprints,
+        "farm": farm,
         **extra,
     }
 
@@ -310,3 +313,39 @@ def _part_name(conn, uid: str) -> str:
         return f"{row[0]} Blueprint"
     tail = uid.rsplit("/", 1)[-1]
     return tail.replace("Blueprint", " Blueprint").replace("Component", "")
+
+
+def build_farm(report: Report, codex: Codex, inventory: Inventory | None, relics: list[dict]) -> dict:
+    from .farm import finish_cards, load_popular, needed_parts, rank_missions, relics_with_needs
+
+    try:
+        from ..guide.kb import kb_dir
+
+        kb_root = kb_dir()
+    except FileNotFoundError:
+        kb_root = None
+    conn = codex.conn
+    need = needed_parts(conn, report, inventory, set())
+    relic_needs = relics_with_needs(conn, need)
+    missions = rank_missions(conn, need, relic_needs, load_popular(kb_root))
+    crack = sorted(
+        (r for r in relics if (r.get("count") or 0) > 0 and (r["needed"] or r["vaulted_parts"])),
+        key=lambda r: (-r["needed"], -r["vaulted_parts"], -(r["count"] or 0)),
+    )[:30]
+    return {
+        "needed_parts": len(need),
+        "needed_relics": len(relic_needs),
+        "missions": missions,
+        "finish": finish_cards(conn, report, inventory),
+        "crack": [
+            {
+                "id": r["id"],
+                "name": r["name"],
+                "count": r["count"],
+                "needed": r["needed"],
+                "vaulted_parts": r["vaulted_parts"],
+                "vaulted": r["vaulted"],
+            }
+            for r in crack
+        ],
+    }

@@ -41,11 +41,11 @@ Effort: S = hours, M = a day or two, L = several days. Each item lists how we kn
 
 | Item | Effort | Done when |
 | --- | --- | --- |
-| Do these missions: nodes ranked by the drop chance of relics and parts you need, filterable by mission type | M | Top 10 for the owner's account agree with a veteran's judgement |
-| To finish this: pick an item and see each missing piece with its best source | M | Works for Primes, vendor items, bounty items and Necramechs |
+| Do these missions: nodes ranked by the drop chance of relics and parts you need, filterable by mission type (built) | M | Top 10 for the owner's account agree with a veteran's judgement |
+| To finish this: pick an item and see each missing piece with its best source (built) | M | Works for Primes, vendor items, bounty items and Necramechs |
 | Relics to crack: owned relics scored by vaulted gear, parts you need and expected platinum at your refinement | M | Score explained per relic; sorting by it matches the price check |
-| Popular farms: curated, sourced list of well-known farms (Hepit, Ukko, Apollo...) in `kb/routes/` | S | Every entry has a source and a last-verified date |
-| One part away: Prime sets and blueprints missing exactly one piece | S | Correct for the owner's inventory |
+| Popular farms: curated, sourced list of well-known farms (Hepit, Ukko, Apollo...) in `kb/routes/` (built) | S | Every entry has a source and a last-verified date |
+| One part away: Prime sets and blueprints missing exactly one piece (built) | S | Correct for the owner's inventory |
 | Road to 30 inside the app, using owned-but-unmastered gear | M | Plan totals match `openwarframe guide mastery` |
 
 ### 0.4b "Earnings and costs"

@@ -1,0 +1,33 @@
+# Well-known relic farms. The app only tags a node "popular" when today's drop tables
+# still give that node the listed relic tiers, so stale entries quietly drop out.
+id: relic-farms
+last_verified: 2026-11-24
+sources:
+  - { title: "Void Relics Farm (2026) Guide - ProGameTalk", url: "https://progametalk.com/warframe/void-relics-farm-guide/" }
+  - { title: "Best Places to Farm Lith, Meso, Neo and Axi Relics in 2026 - warframe.today", url: "https://warframe.today/warframe-relic-farming-best-place-to-farm-neo-lith-meso-axi/" }
+  - { title: "Warframe Void Relics Guide (Nov 2026) - lfcarry", url: "https://lfcarry.com/guides/warframe-relics" }
+farms:
+  - place: Hepit
+    planet: Void
+    tiers: [Lith]
+    why: "One-minute Capture; rotation A is almost always a Lith relic."
+  - place: Olympus
+    planet: Mars
+    tiers: [Lith, Meso]
+    why: "Disruption; Lith on rotations A and B, Meso on C."
+  - place: Ukko
+    planet: Void
+    tiers: [Meso, Neo]
+    why: "One-minute Capture split between Meso and Neo relics."
+  - place: Io
+    planet: Jupiter
+    tiers: [Meso, Neo]
+    why: "Defense; Meso on rotation A, Neo on B and C."
+  - place: Apollo
+    planet: Lua
+    tiers: [Neo, Axi]
+    why: "Disruption; Neo on A, pure Axi on B and C."
+  - place: Xini
+    planet: Eris
+    tiers: [Neo, Axi]
+    why: "Interception; Neo on A, Axi on B and C."

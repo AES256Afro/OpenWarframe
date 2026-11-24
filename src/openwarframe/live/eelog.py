@@ -108,7 +108,10 @@ class LogTailer:
             self._skip_to_end()
 
     def _identity(self, st: os.stat_result) -> tuple:
-        return (st.st_ino, getattr(st, "st_birthtime", st.st_ctime))
+        # Creation time exists on Windows and macOS. Linux has none, and st_ctime there
+        # changes on every write, so it would look like a new file each time; there the
+        # shrink and first-bytes checks in poll() catch a recreated log instead.
+        return (st.st_dev, st.st_ino, getattr(st, "st_birthtime", None))
 
     def _skip_to_end(self) -> None:
         try:

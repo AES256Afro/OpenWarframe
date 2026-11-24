@@ -97,6 +97,8 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 .fcard ul{margin:0; padding-left:1.1em; display:grid; gap:6px; font-size:13px}
 .fcard .ok{color:var(--muted); text-decoration:line-through}
 .fcard .src{color:var(--muted); font-size:12px}
+.fcard .route{font-size:12px; color:var(--ok)}
+.fcard .route.no{color:var(--warn)}
 .fbar{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; padding:9px 18px; background:var(--gold-soft); border-bottom:1px solid var(--line)}
 .fbar .lbl{font:600 11px var(--mono); letter-spacing:.12em; text-transform:uppercase; color:var(--gold)}
 .fbar .what{font-weight:700; flex:1 1 320px}
@@ -393,6 +395,7 @@ function renderFilters(){
     }
     if(spec.key==="finish"){
       h+='<label><input type="checkbox" id="fone"'+(F._one?" checked":"")+'> Only one piece away</label>';
+      if(DATA.meta.inventory) h+='<label><input type="checkbox" id="fdo"'+(F._do?" checked":"")+'> Only with relics I own</label>';
     }
   } else if(spec.key==="items"){
     var states=Object.keys(countBy(spec.rows,"state")).sort();
@@ -437,6 +440,7 @@ function renderFilters(){
   bind("fshort","_short",function(r){return r.short>0});
   bind("fmis","mission"); bind("fpop","_pop",function(r){return r.popular});
   bind("fone","_one",function(r){return r.missing<=1});
+  bind("fdo","_do",function(r){return r.doable!==false});
   bind("fuse","_use",function(r){return r.useful_relics>0});
   bind("fnosp","_nosp",function(r){return !r.steel_path});
   bind("ffast","_fast",function(r){return r.fast});
@@ -576,7 +580,12 @@ function renderFinish(){
     c.pieces.forEach(function(p){
       var done=p.short===0;
       var have=p.have==null?'':' <span class="muted">('+p.have+'/'+p.need+')</span>';
-      h+='<li class="'+(done?'ok':'')+'">'+esc(p.name)+have+(done?'':'<div class="src">'+p.sources.map(esc).join('<br>')+'</div>')+'</li>';
+      var route='';
+      if(!done && p.crack){
+        if(p.crack.length) route='<div class="route">Crack '+esc(p.crack[0].relic)+': you have '+p.crack[0].have+(p.crack.length>1?' (and '+(p.crack.length-1)+' other relic'+(p.crack.length>2?'s':'')+' you own)':'')+'</div>';
+        else if(p.relic_only) route='<div class="route no">You have none of the relics that hold it.'+(p.farm_relic?' Farm '+esc(p.farm_relic.relic)+' on '+esc(p.farm_relic.where)+' first.':' Only vaulted relics hold it.')+'</div>';
+      }
+      h+='<li class="'+(done?'ok':'')+'">'+esc(p.name)+have+route+(done?'':'<div class="src">'+p.sources.map(esc).join('<br>')+'</div>')+'</li>';
     });
     h+='</ul>';
     var cost=c.cost||{credits:0,resources:[]};
@@ -728,6 +737,20 @@ function toggleGoal(id){ PREFS.goals=PREFS.goals||[]; var i=PREFS.goals.indexOf(
 function skippedToday(id){ return (PREFS.skipped||{})[id]===dayKey(); }
 function skip(id){ PREFS.skipped=PREFS.skipped||{}; PREFS.skipped[id]=dayKey(); var keep={}; Object.keys(PREFS.skipped).forEach(function(k){ if(PREFS.skipped[k]===dayKey()) keep[k]=PREFS.skipped[k]; }); PREFS.skipped=keep; savePrefs(); renderAll(); }
 
+function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
+// How to get one missing piece, honest about which relics you own.
+function pieceRoute(p){
+  var src=(p.sources||[])[0]||"";
+  if(p.crack==null) return {can:true, chance:0, what:"get the "+p.name, where:src.split(":")[0], why:src||"No drop source recorded."};
+  if(p.crack.length){ var r=p.crack[0];
+    return {can:true, chance:r.intact||0, what:"crack "+r.relic+" for the "+p.name, where:"Any "+r.tier+" fissure",
+      why:"You have "+r.have+" "+r.relic+" ("+r.rarity.toLowerCase()+": "+r.intact+"% intact, "+r.radiant+"% radiant)."}; }
+  if(p.relic_only){ var fr=p.farm_relic;
+    if(fr) return {can:false, chance:0, what:"farm "+fr.relic+" relics, then crack one for the "+p.name, where:fr.where,
+      why:"You have none of the relics that hold it. "+fr.relic+" drops on "+fr.where+(fr.mission?" ("+fr.mission+", rotation "+fr.rotation+")":"")+"."};
+    return {can:false, chance:0, what:"trade for the "+p.name, where:"Trade chat or warframe.market", why:"Only vaulted relics hold it, and you have none of them."}; }
+  return {can:true, chance:0, what:"get the "+p.name, where:src.split(":")[0], why:src};
+}
 function suggestions(){
   var out=[], f=DATA.farm||{}, inv=DATA.meta.inventory;
   if(!inv) out.push({id:"inventory", what:"Load your inventory so ideas match what you own", where:"Warframe running, you in your Orbiter", why:(DATA.meta.inventory_error||"Right now relic, blueprint and Foundry ideas are guesses, because the app cannot see what you own.")+" Then click Get inventory from game.", m:1, action:"grab"});
@@ -736,7 +759,8 @@ function suggestions(){
   (PREFS.goals||[]).forEach(function(gid){
     var c=(f.finish||[]).find(function(x){return x.id===gid}); if(!c) return;
     var p=c.pieces.find(function(x){return x.short!==0}); if(!p){ out.push({id:"goal-build:"+gid, what:"Build "+c.name, where:"Your Orbiter, Foundry", why:"Every piece is in your inventory. Your goal is one build away.", m:2, go:"farm"}); return; }
-    out.push({id:"goal:"+gid+":"+p.name, what:"Get "+p.name+" for "+c.name, where:(p.sources[0]||"").split(":")[0], why:"Your goal. "+(p.sources[0]||"No drop source recorded"), m:10, go:"farm"});
+    var gr=pieceRoute(p);
+    out.push({id:"goal:"+gid+":"+p.name, what:cap(gr.what)+" ("+c.name+" goal)", where:gr.where, why:"Your goal. "+gr.why, m:gr.can?10:20, go:"farm"});
   });
   if(LIVE&&LIVE.fissures){ var fz=LIVE.fissures.filter(function(x){return x.useful_relics && x.best_relic && (!inv || x.best_relic_count)})[0];
     if(fz){
@@ -745,8 +769,12 @@ function suggestions(){
       out.push({id:"fissure:"+fz.id, what:inv?("Run the "+fz.tier+" "+fz.mission+" fissure on "+fz.where):("If you have "+fz.tier+" relics: run the "+fz.mission+" fissure on "+fz.where), where:fz.where+(fz.steel_path?" (Steel Path)":""), why:why, m:fz.fast?5:10, go:"live"}); } }
   if(LIVE&&LIVE.baro&&LIVE.baro.here){ var duc=(DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0);
     if(duc) out.push({id:"baro", what:"Turn spare Prime parts into ducats, then visit Baro", where:LIVE.baro.where, why:duc+" ducats from spares. Baro leaves in "+LIVE.baro.hours_left+" h.", m:10, go:"sell"}); }
-  var one=(f.finish||[]).filter(function(x){return x.missing===1 && !isGoal(x.id)}).slice(0,3);
-  one.forEach(function(c){ var p=c.pieces.find(function(x){return x.short!==0}); if(p) out.push({id:"one:"+c.id, what:"Finish "+c.name+": get "+p.name, where:(p.sources[0]||"").split(":")[0], why:"One piece away. "+(p.sources[0]||""), m:10, go:"farm"}); });
+  var ownedOnly=(PREFS.settings||{}).ownedonly!==false;
+  var one=(f.finish||[]).filter(function(x){return x.missing===1 && !isGoal(x.id)})
+    .map(function(c){ var p=c.pieces.find(function(x){return x.short!==0}); return p?{c:c,p:p,r:pieceRoute(p)}:null; })
+    .filter(function(x){ return x && (x.r.can || !ownedOnly); });
+  one.sort(function(a,b){ return (b.r.can-a.r.can) || (b.r.chance-a.r.chance); });
+  one.slice(0,3).forEach(function(x){ out.push({id:"one:"+x.c.id, what:"Finish "+x.c.name+": "+x.r.what, where:x.r.where, why:"One piece away. "+x.r.why, m:x.r.can?10:20, go:"farm"}); });
   var mis=(f.missions||[])[0]; if(mis) out.push({id:"mission:"+mis.id, what:"Run "+mis.place+" · "+mis.mission+", rotation "+mis.best_rotation, where:mis.place, why:"Drops the most of what you need: "+(mis.gives[0]||"").split(" · ")[0]+".", m:5, go:"farm"});
   var ck=(f.crack||[])[0]; if(ck) out.push({id:"crack:"+ck.id, what:"Crack "+ck.name+" in any "+ck.name.split(" ")[0]+" fissure", where:"Void Fissures", why:"You have "+ck.count+"; it holds "+ck.needed+" part"+(ck.needed===1?"":"s")+" you need.", m:5, go:"live"});
   DAILY.forEach(function(x){ if(x.id==="foundry_d" && ready.length) return; if(!checked("d",x.id) && !hiddenRoutine(x.id)) out.push({id:"daily:"+x.id, what:x.t, where:"Daily", why:x.why+". Resets in "+untilReset(false)+".", m:x.m, routine:"d", rid:x.id}); });
@@ -822,6 +850,7 @@ function renderFocus(){
   h+='<label class="tick"><input type="checkbox" id="st-contrast"'+(st.contrast?' checked':'')+'><span class="t">Higher contrast</span><span></span></label>';
   h+='<label class="tick"><input type="checkbox" id="st-calm"'+(st.calm?' checked':'')+'><span class="t">No motion</span><span></span></label>';
   h+='<label class="tick"><input type="checkbox" id="st-bar"'+(st.bar!==false?' checked':'')+'><span class="t">Show the Next bar on every screen</span><span></span></label>';
+  h+='<label class="tick"><input type="checkbox" id="st-owned"'+(st.ownedonly!==false?' checked':'')+'><span class="t">Only suggest relics I already have<small>Off: also suggests farming a relic first</small></span><span></span></label>';
   h+='<label class="tick"><input type="checkbox" id="st-start"'+(st.start!=="last"?' checked':'')+'><span class="t">Open on this Focus screen</span><span></span></label>';
   h+='<details><summary class="muted">Hide routine items I never do</summary>'+DAILY.concat(WEEKLY).map(function(x){return '<label class="tick"><input type="checkbox" data-hide="'+x.id+'"'+(hiddenRoutine(x.id)?' checked':'')+'><span class="t">Hide '+esc(x.t)+'</span><span></span></label>'}).join('')+'</details>';
   h+='</div>';
@@ -842,7 +871,7 @@ function renderFocus(){
   $("view").querySelectorAll("[data-hide]").forEach(function(b){ b.onchange=function(){ var hd=((PREFS.settings||{}).hide||[]).filter(function(x){return x!==b.dataset.hide}); if(b.checked) hd.push(b.dataset.hide); setSetting("hide",hd); }; });
   var bind2=function(id,k,fn){ var e=$(id); if(e) e.onchange=function(){ setSetting(k, fn(e.checked)); }; };
   bind2("st-contrast","contrast",function(v){return v}); bind2("st-calm","calm",function(v){return v});
-  bind2("st-bar","bar",function(v){return v}); bind2("st-start","start",function(v){return v?"focus":"last"});
+  bind2("st-bar","bar",function(v){return v}); bind2("st-owned","ownedonly",function(v){return v}); bind2("st-start","start",function(v){return v?"focus":"last"});
   return [];
 }
 

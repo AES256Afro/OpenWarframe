@@ -40,3 +40,24 @@ def test_popular_tag_needs_matching_tiers(codex_path: Path):  # noqa: F811
     rows = rank_missions(cx.conn, {CELL: "Rhino Prime"}, {}, popular)
     top = next(r for r in rows if r["place"].startswith("Apollodorus"))
     assert top["popular"] is False  # the fixture node drops no Axi relics
+
+
+def test_relic_route_knows_which_relics_you_own(codex_path: Path):  # noqa: F811
+    from openwarframe.app.farm import relic_route
+    from openwarframe.inventory import parse_inventory
+    from test_codex_build import CHASSIS
+
+    cx = Codex(codex_path)
+    unknown = relic_route(cx.conn, CHASSIS, None)
+    assert unknown["crack"] is None  # no inventory: no claims about ownership
+
+    have = relic_route(
+        cx.conn, CHASSIS, parse_inventory({"MiscItems": [{"ItemType": RELIC, "ItemCount": 2}]})
+    )
+    assert [(r["relic"], r["have"]) for r in have["crack"]] == [("Lith R2", 2)]
+    assert have["farm_relic"] is None
+
+    none = relic_route(cx.conn, CHASSIS, parse_inventory({"MiscItems": [{"ItemType": CELL, "ItemCount": 1}]}))
+    assert none["crack"] == [] and none["owned"] == {"Lith R2 relic": 0}
+    # the fixture relic drops nowhere, so there is no place to farm it
+    assert none["farm_relic"] is None

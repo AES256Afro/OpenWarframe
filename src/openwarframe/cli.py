@@ -25,6 +25,7 @@ inventory_app = typer.Typer(help="Load your full inventory from a JSON file.", n
 app.add_typer(inventory_app, name="inventory")
 guide_app = typer.Typer(help="Guides built from your snapshot and the knowledge base.", no_args_is_help=True)
 app.add_typer(guide_app, name="guide")
+app.add_typer(__import__("openwarframe.live.cli", fromlist=["app"]).app, name="live")
 console = Console()
 
 

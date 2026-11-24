@@ -1,0 +1,87 @@
+name: Release
+
+# On a version tag, build the standalone Windows app with PyInstaller and attach
+# OpenWarframe-<tag>-windows.zip plus SHA256SUMS.txt to the GitHub release.
+# The build is unsigned; docs/INSTALL.md explains SmartScreen and checksum checks.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to (re)build and attach assets to, e.g. v0.3.0"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check tag matches package version
+        shell: pwsh
+        run: |
+          $v = (Select-String -Path src/openwarframe/__init__.py -Pattern '__version__ = "([^"]+)"').Matches[0].Groups[1].Value
+          if ("v$v" -ne $env:TAG) { throw "Tag $env:TAG does not match __version__ $v" }
+
+      - run: uv sync --all-groups
+      - name: Test
+        run: uv run pytest -q
+
+      - name: Build with PyInstaller
+        run: uv run --with pyinstaller pyinstaller packaging/openwarframe.spec --noconfirm
+
+      - name: Smoke test
+        shell: pwsh
+        run: |
+          $d = "dist/OpenWarframe"
+          & "$d/openwarframe-cli.exe" --help | Out-Null
+          if ($LASTEXITCODE -ne 0) { throw "CLI --help failed" }
+          & "$d/openwarframe-cli.exe" version
+          if ($LASTEXITCODE -ne 0) { throw "CLI version failed" }
+          $env:OPENWARFRAME_HOME = "$env:RUNNER_TEMP/owhome"
+          $p = Start-Process "$d/openwarframe-cli.exe" -ArgumentList 'gui','--no-window','--port','8765' -PassThru
+          try {
+            $ok = $false
+            foreach ($i in 1..30) {
+              Start-Sleep 1
+              try { if ((Invoke-RestMethod http://127.0.0.1:8765/api/ping).ok) { $ok = $true; break } } catch {}
+            }
+            if (-not $ok) { throw "app server did not answer /api/ping" }
+            $html = Invoke-WebRequest http://127.0.0.1:8765/ -UseBasicParsing
+            if ($html.StatusCode -ne 200) { throw "index.html not served" }
+          } finally { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
+
+      - name: Zip and checksum
+        shell: pwsh
+        run: |
+          $zip = "OpenWarframe-$env:TAG-windows.zip"
+          Copy-Item LICENSE, docs/INSTALL.md dist/OpenWarframe/
+          Compress-Archive -Path dist/OpenWarframe -DestinationPath $zip
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  $zip" | Out-File SHA256SUMS.txt -Encoding ascii
+          Get-Content SHA256SUMS.txt
+          "ZIP=$zip" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Attach to release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view $env:TAG *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:TAG --title "OpenWarframe $env:TAG" --generate-notes --verify-tag
+          }
+          gh release upload $env:TAG $env:ZIP SHA256SUMS.txt --clobber

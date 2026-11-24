@@ -82,3 +82,38 @@ a signing certificate costs money every year, and the project does not have one.
     <https://www.microsoft.com/wdsi/filesubmission>).
 
 Never download OpenWarframe from anywhere except the GitHub release page or the command above.
+
+# Installing OpenWarframe on macOS
+
+The Mac app is the same program in a native window (WebKit, built into macOS). It needs macOS 11
+or newer; the release build is for Apple Silicon Macs.
+
+1. From the [latest release](https://github.com/AES256Afro/OpenWarframe/releases/latest), download
+   `OpenWarframe-<version>-macos.zip` and `SHA256SUMS-macos.txt`.
+2. Optional: in Terminal, `cd ~/Downloads && shasum -a 256 -c SHA256SUMS-macos.txt` should print
+   `OK`.
+3. Unzip it and drag **OpenWarframe.app** into **Applications**.
+4. The app is not notarized by Apple, so the first open is blocked. Open it once, then go to
+   **System Settings > Privacy & Security**, scroll down and click **Open Anyway**. (Or in Terminal:
+   `xattr -dr com.apple.quarantine /Applications/OpenWarframe.app`.) macOS only asks once.
+5. The first start downloads the game database (about a minute), then shows the welcome screen.
+   Type your account ID there (the screen explains how to find it).
+
+Or run it from source with [uv](https://docs.astral.sh/uv/): `uv sync --all-groups`, then
+`uv run openwarframe gui`.
+
+The command-line tool is inside the app: `/Applications/OpenWarframe.app/Contents/MacOS/openwarframe-cli`.
+Your data lives in `~/Library/Application Support/OpenWarframe`. To uninstall, delete the app and
+that folder.
+
+### What is different on a Mac
+
+- **Get inventory from game** is Windows only. macOS does not let one app read another app's
+  memory. Load your inventory with **Load inventory file** instead; everything else works the same.
+- **Reward helper** reads the reward names with Apple's own text recognition (Vision). The first
+  time it runs, macOS asks for **Screen Recording** permission for OpenWarframe; allow it in
+  **System Settings > Privacy & Security > Screen Recording**, then restart the app.
+- **Mission tracking and the reward helper** read Warframe's `EE.log`. OpenWarframe looks for it
+  in the native Mac client's folders and in CrossOver, Whisky and Wine bottles, and uses the one
+  the game wrote to last. If it picks the wrong one, start the app with
+  `OPENWARFRAME_WARFRAME_DIR=/path/to/folder/with/EE.log`.

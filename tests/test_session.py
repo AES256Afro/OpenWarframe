@@ -102,6 +102,7 @@ def test_app_asks_for_consent_once_then_saves(tmp_path: Path, monkeypatch: pytes
     monkeypatch.setenv("OPENWARFRAME_HOME", str(tmp_path))
     state = AppState(load_settings())
     monkeypatch.setattr(state, "build", lambda force=False: {"ok": True})
+    monkeypatch.setattr(sess, "SUPPORTED", True)
     monkeypatch.setattr(sess, "grab_session", lambda account=None: ("ab" * 12, INVENTORY))
     monkeypatch.setattr(state, "sync", lambda: {"ok": True})  # never touch the network
 
@@ -114,3 +115,12 @@ def test_app_asks_for_consent_once_then_saves(tmp_path: Path, monkeypatch: pytes
     assert load_settings().extra["session_reader_ok"] is True
     assert state.grab(accept=False) == {"ok": True}  # no second prompt
     assert isinstance(Settings(home=tmp_path).home, Path)
+
+
+def test_app_explains_grab_is_windows_only(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("OPENWARFRAME_HOME", str(tmp_path))
+    monkeypatch.setattr(sess, "SUPPORTED", False)
+    state = AppState(load_settings())
+    with pytest.raises(sess.SessionError, match="only works on Windows"):
+        state.grab(accept=True)
+    assert not state.session_ok  # no consent is recorded for something that cannot run

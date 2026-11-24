@@ -167,6 +167,8 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 "use strict";
 var REWARD=null, REWARD_POLL=null;
 var PREFS={goals:[],checks:{},settings:{},skipped:{}}, SESSION=null, SESSION_TICKS={}, EASY=false;
+// Reading the inventory from the running game is Windows-only; on a Mac the file import is the way in.
+var MAC=/Macintosh|Mac OS X/.test(navigator.userAgent);
 var DATA=null, LIVE=null, LIVE_AT=0, VIEW="overview", SORT={relics:{k:"count",dir:-1}}, Q="", F={}, OPEN={};
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
@@ -678,7 +680,7 @@ function renderRewards(){
   h+='<div class="big"><div class="eyebrow" style="font:600 11px var(--mono);letter-spacing:.14em;color:var(--gold)">RELIC REWARD HELPER</div>';
   h+='<div class="what">'+(on?'Watching for fissure reward screens':'Not watching')+'</div><div class="why">'+esc(d.message||'When the reward screen opens, the helper reads the four names off your screen and picks the best one for your account.')+'</div>';
   h+='<div class="acts"><button class="btn primary" type="button" id="rw-toggle">'+(on?'Stop watching':'Start watching')+'</button><button class="btn" type="button" id="rw-pop">Open pop-out window</button><button class="btn" type="button" id="rw-demo">Try with a sample screen</button></div>';
-  if(!d.ocr) h+='<div class="why"><b>Windows text recognition is not available here.</b> The helper needs Windows 10 or 11 with an English OCR language pack.</div>';
+  if(!d.ocr) h+='<div class="why"><b>Text recognition is not available here.</b> The helper needs Windows 10 or 11 with an English OCR language pack, or macOS 10.15 or newer.</div>';
   h+='</div>';
   if(d.last){
     var r=d.last, p=r.pick;
@@ -755,7 +757,7 @@ function pieceRoute(p){
 }
 function suggestions(){
   var out=[], f=DATA.farm||{}, inv=DATA.meta.inventory;
-  if(!inv) out.push({id:"inventory", what:"Load your inventory so ideas match what you own", where:"Warframe running, you in your Orbiter", why:(DATA.meta.inventory_error||"Right now relic, blueprint and Foundry ideas are guesses, because the app cannot see what you own.")+" Then click Get inventory from game.", m:1, action:"grab"});
+  if(!inv) out.push({id:"inventory", what:"Load your inventory so ideas match what you own", where:MAC?"An inventory file":"Warframe running, you in your Orbiter", why:(DATA.meta.inventory_error||"Right now relic, blueprint and Foundry ideas are guesses, because the app cannot see what you own.")+(MAC?" Then click Load inventory file.":" Then click Get inventory from game."), m:1, action:"grab"});
   var ready=(DATA.foundry||[]).filter(function(x){return x.ready});
   if(ready.length) out.push({id:"foundry", what:"Claim "+ready.length+" finished item"+(ready.length===1?"":"s")+" in your Foundry", where:"Your Orbiter, Foundry", why:ready.map(function(x){return x.name}).slice(0,4).join(", "), m:2, go:"foundry", routine:"d", rid:"foundry_d"});
   (PREFS.goals||[]).forEach(function(gid){
@@ -785,7 +787,7 @@ function suggestions(){
   if(EASY) out=out.map(function(s,i){return [s,i]}).sort(function(a,b){return (a[0].m-b[0].m)||(a[1]-b[1])}).map(function(x){return x[0]});
   return out;
 }
-function doneSuggestion(s){ if(s.action==="grab"){ grab(false); return; } if(s.routine){ var k=s.routine==="d"?dayKey():weekKey(); PREFS.checks=PREFS.checks||{}; PREFS.checks[k]=PREFS.checks[k]||{}; PREFS.checks[k][s.rid]=true; } skip(s.id); toast("Nice. Next one is up."); }
+function doneSuggestion(s){ if(s.action==="grab"){ if(MAC){ $("invfile").click(); } else { grab(false); } return; } if(s.routine){ var k=s.routine==="d"?dayKey():weekKey(); PREFS.checks=PREFS.checks||{}; PREFS.checks[k]=PREFS.checks[k]||{}; PREFS.checks[k][s.rid]=true; } skip(s.id); toast("Nice. Next one is up."); }
 function renderFocusBar(){
   var el=$("fbar");
   if(!DATA||VIEW==="focus"||(PREFS.settings||{}).bar===false){ el.hidden=true; return; }
@@ -860,7 +862,7 @@ function renderFocus(){
   $("view").innerHTML=h;
   if(s){
     $("fx-done").onclick=function(){ doneSuggestion(s); };
-    if(s.action==="grab") $("fx-done").textContent="Get inventory from game";
+    if(s.action==="grab") $("fx-done").textContent=MAC?"Load inventory file":"Get inventory from game";
     $("fx-skip").onclick=function(){ skip(s.id); };
     $("fx-tired").onclick=function(){ EASY=!EASY; renderAll(); toast(EASY?"Quickest things first. Click again to switch back.":"Back to the usual order."); };
     if($("fx-go")) $("fx-go").onclick=function(){ VIEW=s.go; F={}; renderAll(); };
@@ -924,14 +926,14 @@ function renderSetup(d){
   if(d.has_account){
     h+='<div class="box"><p>Your account is set. Fetch your public profile to fill the app.</p><div class="row"><button class="btn primary" type="button" id="setup-refresh">Fetch my profile</button></div></div>';
   } else {
-    h+='<div class="box"><h2>From the running game (Windows PC)</h2><p>Start Warframe, log in and wait until you are in your Orbiter. Then click the button. OpenWarframe finds your account and loads your full inventory (relics, blueprints, resources) in one go.</p><div class="row"><button class="btn primary" type="button" id="setup-grab">Find my account in the game</button></div></div>'
+    h+=(MAC?'':'<div class="box"><h2>From the running game (Windows only)</h2><p>Start Warframe, log in and wait until you are in your Orbiter. Then click the button. OpenWarframe finds your account and loads your full inventory (relics, blueprints, resources) in one go.</p><div class="row"><button class="btn primary" type="button" id="setup-grab">Find my account in the game</button></div></div>')
       +'<div class="box"><h2>Or type your account ID</h2><ol><li>Log in at warframe.com in your browser.</li><li>Press F12 and open the Application tab (Storage in Firefox).</li><li>Under Cookies, pick www.warframe.com and copy the value of <b>gid</b>.</li></ol>'
       +'<p class="muted">It works like a user name, not a password: it only opens the same read-only profile anyone can view in the game.</p>'
       +'<div class="row"><label for="setup-id" class="muted">Account ID</label><input id="setup-id" autocomplete="off" spellcheck="false" maxlength="40" placeholder="24 characters, 0-9 and a-f"><select id="setup-plat" aria-label="Platform"><option value="pc">PC</option><option value="ps4">PlayStation</option><option value="xb1">Xbox</option><option value="swi">Nintendo Switch</option><option value="mob">iOS</option><option value="and">Android</option></select><button class="btn" type="button" id="setup-save">Save and fetch</button></div></div>';
   }
   $("view").innerHTML=h+'</div>';
   if(d.has_account){ $("setup-refresh").onclick=function(){ $("refresh").click(); }; return; }
-  $("setup-grab").onclick=function(){ grab(false); };
+  if($("setup-grab")) $("setup-grab").onclick=function(){ grab(false); };
   $("setup-save").onclick=function(){
     var id=$("setup-id").value.trim();
     if(!id){ $("setup-id").focus(); return; }
@@ -955,6 +957,7 @@ function grab(accept){
     }).catch(function(){ toast("Could not reach the OpenWarframe server."); });
 }
 $("grab").onclick=function(){ grab(false); };
+if(MAC) $("grab").hidden=true;
 $("consent-yes").onclick=function(){ $("consent").hidden=true; grab(true); };
 $("consent-no").onclick=function(){ $("consent").hidden=true; };
 function sendInventory(file){

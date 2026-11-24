@@ -27,6 +27,13 @@ import httpx
 from ...config import USER_AGENT
 
 PROCESS_NAMES = ("Warframe.x64.exe",)
+# macOS does not let one app read another's memory without root and a disabled SIP, so the
+# Mac app loads the inventory from a file instead.
+SUPPORTED = sys.platform == "win32"
+UNSUPPORTED_TEXT = (
+    "Reading the inventory from the running game only works on Windows. On a Mac, use "
+    "Load inventory file instead; everything else in the app works without it."
+)
 INVENTORY_HOSTS = ("https://mobile.warframe.com", "https://api.warframe.com")
 SESSION_RE = re.compile(rb"\?accountId=([0-9a-f]{24})&nonce=(\d{4,24})")
 MARKER = b"?accountId="

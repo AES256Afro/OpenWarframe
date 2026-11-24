@@ -17,7 +17,7 @@ app = typer.Typer(
 )
 console = Console()
 
-LOG_OPT = typer.Option(None, "--log", help="EE.log to follow (default: %LOCALAPPDATA%\\Warframe\\EE.log).")
+LOG_OPT = typer.Option(None, "--log", help="EE.log to follow (default: the game's own EE.log).")
 
 
 def _settings():
@@ -46,7 +46,9 @@ def _need_ocr() -> None:
     from .ocr import ocr_available
 
     if not ocr_available():
-        console.print("[red]Windows OCR is not available (needs Windows 10/11 and the winrt packages).[/red]")
+        console.print(
+            "[red]System OCR is not available (needs Windows 10/11 with the winrt packages, or macOS with pyobjc).[/red]"
+        )
         raise typer.Exit(code=1)
 
 

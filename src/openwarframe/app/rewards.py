@@ -74,7 +74,7 @@ class RewardWatcher:
 
         if not ocr_available():
             with self.lock:
-                self.state, self.message = "error", "Windows OCR is not available on this system."
+                self.state, self.message = "error", "Text recognition is not available on this system."
             return self.status()
         if self.thread and self.thread.is_alive():
             return self.status()

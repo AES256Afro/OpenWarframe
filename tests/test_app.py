@@ -310,6 +310,7 @@ def test_first_grab_saves_the_account_and_fetches_the_profile(server, monkeypatc
 
     base, state = server
     state.settings.extra["session_reader_ok"] = True
+    monkeypatch.setattr(session, "SUPPORTED", True)
     monkeypatch.setattr(session, "grab_session", lambda expected=None: ("cd" * 12, INVENTORY))
     monkeypatch.setattr(state, "sync", lambda: {"synced": True})
     assert state.grab(accept=False) == {"synced": True}

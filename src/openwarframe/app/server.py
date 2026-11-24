@@ -64,12 +64,14 @@ class AppState:
             codex.close()
             return self.cache
 
-    def fetch_prices(self, ids: list[str], limit: int = 80) -> dict:
-        """Lowest and typical sell price on warframe.market for up to `limit` relics (cached 6 h)."""
+    def fetch_prices(self, ids: list[str], limit: int = 80, kind: str = "relics") -> dict:
+        """Lowest and typical sell price on warframe.market for up to `limit` rows (cached 6 h)."""
         from ..http import CachedClient
 
+        if kind not in ("relics", "sell", "mods"):
+            raise ValueError("unknown price list")
         data = self.build()
-        slugs = {r["id"]: r.get("slug") for r in data.get("relics", [])}
+        slugs = {r["id"]: r.get("slug") for r in data.get(kind, [])}
         client = CachedClient(self.settings.cache_dir)
         out: dict[str, dict] = {}
         try:
@@ -99,7 +101,7 @@ class AppState:
                     time.sleep(0.34)  # warframe.market asks for at most 3 requests a second
         finally:
             client.close()
-        for r in data.get("relics", []):
+        for r in data.get(kind, []):
             if r["id"] in self.prices:
                 r["price"] = self.prices[r["id"]]["typical"]
         return out
@@ -186,8 +188,11 @@ def make_handler(state: AppState):
                     req = json.loads(body.decode("utf-8") or "{}")
                     self._json(state.grab(bool(req.get("accept"))))
                 elif self.path == "/api/prices":
-                    ids = json.loads(body.decode("utf-8") or "[]")
-                    self._json(state.fetch_prices([str(i) for i in ids]))
+                    req = json.loads(body.decode("utf-8") or "[]")
+                    if isinstance(req, list):
+                        req = {"ids": req, "kind": "relics"}
+                    ids = [str(i) for i in req.get("ids", [])]
+                    self._json(state.fetch_prices(ids, kind=str(req.get("kind", "relics"))))
                 elif self.path == "/api/inventory/clear":
                     if state.inventory_path.exists():
                         state.inventory_path.unlink()

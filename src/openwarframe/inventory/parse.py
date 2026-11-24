@@ -61,6 +61,9 @@ class Inventory:
     pending: list[dict] = field(default_factory=list)  # foundry queue
     credits: int | None = None
     platinum: int | None = None
+    endo: int | None = None
+    regal_aya: int | None = None
+    mods: dict[str, dict] = field(default_factory=dict)  # uniqueName -> {"unranked": n, "ranks": [lvl, ...]}
 
     def owns(self, unique_name: str) -> bool:
         return self.equipment.get(unique_name, 0) > 0
@@ -108,6 +111,21 @@ def parse_inventory(data: dict, *, source: str = "file") -> Inventory:
             inv.recipes[t] = inv.recipes.get(t, 0) + n
     for e in data.get("PendingRecipes") or []:
         inv.pending.append({"recipe": e.get("ItemType"), "ready_at": _date(e.get("CompletionDate"))})
+    for e in data.get("RawUpgrades") or []:
+        t, n = e.get("ItemType"), int(e.get("ItemCount") or 0)
+        if t and n > 0:
+            inv.mods.setdefault(t, {"unranked": 0, "ranks": []})["unranked"] += n
+    for e in data.get("Upgrades") or []:
+        t = e.get("ItemType")
+        if not t:
+            continue
+        try:
+            lvl = int(json.loads(e.get("UpgradeFingerprint") or "{}").get("lvl", 0))
+        except (ValueError, AttributeError):
+            lvl = 0
+        inv.mods.setdefault(t, {"unranked": 0, "ranks": []})["ranks"].append(lvl)
+    inv.endo = data.get("FusionPoints")
+    inv.regal_aya = data.get("PrimeTokens")
     inv.credits = data.get("RegularCredits")
     inv.platinum = (data.get("PremiumCredits") or 0) + (data.get("PremiumCreditsFree") or 0) or None
     return inv

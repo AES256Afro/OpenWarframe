@@ -114,3 +114,38 @@ def test_server_rejects_non_inventory_upload(server):
         urllib.request.urlopen(req)
     assert err.value.code == 400
     assert not state.inventory_path.exists()
+
+
+def test_inventory_reads_mods_and_wallet():
+    data = dict(INVENTORY)
+    data["RawUpgrades"] = [{"ItemType": "/Mods/Vitality", "ItemCount": 3}]
+    data["Upgrades"] = [{"ItemType": "/Mods/Vitality", "UpgradeFingerprint": '{"lvl":10}'}]
+    data["FusionPoints"] = 1234
+    data["PendingRecipes"] = [{"ItemType": RHINO_BP, "CompletionDate": {"$date": {"$numberLong": "1"}}}]
+    inv = parse_inventory(data)
+    assert inv.mods["/Mods/Vitality"] == {"unranked": 3, "ranks": [10]}
+    assert inv.endo == 1234 and inv.pending[0]["recipe"] == RHINO_BP
+
+
+def test_extras_foundry_resources_and_sell(codex_path: Path):  # noqa: F811
+    import sqlite3
+
+    from openwarframe.app.extras import build_foundry, build_resources, build_sell
+
+    with sqlite3.connect(codex_path) as w:
+        w.execute("UPDATE recipe SET ducats = 45 WHERE unique_name = ?", (RHINO_BP,))
+    cx = Codex(codex_path)
+    data = dict(INVENTORY)
+    data["PendingRecipes"] = [{"ItemType": CHASSIS_BP, "CompletionDate": {"$date": {"$numberLong": "1"}}}]
+    data["MiscItems"] = data["MiscItems"] + [{"ItemType": CHASSIS, "ItemCount": 2}]
+    inv = parse_inventory(data)
+
+    foundry = build_foundry(cx.conn, inv)
+    assert foundry[0]["ready"] and foundry[0]["name"] == "Rhino Prime Chassis"
+
+    res = {r["name"]: r for r in build_resources(cx.conn, inv, lambda uid: None)}
+    assert res["Orokin Cell"]["need"] == 3 and res["Orokin Cell"]["short"] == 2
+
+    sell = {r["id"]: r for r in build_sell(cx.conn, inv, lambda u: RHINO, set(), {})}
+    # Rhino Prime is already built in INVENTORY, so its one blueprint is spare
+    assert sell[RHINO_BP]["spare"] == 1 and sell[RHINO_BP]["ducats_total"] == 45

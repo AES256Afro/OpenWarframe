@@ -296,13 +296,14 @@ def load_recipes(conn: sqlite3.Connection, pe: PublicExport, resolver: NameResol
                 rec.get("skipBuildTimePrice"),
                 rec.get("num", 1),
                 1 if rec.get("consumeOnUse") else 0,
+                rec.get("primeSellingPrice"),
             )
         )
         for ing in rec.get("ingredients", []):
             irows.append((uid, ing.get("ItemType"), ing.get("ItemCount", 1)))
         if result in names:
             resolver.add_recipe(names[result], uid)
-    conn.executemany("INSERT OR REPLACE INTO recipe VALUES (?,?,?,?,?,?,?)", rrows)
+    conn.executemany("INSERT OR REPLACE INTO recipe VALUES (?,?,?,?,?,?,?,?)", rrows)
     conn.executemany("INSERT INTO recipe_ingredient VALUES (?,?,?)", irows)
     return len(rrows)
 

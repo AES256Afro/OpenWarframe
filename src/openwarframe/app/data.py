@@ -256,6 +256,23 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             )
         blueprints.sort(key=lambda b: (not b["ready"], b["missing"], b["name"]))
 
+    extra = {"foundry": [], "resources": [], "mods": [], "sell": []}
+    if have_inv:
+        from .extras import build_foundry, build_mods, build_resources, build_sell
+
+        def best_source(uid: str) -> str | None:
+            for s in codex.sources_for(uid):
+                if s.kind != "market":
+                    return f"{s.where}: {s.detail}"
+            return None
+
+        extra = {
+            "foundry": build_foundry(conn, inventory),
+            "resources": build_resources(conn, inventory, best_source),
+            "mods": build_mods(conn, inventory),
+            "sell": build_sell(conn, inventory, final, mastered_ids, item_names),
+        }
+
     m = report.mastery
     return {
         "meta": {
@@ -272,11 +289,15 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
                 "source": inventory.source,
                 "credits": inventory.credits,
                 "platinum": inventory.platinum,
+                "endo": inventory.endo,
+                "regal_aya": inventory.regal_aya,
+                "ducats": inventory.misc.get("/Lotus/Types/Items/MiscItems/PrimeBucks"),
             },
         },
         "items": items,
         "relics": relics,
         "blueprints": blueprints,
+        **extra,
     }
 
 

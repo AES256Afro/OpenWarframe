@@ -30,10 +30,10 @@ Effort: S = hours, M = a day or two, L = several days. Each item lists how we kn
 | --- | --- | --- |
 | One-click installer script (`install.ps1`): installs uv, OpenWarframe and the desktop icon | S | A fresh Windows account goes from download to running app with one command |
 | Standalone `OpenWarframe.exe` built by GitHub Actions on every release tag, with SHA-256 checksums | M | The release page has a zip; it runs on a machine without Python. Unsigned, so the README explains the SmartScreen "More info, Run anyway" step and how to verify the checksum |
-| Sell list from the real inventory: duplicates and parts of mastered Primes, ducats vs today's platinum | S | Matches the in-game ducat kiosk counts for 10 spot-checked parts |
-| Foundry tab: queue with time left and "ready to claim" | S | Shows the 8 items in the owner's Foundry with correct ready times |
-| Resource shortfalls: what owned blueprints need vs what you have | S | Every short resource links to its best farm |
-| Mods and arcanes tab: duplicates, unranked rares, endo and ducat-free sell candidates | S | Counts match the in-game mod screen for 5 spot checks |
+| Sell list from the real inventory: duplicates and parts of mastered Primes, ducats vs today's platinum (built) | S | Matches the in-game ducat kiosk counts for 10 spot-checked parts |
+| Foundry tab: queue with time left and "ready to claim" (built) | S | Shows the 8 items in the owner's Foundry with correct ready times |
+| Resource shortfalls: what owned blueprints need vs what you have (built) | S | Every short resource links to its best farm |
+| Mods and arcanes tab: duplicates, unranked rares, endo and ducat-free sell candidates (built) | S | Counts match the in-game mod screen for 5 spot checks |
 | Auto-refresh: grab the inventory on open when the game runs (after the one-time consent) | S | Opening the app during play needs no click |
 | Release 0.3.0: README "how it works", real screenshots, repo description and topics | S | Release page and repo front page explain what it is, how to install and the risks |
 
@@ -47,6 +47,14 @@ Effort: S = hours, M = a day or two, L = several days. Each item lists how we kn
 | Popular farms: curated, sourced list of well-known farms (Hepit, Ukko, Apollo...) in `kb/routes/` | S | Every entry has a source and a last-verified date |
 | One part away: Prime sets and blueprints missing exactly one piece | S | Correct for the owner's inventory |
 | Road to 30 inside the app, using owned-but-unmastered gear | M | Plan totals match `openwarframe guide mastery` |
+
+### 0.4b "Earnings and costs"
+
+| Item | Effort | Done when |
+| --- | --- | --- |
+| What you can make: spare Prime parts, relics, mods and arcanes valued in ducats and platinum, with "sell to Baro" vs "sell on the market" per item | M | Totals match the Sell list, relic and mod price checks |
+| Cost to finish: for any goal, credits, resources, build time and the platinum to buy missing parts instead of farming them | M | Shown on every "To finish this" card |
+| Next content from your profile: "done with relics? do this next", ranked by what your account is missing and what pays | M | Feeds the Now card in 0.6 |
 
 ### 0.5 "Live"
 

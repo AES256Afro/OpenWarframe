@@ -1,6 +1,6 @@
 """SQLite schema for the codex. Rebuilt from sources; safe to delete."""
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA = """
 CREATE TABLE source_version (
@@ -30,7 +30,8 @@ CREATE TABLE recipe (
     build_time_s  INTEGER,
     rush_price    INTEGER,
     num           INTEGER,
-    consume_on_use INTEGER
+    consume_on_use INTEGER,
+    ducats        INTEGER       -- primeSellingPrice: value at the ducat kiosk
 );
 CREATE INDEX recipe_result ON recipe(result_item);
 

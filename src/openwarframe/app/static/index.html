@@ -125,6 +125,10 @@ var VIEWS=[
   {id:"Companions", label:"Companions & more", group:"Companions & more"},
   {id:"relics", label:"Relics"},
   {id:"blueprints", label:"Blueprints"},
+  {id:"foundry", label:"Foundry"},
+  {id:"resources", label:"Resources"},
+  {id:"sell", label:"Sell list"},
+  {id:"mods", label:"Mods & arcanes"},
   {id:"locked", label:"Can't get yet"},
   {id:"all", label:"All items"}
 ];
@@ -167,7 +171,35 @@ var BP_COLS=[
   {k:"blueprints",l:"Copies",cls:"num"},{k:"credits",l:"Credits",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},{k:"hours",l:"Build h",cls:"num"}
 ];
 
+var price=function(v){return v==null?'<span class="muted">-</span>':v};
+var FOUNDRY_COLS=[
+  {k:"name",l:"Building",cls:"name"},
+  {k:"ready",l:"Status",fmt:function(v){return v?'<span class="pill p-owned">Ready to claim</span>':'<span class="pill p-leveling">Building</span>'}},
+  {k:"hours_left",l:"Hours left",cls:"num"}
+];
+var RES_COLS=[
+  {k:"name",l:"Resource",cls:"name"},{k:"short",l:"Short",cls:"num",fmt:function(v){return v?'<b>'+v.toLocaleString()+'</b>':'<span class="pill p-owned">Enough</span>'}},
+  {k:"have",l:"You have",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},{k:"need",l:"Blueprints need",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},
+  {k:"blueprints",l:"Used by",cls:"num"},{k:"farm",l:"Where to farm",fmt:function(v){return v?esc(v):'<span class="muted">Market, Dojo or quest</span>'}}
+];
+var SELL_COLS=[
+  {k:"name",l:"Part",cls:"name"},{k:"for",l:"For"},
+  {k:"owned",l:"You have",cls:"num"},{k:"spare",l:"Spare",cls:"num",fmt:function(v){return v?'<b>'+v+'</b>':'<span class="muted">0</span>'}},
+  {k:"ducats",l:"Ducats each",cls:"num"},{k:"ducats_total",l:"Ducats if sold",cls:"num"},
+  {k:"price",l:"Market (p)",cls:"num",fmt:price},
+  {k:"status",l:"Why",fmt:function(v){return v==="Mastered or built"?'<span class="pill p-mastered">'+esc(v)+'</span>':'<span class="pill p-leveling">'+esc(v)+'</span>'}}
+];
+var MOD_COLS=[
+  {k:"name",l:"Name",cls:"name"},{k:"category",l:"Type"},{k:"rarity",l:"Rarity"},
+  {k:"owned",l:"Owned",cls:"num"},{k:"spare",l:"Spare",cls:"num"},
+  {k:"best_rank",l:"Best rank",cls:"num",fmt:function(v,r){return v+(r.max_rank!=null?' / '+r.max_rank:'')}},
+  {k:"price",l:"Market (p)",cls:"num",fmt:price}
+];
 function currentSpec(){
+  if(VIEW==="foundry") return {rows:DATA.foundry||[], cols:FOUNDRY_COLS, key:"foundry"};
+  if(VIEW==="resources") return {rows:DATA.resources||[], cols:RES_COLS, key:"resources"};
+  if(VIEW==="sell") return {rows:DATA.sell||[], cols:SELL_COLS, key:"sell"};
+  if(VIEW==="mods") return {rows:DATA.mods||[], cols:MOD_COLS, key:"mods"};
   if(VIEW==="relics") return {rows:DATA.relics, cols:RELIC_COLS, key:"relics"};
   if(VIEW==="blueprints") return {rows:DATA.blueprints, cols:BP_COLS, key:"blueprints"};
   return {rows:itemRows(), cols:ITEM_COLS, key:"items"};
@@ -223,6 +255,18 @@ function renderFilters(){
     h+='<label><input type="checkbox" id="fvault"'+(F._vault?" checked":"")+'> Only relics with vaulted gear</label>';
     h+='<button class="btn" type="button" id="prices">Check market prices</button>';
     if(DATA.meta.inventory) h+='<label><input type="checkbox" id="fown"'+(F._own?" checked":"")+'> Only relics I own</label>';
+  } else if(spec.key==="sell"){
+    h+='<label><input type="checkbox" id="fspare"'+(F._spare?" checked":"")+'> Only spares</label>';
+    h+='<button class="btn" type="button" id="prices">Check market prices</button>';
+    var tot=spec.rows.filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0);
+    h+='<span class="muted">Spares are worth <b>'+tot.toLocaleString()+'</b> ducats at Baro. Sell on the market instead when one part is worth more than about 10 platinum.</span>';
+  } else if(spec.key==="mods"){
+    h+=chipGroup("Type", "category", Object.keys(countBy(spec.rows,"category")).sort(), countBy(spec.rows,"category"));
+    h+='<label><input type="checkbox" id="fspare"'+(F._spare?" checked":"")+'> Only spares</label>';
+    h+='<label><input type="checkbox" id="frare"'+(F._rare?" checked":"")+'> Only rare and legendary</label>';
+    h+='<button class="btn" type="button" id="prices">Check market prices</button>';
+  } else if(spec.key==="resources"){
+    h+='<label><input type="checkbox" id="fshort"'+(F._short?" checked":"")+'> Only what I am short of</label>';
   } else if(spec.key==="blueprints"){
     h+='<label><input type="checkbox" id="fready"'+(F._ready?" checked":"")+'> Only ready to build</label>';
     h+='<label><input type="checkbox" id="funm"'+(F._unm?" checked":"")+'> Only not yet mastered</label>';
@@ -235,6 +279,9 @@ function renderFilters(){
   bind("ffarm","_farm",function(r){return !r.vaulted});
   bind("fown","_own",function(r){return r.count>0});
   bind("fvault","_vault",function(r){return r.vaulted_parts>0});
+  bind("fspare","_spare",function(r){return r.spare>0});
+  bind("frare","_rare",function(r){return r.rarity==="Rare"||r.rarity==="Legendary"});
+  bind("fshort","_short",function(r){return r.short>0});
   var pb=$("prices"); if(pb) pb.onclick=checkPrices;
   bind("fready","_ready",function(r){return r.ready});
   bind("funm","_unm",function(r){return !r.mastered});
@@ -254,6 +301,8 @@ function detailHtml(spec, r){
       return '<div class="'+(p.short?"need":"done")+'">'+esc(p.name)+' <span class="muted">'+p.have+' / '+p.need+'</span>'+rel+'</div>';
     }).join("")+'</div>';
   }
+  if(spec.key==="resources") return '<span class="muted">Needed by: '+esc((r.used_by||[]).join(", "))+'</span>';
+  if(spec.key!=="items") return '<span class="muted">'+(r.slug?'Trade name on warframe.market: '+esc(r.slug):'Not tradeable')+'</span>';
   var s=(r.sources||[]);
   return s.length?'<div class="drops">'+s.map(function(x){return '<div>'+esc(x)+'</div>'}).join("")+'</div>'+(r.slug?'<p class="muted">Trade name on warframe.market: '+esc(r.slug)+'</p>':""):'<span class="muted">No drop sources recorded. Check the Market, your clan Dojo or quests.</span>';
 }
@@ -274,6 +323,7 @@ function renderTable(){
   return rows;
 }
 function emptyText(spec){
+  if(["foundry","resources","sell","mods"].indexOf(spec.key)>=0&&!DATA.meta.inventory) return "This view comes from your inventory. With Warframe running, click Get inventory from game.";
   if(spec.key==="blueprints"&&!DATA.meta.inventory) return "Owned blueprints come from your inventory. Load an inventory file to see what each blueprint still needs.";
   if(spec.key==="relics"&&!DATA.meta.inventory&&!spec.rows.length) return "No relics found.";
   return "Nothing matches these filters.";
@@ -292,6 +342,13 @@ function renderOverview(){
   var avail=it.filter(function(r){return r.access==="Available"}).length, locked=it.filter(function(r){return r.access!=="Available"&&r.access!=="Leveled before"}).length;
   h+=card("Never leveled, can get now", avail, "Plus "+locked+" you can't get yet");
   h+=card("Relics with parts you need", DATA.relics.filter(function(r){return r.needed>0}).length, m.inventory?"From your inventory":"Load your inventory to see which you own");
+  if(m.inventory){
+    var ready=(DATA.foundry||[]).filter(function(f){return f.ready}).length;
+    h+=card("Foundry", ready+" ready", (DATA.foundry||[]).length+" items building or done");
+    var duc=(DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0);
+    h+=card("Spare Prime parts", duc.toLocaleString()+" ducats", "You hold "+(m.inventory.ducats||0).toLocaleString()+" ducats now");
+    h+=card("Wallet", (m.inventory.credits||0).toLocaleString()+" cr", (m.inventory.platinum||0)+" platinum · "+(m.inventory.endo||0).toLocaleString()+" endo");
+  }
   if(m.inventory){ h+=card("Blueprints ready to build", DATA.blueprints.filter(function(b){return b.ready}).length, DATA.blueprints.length+" blueprints owned"); }
   h+='</div>';
   $("view").innerHTML=h;
@@ -303,6 +360,11 @@ function counts(){
   c.Warframes=DATA.items.filter(function(r){return r.group==="Warframes"}).length;
   c.Weapons=DATA.items.filter(function(r){return r.group==="Weapons"}).length;
   c.Companions=DATA.items.filter(function(r){return r.group==="Companions & more"}).length;
+  var inv=!!DATA.meta.inventory;
+  c.foundry=inv?(DATA.foundry||[]).filter(function(f){return f.ready}).length+' ready':'–';
+  c.resources=inv?(DATA.resources||[]).filter(function(r){return r.short}).length:'–';
+  c.sell=inv?(DATA.sell||[]).filter(function(r){return r.spare}).length:'–';
+  c.mods=inv?(DATA.mods||[]).length:'–';
   c.locked=DATA.items.filter(function(r){return r.access!=="Available"&&r.access!=="Leveled before"}).length;
   return c;
 }
@@ -313,7 +375,7 @@ function renderTabs(){
 }
 function renderNotice(){
   var old=document.querySelector(".notice"); if(old) old.remove();
-  if(DATA.meta.inventory||!(VIEW==="relics"||VIEW==="blueprints"||VIEW==="overview")) return;
+  if(DATA.meta.inventory||!(["relics","blueprints","overview","foundry","resources","sell","mods"].indexOf(VIEW)>=0)) return;
   var n=document.createElement("div"); n.className="notice";
   n.innerHTML='<p><b>Your public profile shows what you have leveled, not what you own.</b> With Warframe running and you in your Orbiter, click Get inventory from game to load relic counts, owned blueprints and owned gear.</p><button class="btn primary" type="button">Get inventory from game</button>';
   n.querySelector("button").onclick=grab;
@@ -335,13 +397,14 @@ function load(data){
   renderAll();
 }
 function checkPrices(){
-  var rows=sorted(filtered()).filter(function(r){return r.slug && r.price==null}).slice(0,80);
+  var spec=currentSpec();
+  var rows=sorted(filtered()).filter(function(r){return r.slug && r.price==null && (spec.key==="relics"||r.spare>0)}).slice(0,80);
   if(!rows.length){ toast("Prices are already shown for these relics."); return; }
   toast("Checking warframe.market for "+rows.length+" relics. This takes up to a minute.", 60000);
-  api("/api/prices",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(rows.map(function(r){return r.id}))})
+  api("/api/prices",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:spec.key, ids:rows.map(function(r){return r.id})})})
     .then(function(p){
-      DATA.relics.forEach(function(r){ if(p[r.id]) r.price=p[r.id].typical; });
-      SORT.relics={k:"price",dir:-1}; renderAll();
+      (DATA[spec.key]||[]).forEach(function(r){ if(p[r.id]) r.price=p[r.id].typical; });
+      SORT[VIEW]={k:"price",dir:-1}; renderAll();
       toast("Prices loaded for "+Object.keys(p).length+" relics. Sorted by market value. Filter or sort, then check again for more.");
     }).catch(function(){ toast("Could not reach warframe.market."); });
 }

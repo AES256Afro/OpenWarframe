@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- OpenWarframe icon: a progress ring (gold) around a relic (cyan) on the app's dark tile.
+       Colors match the app: --bg #0a0f1d, --gold #d9b35b, --cyan #4fd1ea. -->
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="#0d1426"/>
+  <rect x="8" y="8" width="496" height="496" rx="112" fill="none" stroke="#2a3756" stroke-width="10"/>
+  <circle cx="256" cy="256" r="156" fill="none" stroke="#1c2741" stroke-width="44"/>
+  <circle cx="256" cy="256" r="156" fill="none" stroke="#d9b35b" stroke-width="44" stroke-linecap="round"
+          stroke-dasharray="720 980" transform="rotate(-90 256 256)"/>
+  <path d="M256 164 L344 256 L256 348 L168 256 Z" fill="#4fd1ea"/>
+  <path d="M256 164 L344 256 L256 256 Z" fill="#a6eefa" opacity="0.6"/>
+  <path d="M168 256 L256 348 L256 256 Z" fill="#1aa6c2" opacity="0.55"/>
+</svg>

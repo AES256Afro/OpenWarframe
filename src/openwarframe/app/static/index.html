@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>OpenWarframe</title>
+<link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cmVjdCB4PSI4IiB5PSI4IiB3aWR0aD0iNDk2IiBoZWlnaHQ9IjQ5NiIgcng9IjExMiIgZmlsbD0iIzBkMTQyNiIvPgogIDxyZWN0IHg9IjgiIHk9IjgiIHdpZHRoPSI0OTYiIGhlaWdodD0iNDk2IiByeD0iMTEyIiBmaWxsPSJub25lIiBzdHJva2U9IiMyYTM3NTYiIHN0cm9rZS13aWR0aD0iMTAiLz4KICA8Y2lyY2xlIGN4PSIyNTYiIGN5PSIyNTYiIHI9IjE1NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWMyNzQxIiBzdHJva2Utd2lkdGg9IjQ0Ii8+CiAgPGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSIxNTYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2Q5YjM1YiIgc3Ryb2tlLXdpZHRoPSI0NCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIgogICAgICAgICAgc3Ryb2tlLWRhc2hhcnJheT0iNzIwIDk4MCIgdHJhbnNmb3JtPSJyb3RhdGUoLTkwIDI1NiAyNTYpIi8+CiAgPHBhdGggZD0iTTI1NiAxNjQgTDM0NCAyNTYgTDI1NiAzNDggTDE2OCAyNTYgWiIgZmlsbD0iIzRmZDFlYSIvPgogIDxwYXRoIGQ9Ik0yNTYgMTY0IEwzNDQgMjU2IEwyNTYgMjU2IFoiIGZpbGw9IiNhNmVlZmEiIG9wYWNpdHk9IjAuNiIvPgogIDxwYXRoIGQ9Ik0xNjggMjU2IEwyNTYgMzQ4IEwyNTYgMjU2IFoiIGZpbGw9IiMxYWE2YzIiIG9wYWNpdHk9IjAuNTUiLz48L3N2Zz4=">
 <style>
 /* Layout: app shell. Sidebar of views on the left, a toolbar of filters over one sortable table. Orokin gold marks mastery, Tenno cyan marks actions. */
 :root{
@@ -22,7 +23,8 @@
 html,body{height:100%}
 body{margin:0; background:var(--bg); color:var(--fg); font:14px/1.45 var(--body); display:grid; grid-template-columns:220px 1fr; overflow:hidden}
 nav.side{background:var(--panel); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:16px 10px; gap:4px; overflow:auto}
-.brand{font:700 15px var(--display); letter-spacing:.12em; color:var(--gold); padding:4px 10px 2px}
+.brand{font:700 14px var(--display); letter-spacing:.08em; white-space:nowrap; color:var(--gold); padding:4px 10px 2px; display:flex; align-items:center; gap:9px}
+.brand svg{width:24px; height:24px; flex:none}
 .who{color:var(--muted); font-size:12px; padding:0 10px 12px; border-bottom:1px solid var(--line); margin-bottom:8px}
 .who b{color:var(--fg)}
 .tab{display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; text-align:left; background:none; border:0; color:var(--fg); font:600 14px var(--body); padding:9px 10px; border-radius:8px; cursor:pointer}
@@ -136,7 +138,7 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 </head>
 <body>
 <nav class="side" aria-label="Views">
-  <div class="brand">OPENWARFRAME</div>
+  <div class="brand"><svg viewBox="0 0 512 512" aria-hidden="true"><rect x="8" y="8" width="496" height="496" rx="112" fill="#0d1426"/> <rect x="8" y="8" width="496" height="496" rx="112" fill="none" stroke="#2a3756" stroke-width="10"/> <circle cx="256" cy="256" r="156" fill="none" stroke="#1c2741" stroke-width="44"/> <circle cx="256" cy="256" r="156" fill="none" stroke="#d9b35b" stroke-width="44" stroke-linecap="round" stroke-dasharray="720 980" transform="rotate(-90 256 256)"/> <path d="M256 164 L344 256 L256 348 L168 256 Z" fill="#4fd1ea"/> <path d="M256 164 L344 256 L256 256 Z" fill="#a6eefa" opacity="0.6"/> <path d="M168 256 L256 348 L256 256 Z" fill="#1aa6c2" opacity="0.55"/></svg><span>OPENWARFRAME</span></div>
   <div class="who" id="who">Loading…</div>
   <div id="tabs" role="tablist"></div>
   <div class="spacer"></div>
@@ -165,7 +167,7 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 "use strict";
 var REWARD=null, REWARD_POLL=null;
 var PREFS={goals:[],checks:{},settings:{},skipped:{}}, SESSION=null, SESSION_TICKS={}, EASY=false;
-var DATA=null, LIVE=null, LIVE_AT=0, VIEW="overview", SORT={}, Q="", F={}, OPEN={};
+var DATA=null, LIVE=null, LIVE_AT=0, VIEW="overview", SORT={relics:{k:"count",dir:-1}}, Q="", F={}, OPEN={};
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
 function toast(msg, ms){ var t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(function(){t.hidden=true}, ms||4000); }
@@ -446,7 +448,7 @@ function renderFilters(){
   bind("ffast","_fast",function(r){return r.fast});
   bind("fworth","_worth",function(r){return r.worth_it});
   var lr=$("liverefresh"); if(lr) lr.onclick=function(){ toast("Refreshing the world state…"); loadLive(true); };
-  el.querySelectorAll("[data-sub]").forEach(function(b){ b.onclick=function(){ var keep=b.dataset.sub; F={sub:keep}; OPEN={}; renderAll(); }; });
+  el.querySelectorAll("[data-sub]").forEach(function(b){ b.onclick=function(){ var keep=b.dataset.sub; F={sub:keep}; OPEN={}; try{ history.replaceState(null,"","#"+VIEW+"/"+keep); }catch(e){} renderAll(); }; });
   var pb=$("prices"); if(pb) pb.onclick=checkPrices;
   bind("fready","_ready",function(r){return r.ready});
   bind("funm","_unm",function(r){return !r.mastered});
@@ -982,8 +984,9 @@ setInterval(function(){
 }, 30000);
 try{ VIEW=localStorage.getItem("owf-view")||"focus"; }catch(e){}
 // deep links: http://127.0.0.1:<port>/#relics opens that tab
-function hashView(){ var h=decodeURIComponent((location.hash||"").slice(1)).toLowerCase(), hit=null; VIEWS.forEach(function(v){ if(v.id.toLowerCase()===h) hit=v.id; }); return hit; }
-window.addEventListener("hashchange", function(){ var hv=hashView(); if(hv&&hv!==VIEW){ VIEW=hv; F={}; OPEN={}; if(DATA) renderAll(); } });
+// #farm/finish also opens a sub-tab (What to farm and Live)
+function hashView(){ var parts=decodeURIComponent((location.hash||"").slice(1)).toLowerCase().split("/"), hit=null; VIEWS.forEach(function(v){ if(v.id.toLowerCase()===parts[0]) hit=v.id; }); if(hit&&parts[1]) F={sub:parts[1]}; return hit; }
+window.addEventListener("hashchange", function(){ var keepF=F; F={}; var hv=hashView(); if(!hv){ F=keepF; return; } VIEW=hv; OPEN={}; if(DATA) renderAll(); });
 $("view").innerHTML='<div class="empty" id="boot">Loading your account…</div>';
 var bootTimer=setInterval(function(){ if(DATA||!$("boot")){ clearInterval(bootTimer); return; } api("/api/status").then(function(s){ var b=$("boot"); if(b&&s.status) b.textContent=s.status; }).catch(function(){}); }, 1500);
 api("/api/prefs").then(function(p){ PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{}); if((PREFS.settings||{}).start!=="last") VIEW="focus"; var hv=hashView(); if(hv) VIEW=hv; applySettings(); }).catch(function(){})

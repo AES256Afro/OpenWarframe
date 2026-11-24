@@ -147,6 +147,7 @@ $s = (New-Object -ComObject WScript.Shell).CreateShortcut('{lnk}')
 $s.TargetPath = '{target}'
 $s.WorkingDirectory = '{cwd}'
 $s.Description = 'OpenWarframe'
+$s.IconLocation = '{icon},0'
 $s.Save()
 """
 
@@ -175,7 +176,10 @@ def gui(
         if not desktop.exists() and onedrive_desktop.exists():
             desktop = onedrive_desktop
         lnk = desktop / "OpenWarframe.lnk"
-        script = SHORTCUT_PS.format(lnk=str(lnk), target=target, cwd=str(Path.home()))
+        from importlib import resources
+
+        icon = resources.files("openwarframe.app").joinpath("static/icon.ico")
+        script = SHORTCUT_PS.format(lnk=str(lnk), target=target, cwd=str(Path.home()), icon=str(icon))
         subprocess.run(["powershell", "-NoProfile", "-Command", script], check=True)  # noqa: S603, S607
         console.print(f"[green]Shortcut created:[/green] {lnk}")
         return

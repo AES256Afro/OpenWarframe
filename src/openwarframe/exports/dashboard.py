@@ -272,9 +272,9 @@ def render_dashboard_html(
     )
     est = "estimated " if ms.estimated_total else ""
     a(
-        f'<p class="muted" style="margin:12px 0 0">Mastery XP ({est}total) <span class="num">{d.mastery_total:,}</span>; '
-        f"rank {ms.rank + 1} needs <span class='num'>{ms.next_rank_threshold:,}</span>, "
-        f"<span class='num'>{d.xp_to_next:,}</span> to go.</p>"
+        f'<p class="muted" style="margin:12px 0 0">Mastery XP ({est}total) <span class="num">{d.mastery_total:,}</span>'
+        f" &nbsp;&middot;&nbsp; <span class='num'>{d.xp_to_next:,}</span> more to reach rank {ms.rank + 1}"
+        f" &nbsp;&middot;&nbsp; rank {ms.rank + 1} is at <span class='num'>{ms.next_rank_threshold:,}</span></p>"
     )
     a("</div></div></section>")
 

@@ -20,6 +20,7 @@ from PyInstaller.utils.win32 import versioninfo as vi
 ROOT = Path(SPECPATH).parent  # noqa: F821 - SPECPATH is injected by PyInstaller
 SRC = ROOT / "src"
 HERE = ROOT / "packaging"
+ICON = str(SRC / "openwarframe" / "app" / "static" / "icon.ico")
 
 datas = [
     (str(SRC / "openwarframe" / "app" / "static"), "openwarframe/app/static"),
@@ -75,6 +76,7 @@ app_exe = EXE(  # noqa: F821
     exclude_binaries=True,
     name="OpenWarframe",
     console=False,
+    icon=ICON,
     upx=False,
     version=version_info("OpenWarframe.exe", "OpenWarframe desktop app"),
 )
@@ -85,6 +87,7 @@ cli_exe = EXE(  # noqa: F821
     exclude_binaries=True,
     name="openwarframe-cli",
     console=True,
+    icon=ICON,
     upx=False,
     version=version_info("openwarframe-cli.exe", "OpenWarframe command line"),
 )

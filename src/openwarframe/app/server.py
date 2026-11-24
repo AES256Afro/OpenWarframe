@@ -144,6 +144,29 @@ class AppState:
             client.close()
             codex.close()
 
+    @property
+    def prefs_path(self) -> Path:
+        return self.settings.home / "app-prefs.json"
+
+    def get_prefs(self) -> dict:
+        try:
+            data = json.loads(self.prefs_path.read_text(encoding="utf-8"))
+            return data if isinstance(data, dict) else {}
+        except (OSError, ValueError):
+            return {}
+
+    def save_prefs(self, body: bytes) -> dict:
+        """Goals, checklist ticks and comfort settings, kept in the data folder."""
+        data = json.loads(body.decode("utf-8") or "{}")
+        if not isinstance(data, dict):
+            raise ValueError("preferences must be an object")
+        allowed = {k: data[k] for k in ("goals", "checks", "settings", "skipped") if k in data}
+        merged = {**self.get_prefs(), **allowed}
+        tmp = self.prefs_path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(merged), encoding="utf-8")
+        tmp.replace(self.prefs_path)
+        return merged
+
     def sync(self) -> dict:
         from ..account.sync import sync_profile
 
@@ -193,6 +216,8 @@ def make_handler(state: AppState):
                     self._json(state.live())
                 except Exception as exc:  # noqa: BLE001 - network trouble is shown in the app
                     self._json({"error": f"Could not load the world state: {exc}"})
+            elif self.path == "/api/prefs":
+                self._json(state.get_prefs())
             elif self.path == "/api/ping":
                 self._json({"ok": True})
             else:
@@ -219,6 +244,8 @@ def make_handler(state: AppState):
                         req = {"ids": req, "kind": "relics"}
                     ids = [str(i) for i in req.get("ids", [])]
                     self._json(state.fetch_prices(ids, kind=str(req.get("kind", "relics"))))
+                elif self.path == "/api/prefs":
+                    self._json(state.save_prefs(body))
                 elif self.path == "/api/inventory/clear":
                     if state.inventory_path.exists():
                         state.inventory_path.unlink()

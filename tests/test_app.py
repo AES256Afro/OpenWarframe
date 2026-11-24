@@ -149,3 +149,14 @@ def test_extras_foundry_resources_and_sell(codex_path: Path):  # noqa: F811
     sell = {r["id"]: r for r in build_sell(cx.conn, inv, lambda u: RHINO, set(), {})}
     # Rhino Prime is already built in INVENTORY, so its one blueprint is spare
     assert sell[RHINO_BP]["spare"] == 1 and sell[RHINO_BP]["ducats_total"] == 45
+
+
+def test_prefs_are_saved_merged_and_filtered(tmp_path: Path):
+    state = AppState(Settings(home=tmp_path))
+    assert state.get_prefs() == {}
+    state.save_prefs(json.dumps({"goals": ["/a"], "evil": 1}).encode())
+    merged = state.save_prefs(json.dumps({"settings": {"zoom": 1.15}}).encode())
+    assert merged == {"goals": ["/a"], "settings": {"zoom": 1.15}}
+    assert json.loads(state.prefs_path.read_text(encoding="utf-8"))["goals"] == ["/a"]
+    with pytest.raises(ValueError):
+        state.save_prefs(b"[1, 2]")

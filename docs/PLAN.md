@@ -69,11 +69,11 @@ Effort: S = hours, M = a day or two, L = several days. Each item lists how we kn
 
 | Item | Effort | Done when |
 | --- | --- | --- |
-| Now card on every view: one next action with where, why and time | M | Never shows more than one primary button |
-| Session planner: "I have 30 minutes" builds a short checklist from live state and goals | M | Plans fit the time given |
-| Daily and weekly checklist: sortie, Archon Hunt, Nightwave, standing caps, Baro, Foundry claims | M | Resets at the game's reset times |
-| Goals: "build Wisp Prime", "reach MR 24", "unlock Helminth", tracked automatically | M | Progress moves after each inventory refresh |
-| Comfort settings: larger text, reduced motion, high contrast, sounds off | S | Settings persist |
+| Now card on every view: one next action with where, why and time (built) | M | Never shows more than one primary button |
+| Session planner: "I have 30 minutes" builds a short checklist from live state and goals (built) | M | Plans fit the time given |
+| Daily and weekly checklist: sortie, Archon Hunt, Nightwave, standing caps, Baro, Foundry claims (built) | M | Resets at the game's reset times |
+| Goals: "build Wisp Prime", "reach MR 24", tracked automatically (built; system unlocks like Helminth come with the knowledge base) | M | Progress moves after each inventory refresh |
+| Comfort settings: larger text, reduced motion, high contrast, sounds off (built) | S | Settings persist |
 
 ### 0.7 "Relic reward helper"
 

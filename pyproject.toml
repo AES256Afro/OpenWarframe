@@ -1,6 +1,6 @@
 [project]
 name = "openwarframe"
-version = "0.3.2"
+version = "0.4.0"
 description = "Export, explain and plan your Warframe account: Excel, PDF, JSON, SQLite and LLM briefs."
 readme = "README.md"
 license = "MIT"

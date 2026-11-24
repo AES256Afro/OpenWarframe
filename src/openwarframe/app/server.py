@@ -68,10 +68,14 @@ class AppState:
         """Lowest and typical sell price on warframe.market for up to `limit` rows (cached 6 h)."""
         from ..http import CachedClient
 
-        if kind not in ("relics", "sell", "mods"):
+        if kind not in ("relics", "sell", "mods", "pieces"):
             raise ValueError("unknown price list")
         data = self.build()
-        slugs = {r["id"]: r.get("slug") for r in data.get(kind, [])}
+        if kind == "pieces":
+            rows_ = [p for c in data.get("farm", {}).get("finish", []) for p in c["pieces"]]
+        else:
+            rows_ = data.get(kind, [])
+        slugs = {r["id"]: r.get("slug") for r in rows_ if r.get("id")}
         client = CachedClient(self.settings.cache_dir)
         out: dict[str, dict] = {}
         try:
@@ -101,8 +105,8 @@ class AppState:
                     time.sleep(0.34)  # warframe.market asks for at most 3 requests a second
         finally:
             client.close()
-        for r in data.get(kind, []):
-            if r["id"] in self.prices:
+        for r in rows_:
+            if r.get("id") in self.prices:
                 r["price"] = self.prices[r["id"]]["typical"]
         return out
 
@@ -122,6 +126,23 @@ class AppState:
             save_settings(self.settings)
         data = grab_inventory(self.settings.account_id)
         return self.save_inventory(json.dumps(data).encode("utf-8"))
+
+    def live(self) -> dict:
+        """World state matched against the account (cached about a minute)."""
+        from ..codex import Codex
+        from ..http import CachedClient
+        from .live import build_live
+
+        data = self.build()
+        if "error" in data:
+            return data
+        codex = Codex(self.settings.codex_path)
+        client = CachedClient(self.settings.cache_dir)
+        try:
+            return build_live(codex.conn, data, client)
+        finally:
+            client.close()
+            codex.close()
 
     def sync(self) -> dict:
         from ..account.sync import sync_profile
@@ -167,6 +188,11 @@ def make_handler(state: AppState):
                 self._send(200, _page(), "text/html; charset=utf-8")
             elif self.path == "/api/data":
                 self._json(state.build())
+            elif self.path == "/api/live":
+                try:
+                    self._json(state.live())
+                except Exception as exc:  # noqa: BLE001 - network trouble is shown in the app
+                    self._json({"error": f"Could not load the world state: {exc}"})
             elif self.path == "/api/ping":
                 self._json({"ok": True})
             else:

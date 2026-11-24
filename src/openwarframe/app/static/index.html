@@ -124,7 +124,7 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 <script>
 (function(){
 "use strict";
-var DATA=null, VIEW="overview", SORT={}, Q="", F={}, OPEN={};
+var DATA=null, LIVE=null, LIVE_AT=0, VIEW="overview", SORT={}, Q="", F={}, OPEN={};
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
 function toast(msg, ms){ var t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(function(){t.hidden=true}, ms||4000); }
@@ -132,6 +132,7 @@ function toast(msg, ms){ var t=$("toast"); t.textContent=msg; t.hidden=false; cl
 var VIEWS=[
   {id:"overview", label:"Overview"},
   {id:"farm", label:"What to farm"},
+  {id:"live", label:"Live"},
   {id:"Warframes", label:"Warframes", group:"Warframes"},
   {id:"Weapons", label:"Weapons", group:"Weapons"},
   {id:"Companions", label:"Companions & more", group:"Companions & more"},
@@ -139,6 +140,7 @@ var VIEWS=[
   {id:"blueprints", label:"Blueprints"},
   {id:"foundry", label:"Foundry"},
   {id:"resources", label:"Resources"},
+  {id:"earn", label:"Earnings"},
   {id:"sell", label:"Sell list"},
   {id:"mods", label:"Mods & arcanes"},
   {id:"locked", label:"Can't get yet"},
@@ -220,7 +222,64 @@ var CRACK_COLS=[
   {k:"vaulted_parts",l:"Vaulted gear",fmt:function(v){return v?'<span class="pill p-violet">'+v+' vaulted</span>':'<span class="muted">-</span>'}}
 ];
 function farmSub(){ return F.sub||"missions"; }
+function liveSub(){ return F.sub||"fissures"; }
+var mins=function(v){ if(v==null) return '<span class="muted">-</span>'; var h=Math.floor(v/60); return (h?h+'h ':'')+(v%60)+'m'; };
+var relicCell=function(v,r){
+  if(!v) return '<span class="muted">none</span>';
+  var own=r.best_relic_count!=null?' · you have '+r.best_relic_count:'';
+  return '<b>'+esc(v)+'</b><span class="muted"> ('+r.best_relic_needed+' needed'+own+')</span>';
+};
+var FISSURE_COLS=[
+  {k:"tier",l:"Tier"},{k:"mission",l:"Mission",fmt:function(v,r){return esc(v)+(r.fast?' <span class="pill p-owned">quick</span>':'')}},
+  {k:"where",l:"Where",cls:"name"},
+  {k:"steel_path",l:"Mode",fmt:function(v){return v?'<span class="pill p-violet">Steel Path</span>':'Normal'}},
+  {k:"minutes_left",l:"Time left",cls:"num",fmt:mins},
+  {k:"useful_relics",l:"Useful relics",cls:"num"},
+  {k:"best_relic",l:"Bring",fmt:relicCell}
+];
+var STORM_COLS=[
+  {k:"tier",l:"Tier"},{k:"where",l:"Where",cls:"name"},{k:"minutes_left",l:"Time left",cls:"num",fmt:mins},
+  {k:"useful_relics",l:"Useful relics",cls:"num"},{k:"best_relic",l:"Bring",fmt:relicCell}
+];
+var INV_COLS=[
+  {k:"where",l:"Where",cls:"name"},
+  {k:"attacker",l:"Fight",fmt:function(v,r){return esc(v)+' vs '+esc(r.defender)}},
+  {k:"rewards",l:"Rewards",fmt:function(v){return v.map(function(x){return (x.flag?'<b>':'')+esc(x.side)+': '+x.count+'× '+esc(x.name)+(x.flag?'</b>':'')}).join('<br>')}},
+  {k:"progress",l:"Progress",cls:"num",fmt:function(v){return v+'%'}},
+  {k:"worth_it",l:"For you",fmt:function(v){return v?'<span class="pill p-owned">You need this</span>':'<span class="muted">-</span>'}}
+];
+var BARO_COLS=[
+  {k:"name",l:"Item",cls:"name"},{k:"ducats",l:"Ducats",cls:"num"},{k:"credits",l:"Credits",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},
+  {k:"for_mastery",l:"For you",fmt:function(v){return v?'<span class="pill p-leveling">Mastery</span>':'<span class="muted">-</span>'}}
+];
+function loadLive(force){
+  if(!force && LIVE && Date.now()-LIVE_AT<55000) return;
+  api("/api/live").then(function(d){ LIVE=d; LIVE_AT=Date.now(); if(VIEW==="live") renderAll(); })
+    .catch(function(){ LIVE={error:"Could not load the world state."}; if(VIEW==="live") renderAll(); });
+}
+function liveHeader(){
+  if(!LIVE) return '<div class="now"><div class="eyebrow">Live</div><div class="what">Loading the world state…</div></div>';
+  if(LIVE.error) return '<div class="now"><div class="eyebrow">Live</div><div class="what">'+esc(LIVE.error)+'</div></div>';
+  var h='<div class="now"><div class="eyebrow">Right now</div>';
+  var best=(LIVE.fissures||[]).filter(function(f){return f.useful_relics})[0];
+  if(best) h+='<div class="what">'+esc(best.tier)+' '+esc(best.mission)+' fissure on '+esc(best.where)+(best.steel_path?' (Steel Path)':'')+', '+mins(best.minutes_left)+' left</div><div class="why">Bring '+esc(best.best_relic)+': it holds '+best.best_relic_needed+' part'+(best.best_relic_needed===1?'':'s')+' you need'+(best.best_relic_count!=null?' and you have '+best.best_relic_count:'')+'.</div>';
+  else h+='<div class="what">No open fissure matches your relics right now.</div>';
+  h+='<div class="also">';
+  if(LIVE.here) h+='<span>You are here: <b>'+esc(LIVE.here.where||LIVE.here.node)+'</b>'+(LIVE.here.mission?' · '+esc(LIVE.here.mission):'')+(LIVE.here.fissure?' · fissure':'')+'</span>';
+  if(LIVE.baro) h+='<span>Baro: '+(LIVE.baro.here?'at <b>'+esc(LIVE.baro.where)+'</b> for '+LIVE.baro.hours_left+' h':'arrives at '+esc(LIVE.baro.where)+' in '+LIVE.baro.hours_until+' h')+'</span>';
+  var inv=(LIVE.invasions||[]).filter(function(i){return i.worth_it}).length;
+  if(inv) h+='<span><b>'+inv+'</b> invasions reward things you need</span>';
+  if(!LIVE.inventory) h+='<span>Load your inventory to match fissures to relics you own.</span>';
+  return h+'</div></div>';
+}
 function currentSpec(){
+  if(VIEW==="live"){
+    var ls=liveSub(), L=LIVE||{};
+    if(ls==="storms") return {rows:L.storms||[], cols:STORM_COLS, key:"storms"};
+    if(ls==="invasions") return {rows:L.invasions||[], cols:INV_COLS, key:"invasions"};
+    if(ls==="baro") return {rows:(L.baro||{}).stock||[], cols:BARO_COLS, key:"baro"};
+    return {rows:L.fissures||[], cols:FISSURE_COLS, key:"fissures"};
+  }
   if(VIEW==="farm"){
     var sub=farmSub();
     if(sub==="crack") return {rows:(DATA.farm||{}).crack||[], cols:CRACK_COLS, key:"crack"};
@@ -237,7 +296,7 @@ function currentSpec(){
 }
 function matches(r){
   if(Q){
-    var hay=(r.name+" "+(r.category||"")+" "+(r.how||"")+" "+(r.sources||[]).join(" ")+" "+(r.drops||[]).map(function(d){return d.part+" "+d.for}).join(" ")+" "+(r.parts||[]).map(function(p){return p.name}).join(" ")+" "+(r.pieces||[]).map(function(p){return p.name+" "+p.sources.join(" ")}).join(" ")+" "+(r.place||"")+" "+(r.gives||[]).join(" ")).toLowerCase();
+    var hay=(r.name+" "+(r.category||"")+" "+(r.how||"")+" "+(r.sources||[]).join(" ")+" "+(r.drops||[]).map(function(d){return d.part+" "+d.for}).join(" ")+" "+(r.parts||[]).map(function(p){return p.name}).join(" ")+" "+(r.pieces||[]).map(function(p){return p.name+" "+p.sources.join(" ")}).join(" ")+" "+(r.place||"")+" "+(r.gives||[]).join(" ")+" "+(r.where||"")+" "+(r.mission||"")+" "+(r.tier||"")).toLowerCase();
     if(hay.indexOf(Q)<0) return false;
   }
   for(var k in F){ var want=F[k]; if(want==null||want===""||k==="sub") continue;
@@ -269,10 +328,21 @@ function chipGroup(label, field, values, counts){
 function countBy(rows, k){ var c={}; rows.forEach(function(r){ c[r[k]]=(c[r[k]]||0)+1 }); return c; }
 function renderFilters(){
   var el=$("filters"); var h="";
-  if(VIEW==="overview"){ el.hidden=true; return; }
+  if(VIEW==="overview"||VIEW==="earn"){ el.hidden=true; return; }
   el.hidden=false;
   var spec=currentSpec();
-  if(VIEW==="farm"){
+  if(VIEW==="live"){
+    var lsubs=[["fissures","Fissures"],["storms","Void storms"],["invasions","Invasions"],["baro","Baro"]];
+    h+=lsubs.map(function(s){return '<button class="chip" type="button" data-sub="'+s[0]+'" aria-pressed="'+(liveSub()===s[0])+'">'+s[1]+'</button>'}).join("");
+    if(spec.key==="fissures"){
+      h+=chipGroup("Tier","tier",["Lith","Meso","Neo","Axi","Requiem","Omnia"],countBy(spec.rows,"tier"));
+      h+='<label><input type="checkbox" id="fuse"'+(F._use?" checked":"")+'> Only where my relics help</label>';
+      h+='<label><input type="checkbox" id="fnosp"'+(F._nosp?" checked":"")+'> Hide Steel Path</label>';
+      h+='<label><input type="checkbox" id="ffast"'+(F._fast?" checked":"")+'> Only quick missions</label>';
+    }
+    if(spec.key==="invasions") h+='<label><input type="checkbox" id="fworth"'+(F._worth?" checked":"")+'> Only rewards I need</label>';
+    h+='<button class="btn" type="button" id="liverefresh">Refresh</button>';
+  } else if(VIEW==="farm"){
     var subs=[["missions","Missions to run"],["finish","Finish an item"],["crack","Relics to crack"]];
     h+=subs.map(function(s){return '<button class="chip" type="button" data-sub="'+s[0]+'" aria-pressed="'+(farmSub()===s[0])+'">'+s[1]+'</button>'}).join("");
     if(spec.key==="missions"){
@@ -326,6 +396,11 @@ function renderFilters(){
   bind("fshort","_short",function(r){return r.short>0});
   bind("fmis","mission"); bind("fpop","_pop",function(r){return r.popular});
   bind("fone","_one",function(r){return r.missing<=1});
+  bind("fuse","_use",function(r){return r.useful_relics>0});
+  bind("fnosp","_nosp",function(r){return !r.steel_path});
+  bind("ffast","_fast",function(r){return r.fast});
+  bind("fworth","_worth",function(r){return r.worth_it});
+  var lr=$("liverefresh"); if(lr) lr.onclick=function(){ toast("Refreshing the world state…"); loadLive(true); };
   el.querySelectorAll("[data-sub]").forEach(function(b){ b.onclick=function(){ var keep=b.dataset.sub; F={sub:keep}; OPEN={}; renderAll(); }; });
   var pb=$("prices"); if(pb) pb.onclick=checkPrices;
   bind("fready","_ready",function(r){return r.ready});
@@ -346,6 +421,7 @@ function detailHtml(spec, r){
       return '<div class="'+(p.short?"need":"done")+'">'+esc(p.name)+' <span class="muted">'+p.have+' / '+p.need+'</span>'+rel+'</div>';
     }).join("")+'</div>';
   }
+  if(["fissures","storms","invasions","baro"].indexOf(spec.key)>=0) return '<span class="muted">'+esc(r.faction||'')+(r.level?' · level '+esc(r.level):'')+'</span>';
   if(spec.key==="missions") return '<div class="drops">'+r.gives.map(function(g){return '<div>'+esc(g)+'</div>'}).join('')+'</div>'+(r.popular_why?'<p class="muted">Popular farm: '+esc(r.popular_why)+'</p>':'');
   if(spec.key==="resources") return '<span class="muted">Needed by: '+esc((r.used_by||[]).join(", "))+'</span>';
   if(spec.key!=="items") return '<span class="muted">'+(r.slug?'Trade name on warframe.market: '+esc(r.slug):'Not tradeable')+'</span>';
@@ -371,6 +447,8 @@ function renderTable(){
 function emptyText(spec){
   if(["foundry","resources","sell","mods"].indexOf(spec.key)>=0&&!DATA.meta.inventory) return "This view comes from your inventory. With Warframe running, click Get inventory from game.";
   if(spec.key==="blueprints"&&!DATA.meta.inventory) return "Owned blueprints come from your inventory. Load an inventory file to see what each blueprint still needs.";
+  if(VIEW==="live"&&!LIVE) return "Loading the world state…";
+  if(spec.key==="baro") return LIVE&&LIVE.baro&&!LIVE.baro.here?"Baro is not here yet. His stock appears when he arrives.":"No stock listed.";
   if(spec.key==="crack"&&!DATA.meta.inventory) return "Relics to crack come from your inventory. With Warframe running, click Get inventory from game.";
   if(spec.key==="relics"&&!DATA.meta.inventory&&!spec.rows.length) return "No relics found.";
   return "Nothing matches these filters.";
@@ -408,6 +486,8 @@ function counts(){
   c.Weapons=DATA.items.filter(function(r){return r.group==="Weapons"}).length;
   c.Companions=DATA.items.filter(function(r){return r.group==="Companions & more"}).length;
   c.farm=((DATA.farm||{}).finish||[]).filter(function(x){return x.missing<=1}).length+' close';
+  c.live=LIVE&&LIVE.fissures?(LIVE.fissures.filter(function(f){return f.useful_relics}).length+' for you'):'';
+  c.earn=DATA.meta.inventory?((DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0).toLocaleString()+' d'):'–';
   var inv=!!DATA.meta.inventory;
   c.foundry=inv?(DATA.foundry||[]).filter(function(f){return f.ready}).length+' ready':'–';
   c.resources=inv?(DATA.resources||[]).filter(function(r){return r.short}).length:'–';
@@ -456,10 +536,73 @@ function renderFinish(){
       var have=p.have==null?'':' <span class="muted">('+p.have+'/'+p.need+')</span>';
       h+='<li class="'+(done?'ok':'')+'">'+esc(p.name)+have+(done?'':'<div class="src">'+p.sources.map(esc).join('<br>')+'</div>')+'</li>';
     });
-    h+='</ul></div>';
+    h+='</ul>';
+    var cost=c.cost||{credits:0,resources:[]};
+    var shortRes=cost.resources.filter(function(x){return x.short});
+    h+='<div class="src"><b>To build:</b> '+(cost.credits||0).toLocaleString()+' credits'+(cost.resources.length?' · '+cost.resources.slice(0,4).map(function(x){return x.need.toLocaleString()+'× '+esc(x.name)+(x.short?' <b>(short '+x.short.toLocaleString()+')</b>':'')}).join(', '):'')+'</div>';
+    var buyable=c.pieces.filter(function(p){return p.short!==0 && p.slug});
+    if(buyable.length){
+      var priced=buyable.filter(function(p){return p.price!=null});
+      if(priced.length===buyable.length){
+        var tot=priced.reduce(function(a,p){return a+p.price*(p.short||1)},0);
+        h+='<div class="src"><b>Buy instead:</b> about '+tot+' platinum on warframe.market ('+priced.map(function(p){return esc(p.name)+' '+p.price+'p'}).join(', ')+')</div>';
+      } else {
+        h+='<button class="btn" type="button" data-buy="'+esc(c.id)+'">Price the missing pieces</button>';
+      }
+    }
+    h+='</div>';
   });
   $("view").innerHTML=h+'</div>';
+  $("view").querySelectorAll("[data-buy]").forEach(function(b){ b.onclick=function(){
+    var card=(DATA.farm.finish||[]).find(function(x){return x.id===b.dataset.buy});
+    var ids=card.pieces.filter(function(p){return p.short!==0 && p.slug}).map(function(p){return p.id});
+    b.textContent="Checking…"; b.disabled=true;
+    api("/api/prices",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:"pieces",ids:ids})}).then(function(p){
+      (DATA.farm.finish||[]).forEach(function(c){ c.pieces.forEach(function(x){ if(p[x.id]) x.price=p[x.id].typical; }); });
+      renderAll();
+    }).catch(function(){ toast("Could not reach warframe.market."); b.disabled=false; });
+  }; });
   return rows;
+}
+function renderEarnings(){
+  var inv=DATA.meta.inventory;
+  if(!inv){ $("view").innerHTML='<div class="empty">Earnings come from your inventory. With Warframe running, click Get inventory from game.</div>'; return []; }
+  var sell=(DATA.sell||[]).filter(function(r){return r.spare});
+  var relics=(DATA.relics||[]).filter(function(r){return r.count>0});
+  var mods=(DATA.mods||[]).filter(function(r){return r.spare && (r.rarity==="Rare"||r.rarity==="Legendary") && r.slug});
+  var sum=function(rows,q){ var priced=rows.filter(function(r){return r.price!=null}); return {plat:priced.reduce(function(a,r){return a+r.price*q(r)},0), priced:priced.length, total:rows.length}; };
+  var s=sum(sell,function(r){return r.spare}), rl=sum(relics.filter(function(r){return r.slug}),function(r){return r.count}), md=sum(mods,function(r){return r.spare});
+  var duc=sell.reduce(function(a,r){return a+r.ducats_total},0);
+  var card=function(k,v,sub){ return '<div class="card"><div class="k">'+esc(k)+'</div><div class="v">'+v+'</div><div class="muted">'+sub+'</div></div>'; };
+  var pl=function(x){ return x.priced?('≈'+x.plat.toLocaleString()+' p'):'?'; };
+  var cov=function(x){ return x.priced+' of '+x.total+' priced'; };
+  var h='<div class="now"><div class="eyebrow">What you can make</div><div class="what">'+duc.toLocaleString()+' ducats from spare Prime parts'+(s.priced?', or about '+s.plat.toLocaleString()+' platinum on the market':'')+'</div>';
+  h+='<div class="why">Prices come from warframe.market sell orders today and change often. Selling takes time; ducats are instant at Baro.</div>';
+  h+='<div class="also"><button class="btn primary" type="button" id="estimate">Estimate platinum value</button><span class="muted">Checks up to 80 items per list. Takes a few minutes the first time.</span></div></div>';
+  h+='<div class="overview">';
+  h+=card("Spare Prime parts", duc.toLocaleString()+' ducats', pl(s)+' · '+cov(s));
+  h+=card("Relics you own", relics.reduce(function(a,r){return a+r.count},0).toLocaleString()+' relics', pl(rl)+' · '+cov(rl));
+  h+=card("Spare rare mods", mods.reduce(function(a,r){return a+r.spare},0).toLocaleString()+' spare', pl(md)+' · '+cov(md));
+  h+=card("Wallet now", (inv.platinum||0)+' p', (inv.ducats||0).toLocaleString()+' ducats · '+(inv.credits||0).toLocaleString()+' credits');
+  h+='</div>';
+  var top=[].concat(sell.map(function(r){return {name:r.name, what:'spare part ×'+r.spare, p:r.price!=null?r.price*r.spare:null, d:r.ducats_total}}),
+    relics.map(function(r){return {name:r.name, what:'relic ×'+r.count, p:r.price!=null?r.price*r.count:null, d:null}}),
+    mods.map(function(r){return {name:r.name, what:'mod ×'+r.spare, p:r.price!=null?r.price*r.spare:null, d:null}})).filter(function(x){return x.p!=null}).sort(function(a,b){return b.p-a.p}).slice(0,15);
+  if(top.length){ h+='<div class="cards"><div class="fcard" style="grid-column:1/-1"><h3>Your 15 most valuable sells</h3><ul>'+top.map(function(x){return '<li><b>'+esc(x.name)+'</b> <span class="muted">'+esc(x.what)+'</span> · ≈'+x.p+' p'+(x.d?' or '+x.d+' ducats':'')+'</li>'}).join('')+'</ul></div></div>'; }
+  $("view").innerHTML=h;
+  $("estimate").onclick=function(){
+    var lists=[["sell",sell.filter(function(r){return r.slug&&r.price==null}).sort(function(a,b){return b.ducats_total-a.ducats_total})],
+               ["relics",relics.filter(function(r){return r.slug&&r.price==null}).sort(function(a,b){return (b.vaulted_parts-a.vaulted_parts)||(b.count-a.count)})],
+               ["mods",mods.filter(function(r){return r.price==null})]];
+    toast("Checking warframe.market. This can take a few minutes.", 300000);
+    var chain=Promise.resolve();
+    lists.forEach(function(l){ var rows=l[1].slice(0,80); if(!rows.length) return; chain=chain.then(function(){
+      return api("/api/prices",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:l[0],ids:rows.map(function(r){return r.id})})}).then(function(p){
+        (DATA[l[0]]||[]).forEach(function(r){ if(p[r.id]) r.price=p[r.id].typical; }); if(VIEW==="earn") renderEarnings();
+      }); }); });
+    chain.then(function(){ toast("Estimates updated."); }).catch(function(){ toast("Could not reach warframe.market."); });
+  };
+  return [];
 }
 function renderAll(){
   if(!DATA) return;
@@ -469,6 +612,8 @@ function renderAll(){
   $("csv").hidden=false;
   var rows;
   if(VIEW==="farm"&&farmSub()==="finish"){ rows=renderFinish(); }
+  else if(VIEW==="earn"){ rows=renderEarnings(); $("csv").hidden=true; }
+  else if(VIEW==="live"){ loadLive(false); rows=renderTable(); $("view").insertAdjacentHTML("afterbegin", liveHeader()); }
   else { rows=renderTable(); if(VIEW==="farm") $("view").insertAdjacentHTML("afterbegin", nowCard()); }
   $("foot").innerHTML='<span>'+rows.length+' shown</span><span>Profile '+new Date(DATA.meta.snapshot).toLocaleString()+'</span><span>'+(DATA.meta.inventory?"Inventory loaded "+new Date(DATA.meta.inventory.loaded).toLocaleString():"No inventory loaded")+'</span><span>Click a row for details. Click a column to sort.</span>';
 }
@@ -524,6 +669,7 @@ $("csv").onclick=function(){
   var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv"})); a.download="openwarframe-"+VIEW.toLowerCase()+".csv"; a.click();
 };
 setInterval(function(){ fetch("/api/ping").catch(function(){}); }, 10000);
+setInterval(function(){ if(VIEW==="live") loadLive(true); }, 60000);
 try{ VIEW=localStorage.getItem("owf-view")||"overview"; }catch(e){}
 api("/api/data").then(load).catch(function(){ $("view").innerHTML='<div class="empty">Could not reach the OpenWarframe server. Start it again with: openwarframe gui</div>'; });
 })();

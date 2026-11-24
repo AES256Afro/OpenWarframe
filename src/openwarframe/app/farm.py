@@ -160,6 +160,58 @@ def rank_missions(
     return rows[:300]
 
 
+def _slug(conn, uid: str) -> str | None:
+    row = conn.execute("SELECT slug FROM market_item WHERE unique_name = ?", (uid,)).fetchone()
+    if row:
+        return row[0]
+    bp = conn.execute("SELECT unique_name FROM recipe WHERE result_item = ?", (uid,)).fetchone()
+    if bp:
+        row = conn.execute("SELECT slug FROM market_item WHERE unique_name = ?", (bp[0],)).fetchone()
+        if row:
+            return row[0]
+    return None
+
+
+def build_cost(conn, item_uid: str, inventory: Inventory | None) -> dict:
+    """Credits and resources to build an item from its blueprint and part blueprints."""
+    credits = 0
+    resources: dict[str, int] = {}
+    main = conn.execute(
+        "SELECT unique_name, build_price FROM recipe WHERE result_item = ?", (item_uid,)
+    ).fetchone()
+    if not main:
+        return {"credits": 0, "resources": []}
+    queue = [(main[0], main[1] or 0)]
+    for rid, price in queue:
+        credits += price
+        for ing, cnt in conn.execute("SELECT item, count FROM recipe_ingredient WHERE recipe = ?", (rid,)):
+            if "/Recipes/" in ing:
+                held = inventory.count(ing) if inventory else 0
+                if held >= cnt:
+                    continue  # part already built
+                sub = conn.execute(
+                    "SELECT unique_name, build_price FROM recipe WHERE result_item = ?", (ing,)
+                ).fetchone()
+                if sub:
+                    queue.append((sub[0], sub[1] or 0))
+            else:
+                resources[ing] = resources.get(ing, 0) + cnt
+    rows = []
+    for uid, need in resources.items():
+        name = conn.execute("SELECT name FROM item WHERE unique_name = ?", (uid,)).fetchone()
+        have = inventory.misc.get(uid, 0) if inventory else None
+        rows.append(
+            {
+                "name": name[0] if name else uid.rsplit("/", 1)[-1],
+                "need": need,
+                "have": have,
+                "short": None if have is None else max(0, need - have),
+            }
+        )
+    rows.sort(key=lambda r: (-(r["short"] or 0), r["name"]))
+    return {"credits": credits, "resources": rows}
+
+
 def finish_cards(conn, report: Report, inventory: Inventory | None) -> list[dict]:
     """One card per not-yet-mastered item: each piece, what you hold, and the best sources."""
     cards = []
@@ -183,11 +235,14 @@ def finish_cards(conn, report: Report, inventory: Inventory | None) -> list[dict
                 srcs.append(label)
             pieces.append(
                 {
+                    "id": bp[0],
                     "name": f"{m.name} Blueprint",
                     "need": 1,
                     "have": have,
                     "short": short,
                     "sources": srcs or ["Market, Dojo or quest"],
+                    "slug": _slug(conn, bp[0]),
+                    "price": None,
                 }
             )
         for c in m.components:
@@ -201,7 +256,18 @@ def finish_cards(conn, report: Report, inventory: Inventory | None) -> list[dict
                 if s.kind == "relic":
                     label += " (farmable)" if s.farmable else " (vaulted)"
                 srcs.append(label)
-            pieces.append({"name": c.name, "need": c.count, "have": have, "short": short, "sources": srcs})
+            pieces.append(
+                {
+                    "id": c.unique_name,
+                    "name": c.name,
+                    "need": c.count,
+                    "have": have,
+                    "short": short,
+                    "sources": srcs,
+                    "slug": _slug(conn, c.unique_name),
+                    "price": None,
+                }
+            )
         cards.append(
             {
                 "id": m.unique_name,
@@ -212,6 +278,7 @@ def finish_cards(conn, report: Report, inventory: Inventory | None) -> list[dict
                 "missing": missing if inventory else len(pieces),
                 "total": len(pieces),
                 "slug": m.market_slug,
+                "cost": build_cost(conn, m.unique_name, inventory),
             }
         )
     cards.sort(key=lambda c: (c["missing"], c["name"]))

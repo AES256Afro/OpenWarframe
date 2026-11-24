@@ -52,17 +52,17 @@ Effort: S = hours, M = a day or two, L = several days. Each item lists how we kn
 
 | Item | Effort | Done when |
 | --- | --- | --- |
-| What you can make: spare Prime parts, relics, mods and arcanes valued in ducats and platinum, with "sell to Baro" vs "sell on the market" per item | M | Totals match the Sell list, relic and mod price checks |
-| Cost to finish: for any goal, credits, resources, build time and the platinum to buy missing parts instead of farming them | M | Shown on every "To finish this" card |
+| What you can make: spare Prime parts, relics, mods and arcanes valued in ducats and platinum, with "sell to Baro" vs "sell on the market" per item (built) | M | Totals match the Sell list, relic and mod price checks |
+| Cost to finish: for any goal, credits, resources, build time and the platinum to buy missing parts instead of farming them (built) | M | Shown on every "To finish this" card |
 | Next content from your profile: "done with relics? do this next", ranked by what your account is missing and what pays | M | Feeds the Now card in 0.6 |
 
 ### 0.5 "Live"
 
 | Item | Effort | Done when |
 | --- | --- | --- |
-| World state panel: fissures, Steel Path fissures, void storms, Baro, invasions, Arbitration | M | Refreshes on its own and shows time left |
-| Fissure matching: "Lith fissure on Tessera, 38 min left, you own 4 Lith C7 with a part you need" | M | Every active fissure is checked against owned relics |
-| You are here: current mission from `EE.log` (node, mission type, faction) | S | Shows the right node within seconds of loading in |
+| World state panel: fissures, Steel Path fissures, void storms, Baro, invasions (built; Arbitration still to do) | M | Refreshes on its own and shows time left |
+| Fissure matching: "Lith fissure on Tessera, 38 min left, you own 4 Lith C7 with a part you need" (built) | M | Every active fissure is checked against owned relics |
+| You are here: current mission from `EE.log` (node, mission type, faction) (built) | S | Shows the right node within seconds of loading in |
 | Refresh after missions: re-grab the inventory when you return to the Orbiter | S | Counts update without a click |
 
 ### 0.6 "Focus mode"

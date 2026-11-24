@@ -1,8 +1,9 @@
 """A tiny local web server that hosts the desktop app.
 
-It listens on 127.0.0.1 only, on a free port, and opens the page in a Chrome or Edge
-"app" window (no tabs, no address bar). Nothing is installed and nothing needs signing.
-The server stops on its own a short while after the window is closed.
+It listens on 127.0.0.1 only, on a free port. On Windows the page opens in OpenWarframe's
+own WebView2 window (window.py), which has its own taskbar button; the app stops when it is
+closed. Otherwise, or with OPENWARFRAME_BROWSER_WINDOW set, it opens in a Chrome or Edge
+"app" window (no tabs, no address bar) and stops a short while after that window is closed.
 """
 
 from __future__ import annotations
@@ -37,6 +38,7 @@ class AppState:
         from .rewards import RewardWatcher
 
         self.rewards = RewardWatcher(settings)
+        self.windows = None  # NativeWindows when the app has its own window
 
     @property
     def inventory_path(self) -> Path:
@@ -378,8 +380,14 @@ def make_handler(state: AppState):
                 elif self.path == "/api/reward/demo":
                     self._json(state.rewards.demo())
                 elif self.path == "/api/reward/popout":
-                    _open_popout(f"http://127.0.0.1:{self.server.server_port}/mini", state.settings)
+                    if state.windows is not None:
+                        state.windows.open_popout()
+                    else:
+                        _open_popout(f"http://127.0.0.1:{self.server.server_port}/mini", state.settings)
                     self._json({"ok": True})
+                elif self.path == "/api/raise":
+                    # a second launch asks the running app to show its window
+                    self._json({"native": bool(state.windows and state.windows.raise_main())})
                 elif self.path == "/api/account":
                     self._json(state.set_account(body))
                 elif self.path == "/api/codex/update":
@@ -460,12 +468,39 @@ def _running_instance(settings: Settings) -> int | None:
         return None
 
 
-def run_app(*, port: int = 0, open_window: bool = True, settings: Settings | None = None) -> None:
+def _raise_running(port: int) -> bool:
+    """Ask a running app to bring its own window forward. False if it has none."""
+    import urllib.request
+
+    from .window import allow_other_process_to_focus
+
+    allow_other_process_to_focus()
+    req = urllib.request.Request(f"http://127.0.0.1:{port}/api/raise", data=b"", method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=3) as r:
+            return bool(json.loads(r.read()).get("native"))
+    except (OSError, ValueError):
+        return False
+
+
+def run_app(
+    *,
+    port: int = 0,
+    open_window: bool = True,
+    settings: Settings | None = None,
+    native: bool | None = None,
+) -> None:
+    """Start the local server and open the app.
+
+    ``native``: use OpenWarframe's own window (None = when available on this PC), otherwise
+    a Chrome or Edge app window that stops the server a while after it is closed.
+    """
     settings = settings or load_settings()
     existing = _running_instance(settings) if open_window and not port else None
     if existing:
         # a second double-click: show the app that is already running instead of starting another
-        _open_window(f"http://127.0.0.1:{existing}/", settings)
+        if not _raise_running(existing):
+            _open_window(f"http://127.0.0.1:{existing}/", settings)
         return
     state = AppState(settings)
     server = ThreadingHTTPServer(("127.0.0.1", port), make_handler(state))
@@ -478,23 +513,24 @@ def run_app(*, port: int = 0, open_window: bool = True, settings: Settings | Non
     threading.Thread(target=state.build, daemon=True).start()  # warm the cache
     if state.get_prefs().get("settings", {}).get("reward_watch"):
         state.rewards.start()
-    if open_window:
-        _open_window(url, settings)
-
-    def watchdog():
-        while True:
-            time.sleep(5)
-            if time.time() - state.last_ping > IDLE_SECONDS:
-                server.shutdown()
-                return
-
-    if open_window:
-        threading.Thread(target=watchdog, daemon=True).start()
+    threading.Thread(target=server.serve_forever, name="app-server", daemon=True).start()
     try:
-        server.serve_forever()
+        if open_window and _use_native(native):
+            if _run_native(url, state):
+                return
+            log.warning("own window failed to open; using a browser window instead")
+        if open_window:
+            _open_window(url, settings)
+            # the browser window pings the server; stop a while after it is closed
+            while time.time() - state.last_ping <= IDLE_SECONDS:
+                time.sleep(5)
+        else:
+            while True:
+                time.sleep(3600)
     except KeyboardInterrupt:
         pass
     finally:
+        server.shutdown()
         server.server_close()
         if open_window:
             try:
@@ -502,3 +538,25 @@ def run_app(*, port: int = 0, open_window: bool = True, settings: Settings | Non
                     lock.unlink()
             except (OSError, ValueError):
                 pass
+
+
+def _use_native(native: bool | None) -> bool:
+    if native is False or os.environ.get("OPENWARFRAME_BROWSER_WINDOW"):
+        return False
+    from .window import available
+
+    return available()
+
+
+def _run_native(url: str, state: AppState) -> bool:
+    """Run OpenWarframe's own window until it is closed. False if it could not open."""
+    from .window import NativeWindows
+
+    state.windows = NativeWindows(url, state.settings.home / "webview")
+    try:
+        state.windows.run()
+    except Exception:  # noqa: BLE001 - fall back to the browser window
+        log.exception("own window failed")
+        state.windows = None
+        return False
+    return True

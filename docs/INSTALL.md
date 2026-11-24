@@ -53,7 +53,8 @@ To uninstall: `uv tool uninstall openwarframe` and delete the desktop shortcut. 
 4. Double-click **OpenWarframe.exe**. Because the app is not code-signed, Windows SmartScreen may say
    "Windows protected your PC". Click **More info**, then **Run anyway**. You only need to do this once.
    The first start downloads the game database (about a minute), then a welcome screen helps you
-   connect your account.
+   connect your account. To keep the app on your taskbar, right-click its taskbar button and pick
+   **Pin to taskbar**.
 5. For command-line use, run `openwarframe-cli.exe` from that folder in PowerShell, for example
    `.\openwarframe-cli.exe codex update` and `.\openwarframe-cli.exe sync`. It is the same program as
    the `openwarframe` command in option 1. (It has a different name because Windows file names

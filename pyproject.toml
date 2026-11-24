@@ -24,6 +24,7 @@ dependencies = [
   "winrt-windows-globalization>=4!10.0.28000.2957 ; sys_platform == 'win32'",
   "winrt-windows-foundation>=4!10.0.28000.2957 ; sys_platform == 'win32'",
   "winrt-windows-foundation-collections>=4!10.0.28000.2957 ; sys_platform == 'win32'",
+  "pywebview>=6.2 ; sys_platform == 'win32'",
 ]
 
 [project.scripts]

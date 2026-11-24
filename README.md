@@ -44,8 +44,10 @@ updates the app:
 irm https://raw.githubusercontent.com/AES256Afro/OpenWarframe/main/packaging/install.ps1 | iex
 ```
 
-The app needs Chrome or Edge for its window. [docs/INSTALL.md](docs/INSTALL.md) covers checking
-the download, antivirus warnings and uninstalling.
+The app opens in its own window, with its own taskbar button you can pin. The window uses
+Microsoft Edge WebView2, which comes with Windows 10 and 11. If WebView2 is missing, the app
+opens in Chrome or Edge instead. [docs/INSTALL.md](docs/INSTALL.md) covers checking the
+download, antivirus warnings and uninstalling.
 
 ![First start](docs/screenshots/first-run.png)
 

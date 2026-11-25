@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import subprocess
+import sys
 import threading
 import time
 import webbrowser
@@ -204,6 +205,27 @@ class AppState:
                 r["price"] = self.prices[r["id"]]["typical"]
         return out
 
+    def capabilities(self) -> dict:
+        """What this computer and account can do, so the page never offers the impossible.
+
+        ``game_here``: the account plays on PC, so the game can run on this computer (a
+        console or mobile account can't use the game log, the inventory reader or the reward
+        helper). ``grab``: reading the inventory from the running game works here (Windows and
+        a PC account). ``ocr``: text recognition for the reward helper.
+        """
+        from ..live.ocr import ocr_available
+        from ..sources.account import session
+        from ..sources.account.profile import PLATFORM_LABELS
+
+        game_here = (self.settings.platform or "pc") == "pc"
+        return {
+            "game_here": game_here,
+            "grab": bool(session.SUPPORTED and game_here),
+            "ocr": bool(game_here and ocr_available()),
+            "platform_label": PLATFORM_LABELS.get(self.settings.platform or "pc", self.settings.platform),
+            "os": "mac" if sys.platform == "darwin" else "windows" if sys.platform == "win32" else "other",
+        }
+
     @property
     def session_ok(self) -> bool:
         return bool(self.settings.extra.get("session_reader_ok"))
@@ -382,6 +404,9 @@ def make_handler(state: AppState):
                     data = state.build()
                     if isinstance(data.get("meta"), dict):
                         data["meta"]["session_ok"] = state.session_ok
+                        data["meta"]["caps"] = state.capabilities()
+                    else:  # the setup screen needs to know what works here too
+                        data = {**data, "caps": state.capabilities()}
                     self._json(data)
                 except Exception as exc:  # noqa: BLE001 - show the real problem instead of a dropped connection
                     log.exception("building app data failed")

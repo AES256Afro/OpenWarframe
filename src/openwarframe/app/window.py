@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import contextlib
 import ctypes
+import json
 import logging
 import shutil
 import sys
@@ -260,18 +261,45 @@ class NativeWindows:
                 return
             except Exception:  # noqa: BLE001 - it was closed; make a new one
                 self.popout = None
+        g = self._popout_geometry()
         self.popout = webview.create_window(
             POPOUT_TITLE,
             self.base_url + "mini",
-            width=440,
-            height=300,
-            x=40,
-            y=40,
+            width=g["width"],
+            height=g["height"],
+            x=g["x"],
+            y=g["y"],
             on_top=True,
             background_color=BACKGROUND,
         )
         self.popout.events.shown += self._tag(self.popout)
         self.popout.events.closed += self._popout_closed
+        # remember where the player put it (often a second monitor) for next time
+        with contextlib.suppress(Exception):
+            self.popout.events.moved += lambda x, y: self._save_popout(x=x, y=y)
+            self.popout.events.resized += lambda w, h: self._save_popout(width=w, height=h)
+
+    @property
+    def _geometry_path(self) -> Path:
+        return self.storage.parent / "popout-window.json"
+
+    def _popout_geometry(self) -> dict:
+        g = {"width": 440, "height": 300, "x": 40, "y": 40}
+        try:
+            saved = json.loads(self._geometry_path.read_text(encoding="utf-8"))
+            g.update({k: int(v) for k, v in saved.items() if k in g and isinstance(v, int | float)})
+        except (OSError, ValueError):
+            pass
+        g["width"], g["height"] = max(300, g["width"]), max(200, g["height"])
+        return g
+
+    def _save_popout(self, **changes) -> None:
+        from ..fsutil import atomic_write_text
+
+        g = self._popout_geometry()
+        g.update({k: int(v) for k, v in changes.items() if v is not None})
+        with contextlib.suppress(OSError):
+            atomic_write_text(self._geometry_path, json.dumps(g))
 
     def _popout_closed(self, *_):
         self.popout = None

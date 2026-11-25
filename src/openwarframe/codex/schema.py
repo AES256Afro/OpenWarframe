@@ -1,6 +1,8 @@
 """SQLite schema for the codex. Rebuilt from sources; safe to delete."""
 
 SCHEMA_VERSION = 3  # 3: ingredient counts summed per recipe; (Caches)/(Extra) drops linked to nodes
+# oldest schema this code can still read (2 -> 3 changed content, not tables): used offline
+READABLE_FROM = 2
 
 SCHEMA = """
 CREATE TABLE source_version (

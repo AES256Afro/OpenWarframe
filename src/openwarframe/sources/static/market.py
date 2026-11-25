@@ -47,3 +47,21 @@ def order_prices(orders) -> list[float]:
         if isinstance(v, int | float) and not isinstance(v, bool) and v == v and abs(v) != float("inf"):
             out.append(v)
     return out
+
+
+ORDERS_TOP = "https://api.warframe.market/v2/orders/item/{slug}/top"
+
+
+def top_prices(client: CachedClient, slug: str, *, max_age: float = 6 * 3600) -> dict:
+    """Lowest and typical (median of the five cheapest) sell price, and the best buy price.
+
+    Raises on network trouble; values are None when nobody is selling or buying.
+    """
+    top = client.get_json(ORDERS_TOP.format(slug=slug), max_age=max_age).get("data", {})
+    sells = sorted(order_prices(top.get("sell")))[:5]
+    buys = sorted(order_prices(top.get("buy")), reverse=True)[:5]
+    return {
+        "low": sells[0] if sells else None,
+        "typical": sells[len(sells) // 2] if sells else None,
+        "buy": buys[0] if buys else None,
+    }

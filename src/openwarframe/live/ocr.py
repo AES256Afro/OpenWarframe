@@ -1,4 +1,5 @@
-"""Screenshot the Warframe window and read the relic reward names with Windows' own OCR.
+"""Screenshot the Warframe window and read the relic reward names with the system OCR
+(Windows.Media.Ocr on Windows, Apple Vision on macOS).
 
 Only the screen is read: we find the game window, copy its pixels, crop the band where
 the reward names are printed and hand each name box to ``Windows.Media.Ocr`` (built into

@@ -33,7 +33,11 @@ IDLE_SECONDS = 150
 PRICE_MAX_AGE = 6 * 3600  # market prices are re-checked after six hours, even in a long session
 PROFILE_REFRESH_HOURS = 24  # the profile is fetched again on open once it is this old
 RELEASES_API = "https://api.github.com/repos/AES256Afro/OpenWarframe/releases/latest"
-MAX_BODY = 64 << 20  # an inventory file is a few MB; anything this big is not one of ours
+MAX_BODY = 64 << 20
+SERVER_SETTINGS = (
+    "reward_watch",
+    "save_recordings",
+)  # changed by their own endpoints, not the page  # an inventory file is a few MB; anything this big is not one of ours
 
 # The page only ever talks to this server. These headers stop other sites from framing it
 # (clickjacking the consent button) and stop injected markup from loading or sending anything.
@@ -182,7 +186,7 @@ class AppState:
     def fetch_prices(self, ids: list[str], limit: int = 80, kind: str = "relics") -> dict:
         """Lowest and typical sell price on warframe.market for up to `limit` rows (cached 6 h)."""
         from ..http import CachedClient
-        from ..sources.static.market import order_prices
+        from ..sources.static.market import top_prices
 
         if kind not in ("relics", "sell", "mods", "pieces"):
             raise ValueError("unknown price list")
@@ -202,22 +206,17 @@ class AppState:
                 if rid in self.prices and time.time() - self.prices[rid].get("_at", 0) < PRICE_MAX_AGE:
                     out[rid] = self.prices[rid]
                     continue
-                url = f"https://api.warframe.market/v2/orders/item/{slug}/top"
                 try:
-                    top = client.get_json(url, max_age=6 * 3600).get("data", {})
+                    price = top_prices(client, slug)
                 except Exception as exc:  # noqa: BLE001
                     log.warning("price for %s failed: %s", slug, exc)
+                    status = getattr(getattr(exc, "response", None), "status_code", None)
+                    if status == 429:  # rate limited: return what we have instead of waiting minutes
+                        break
                     continue
                 finally:
                     if client.last_was_network:  # failed or stale, a request still went out
                         time.sleep(0.34)  # warframe.market asks for at most 3 requests a second
-                sells = sorted(order_prices(top.get("sell")))[:5]
-                buys = sorted(order_prices(top.get("buy")), reverse=True)[:5]
-                price = {
-                    "low": sells[0] if sells else None,
-                    "typical": sells[len(sells) // 2] if sells else None,
-                    "buy": buys[0] if buys else None,
-                }
                 price["_at"] = time.time()
                 self.prices[rid] = out[rid] = price
         finally:
@@ -251,15 +250,26 @@ class AppState:
     # -- freshness -------------------------------------------------------------------
     def profile_age_hours(self) -> float | None:
         """How old the newest profile snapshot is, from its file name (UTC), or None."""
+        checked = self.profile_checked()
         d = self.settings.snapshots_dir
         snaps = sorted(d.glob("*.json")) if d.exists() else []
-        if not snaps:
-            return None
+        taken = None
+        if snaps:
+            try:
+                taken = datetime.strptime(snaps[-1].stem, "%Y-%m-%dT%H%M%SZ").replace(tzinfo=UTC)
+            except ValueError:
+                taken = None
+        newest = max((t for t in (taken, checked) if t is not None), default=None)
+        return None if newest is None else (datetime.now(UTC) - newest).total_seconds() / 3600
+
+    def profile_checked(self) -> datetime | None:
+        """When the profile was last fetched, changed or not."""
+        from ..account.sync import profile_checked_path
+
         try:
-            taken = datetime.strptime(snaps[-1].stem, "%Y-%m-%dT%H%M%SZ").replace(tzinfo=UTC)
-        except ValueError:
+            return datetime.fromtimestamp(profile_checked_path(self.settings).stat().st_mtime, tz=UTC)
+        except OSError:
             return None
-        return (datetime.now(UTC) - taken).total_seconds() / 3600
 
     def refresh_on_open(self) -> None:
         """Warm the cache, and fetch the profile again when it is more than a day old.
@@ -406,6 +416,10 @@ class AppState:
         sync_profile(replace(self.settings, account_id=account, platform=platform))
         self.settings.account_id, self.settings.platform = account, platform
         save_settings(self.settings)
+        # an inventory loaded before the account was set sits in the data folder: move it in
+        from ..config import migrate_to_account_folders
+
+        migrate_to_account_folders(self.settings)
         return self.build(force=True)
 
     def live(self) -> dict:
@@ -430,20 +444,32 @@ class AppState:
         return self.settings.home / "app-prefs.json"
 
     def get_prefs(self) -> dict:
+        """Saved goals, ticks and settings, each the right type even if the file was damaged."""
         try:
             data = json.loads(self.prefs_path.read_text(encoding="utf-8"))
-            return data if isinstance(data, dict) else {}
         except (OSError, ValueError):
             return {}
+        if not isinstance(data, dict):
+            return {}
+        shapes = {"goals": list, "checks": dict, "settings": dict, "skipped": dict, "views": dict}
+        return {k: v for k, v in data.items() if k not in shapes or isinstance(v, shapes[k])}
 
-    def save_prefs(self, body: bytes) -> dict:
-        """Goals, checklist ticks and comfort settings, kept in the data folder."""
+    def save_prefs(self, body: bytes, *, from_page: bool = False) -> dict:
+        """Goals, checklist ticks and comfort settings, kept in the data folder.
+
+        ``from_page``: the page's copy of the settings can be stale for the settings the server
+        changes itself (reward watching, saving screens), so those are never taken from it.
+        """
         data = json.loads(body.decode("utf-8") or "{}")
         if not isinstance(data, dict):
             raise ValueError("preferences must be an object")
+        if "settings" in data and not isinstance(data["settings"], dict):
+            raise ValueError("settings must be an object")
         allowed = {
             k: data[k] for k in ("goals", "checks", "settings", "skipped", "views", "session") if k in data
         }
+        if from_page and "settings" in allowed:
+            allowed["settings"] = {k: v for k, v in allowed["settings"].items() if k not in SERVER_SETTINGS}
         with self.prefs_lock:  # read-merge-write must not interleave between request threads
             current = self.get_prefs()
             if isinstance(allowed.get("settings"), dict):
@@ -469,11 +495,9 @@ class AppState:
         return self.build(force=True)
 
     def _store_inventory(self, data) -> None:
-        from ..inventory import parse_inventory
+        from ..inventory import parse_inventory, unwrap
 
-        if isinstance(data, dict) and "InventoryJson" in data:
-            raw = data["InventoryJson"]
-            data = json.loads(raw) if isinstance(raw, str) else raw
+        data = unwrap(data)
         parse_inventory(data)  # validates
         atomic_write_text(self.inventory_path, json.dumps(data))
 
@@ -536,6 +560,8 @@ def make_handler(state: AppState):
                         data["meta"]["session_ok"] = state.session_ok
                         data["meta"]["caps"] = state.capabilities()
                         data["meta"]["codex_warning"] = state.codex_warning
+                        checked = state.profile_checked()
+                        data["meta"]["profile_checked"] = checked.isoformat() if checked else None
                     else:  # the setup screen needs to know what works here too
                         data = {**data, "caps": state.capabilities()}
                     self._json(data)
@@ -599,7 +625,7 @@ def make_handler(state: AppState):
                     ids = [str(i) for i in req.get("ids", [])]
                     self._json(state.fetch_prices(ids, kind=str(req.get("kind", "relics"))))
                 elif self.path == "/api/prefs":
-                    self._json(state.save_prefs(body))
+                    self._json(state.save_prefs(body, from_page=True))
                 elif self.path == "/api/reward/watch":
                     req = json.loads(body.decode("utf-8") or "{}")
                     on = bool(req.get("on"))
@@ -749,7 +775,8 @@ def run_app(
         with contextlib.suppress(OSError):
             lock.write_text(json.dumps({"port": server.server_port, "pid": os.getpid()}), encoding="utf-8")
     print(f"OpenWarframe is running at {url}  (close the window to stop)")
-    threading.Thread(target=state.refresh_on_open, daemon=True).start()  # warm the cache, refresh old data
+    if open_window:  # a headless server (tests, the CI smoke test) builds on first request instead
+        threading.Thread(target=state.refresh_on_open, daemon=True).start()  # warm up, refresh old data
     if state.get_prefs().get("settings", {}).get("reward_watch"):
         state.rewards.start()
     threading.Thread(target=server.serve_forever, name="app-server", daemon=True).start()

@@ -38,10 +38,6 @@ class CacheEntry:
     last_modified: str | None = None
     status: int = 200
 
-    def is_fresh(self, now: float | None = None) -> bool:
-        now = time.time() if now is None else now
-        return (now - self.fetched_at) < self.max_age
-
 
 class CachedClient:
     def __init__(self, cache_dir: Path, *, timeout: float = 60.0, retries: int = 3) -> None:

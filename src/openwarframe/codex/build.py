@@ -103,6 +103,13 @@ class BuildReport:
     counts: dict[str, int] = field(default_factory=dict)
     unresolved: dict[str, tuple[int, str]] = field(default_factory=dict)
     seconds: float = 0.0
+    warnings: list[str] = field(default_factory=list)
+
+
+# An upstream source changing its format shows up as many more drop-table names that no
+# longer match an item. A jump past both numbers means something changed upstream.
+UNRESOLVED_JUMP = 3.0
+UNRESOLVED_FLOOR = 100
 
 
 # --------------------------------------------------------------------------------------
@@ -736,6 +743,7 @@ def update_codex(settings: Settings, *, force: bool = False) -> BuildReport:
         payloads = fetch_payloads(client, force=force)
     finally:
         client.close()
+    before = _unresolved_count(settings.codex_path)
     tmp = settings.codex_path.with_suffix(".sqlite.tmp")
     if tmp.exists():
         tmp.unlink()
@@ -748,4 +756,26 @@ def update_codex(settings: Settings, *, force: bool = False) -> BuildReport:
     finally:
         conn.close()
     Path(tmp).replace(settings.codex_path)
+    after = len(report.unresolved)
+    if after > UNRESOLVED_FLOOR and after > UNRESOLVED_JUMP * max(before or 0, 1):
+        msg = (
+            f"{after} drop-table names no longer match an item (was {before}). An upstream data source "
+            "probably changed its format; please report it so OpenWarframe can be updated."
+        )
+        log.warning(msg)
+        report.warnings.append(msg)
     return report
+
+
+def _unresolved_count(path: Path) -> int | None:
+    """How many drop-table names the current codex could not match, or None without one."""
+    if not Path(path).exists():
+        return None
+    try:
+        conn = sqlite3.connect(Path(path).resolve().as_uri() + "?mode=ro", uri=True)
+        try:
+            return int(conn.execute("SELECT COUNT(*) FROM unresolved_name").fetchone()[0])
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return None

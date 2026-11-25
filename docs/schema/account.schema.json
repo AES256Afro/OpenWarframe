@@ -420,6 +420,13 @@
      ],
      "default": null,
      "title": "Owned"
+    },
+    "ways": {
+     "items": {
+      "type": "string"
+     },
+     "title": "Ways",
+     "type": "array"
     }
    },
    "required": [

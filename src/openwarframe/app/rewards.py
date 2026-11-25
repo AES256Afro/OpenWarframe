@@ -21,7 +21,6 @@ from ..config import Settings
 
 log = logging.getLogger(__name__)
 CAPTURE_DELAY = 1.5
-MARKET_TOP = "https://api.warframe.market/v2/orders/item/{slug}/top"
 PRICE_TIMEOUT = 4  # seconds per request: prices are a bonus, the pick must not wait on them
 KEEP_RECORDINGS = 30  # newest reward screens kept when saving them is on
 OCR_LANGUAGE = "en-US"  # the item list is English; reading with the profile language fails
@@ -30,19 +29,18 @@ OCR_LANGUAGE = "en-US"  # the item list is English; reading with the profile lan
 def _price_map(slugs: list[str], cache_dir) -> dict[str, float]:
     """Typical sell price per market slug (cached 6 h). Best effort."""
     from ..http import CachedClient
-    from ..sources.static.market import order_prices
+    from ..sources.static.market import top_prices
 
     out: dict[str, float] = {}
     client = CachedClient(cache_dir, timeout=PRICE_TIMEOUT, retries=1)
     try:
         for slug in slugs:
             try:
-                top = client.get_json(MARKET_TOP.format(slug=slug), max_age=6 * 3600).get("data", {})
+                typical = top_prices(client, slug)["typical"]
             except Exception:  # noqa: BLE001
                 continue
-            sells = sorted(order_prices(top.get("sell")))[:5]
-            if sells:
-                out[slug] = sells[len(sells) // 2]
+            if typical is not None:
+                out[slug] = typical
     finally:
         client.close()
     return out
@@ -83,7 +81,6 @@ class RewardWatcher:
         self.last: dict | None = None
         self.history: deque[dict] = deque(maxlen=12)
         self.save_recordings = save_recordings
-        self._context_stamp: tuple | None = None
 
     # -- control ---------------------------------------------------------------------
     def status(self) -> dict:
@@ -160,7 +157,6 @@ class RewardWatcher:
         from ..codex import Codex
         from ..live.match import RewardCatalog, account_needs
 
-        self._context_stamp = self._data_stamp()
         codex = Codex(self.settings.codex_path)
         try:
             catalog = RewardCatalog.from_codex(codex.conn)
@@ -231,6 +227,7 @@ class RewardWatcher:
         from ..live.eelog import default_log_path, watch
 
         try:
+            stamp = self._data_stamp()  # this run's own: the sample screen loads its own context
             catalog, needs = self._context()
         except Exception as exc:  # noqa: BLE001
             self._say(stop, "error", f"Could not load the game database: {exc}")
@@ -258,8 +255,9 @@ class RewardWatcher:
                 if stop.wait(CAPTURE_DELAY):
                     break
                 try:
-                    if self._data_stamp() != self._context_stamp:
-                        catalog, needs = self._context()  # synced, new inventory or game data
+                    if self._data_stamp() != stamp:  # synced, new inventory or game data
+                        stamp = self._data_stamp()
+                        catalog, needs = self._context()
                     win = ocr.find_game_window()
                     if win is None:
                         self._say(stop, "watching", "Reward screen seen, but the game window was not found.")

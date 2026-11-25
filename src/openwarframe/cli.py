@@ -38,14 +38,14 @@ def _main(
         None, "--home", help="Data directory (default: OPENWARFRAME_HOME or the OS app-data dir)."
     ),
 ) -> None:
-    logging.basicConfig(
-        level=logging.INFO if verbose else logging.WARNING, format="%(levelname)s %(name)s: %(message)s"
-    )
-    from . import logsafe
-
-    logsafe.install()  # -v must never print the game session key
     if home:
         os.environ["OPENWARFRAME_HOME"] = str(home)
+    from .config import default_home
+    from .logs import setup_logging
+
+    # console as before (-v for details); everything also goes to <data folder>/logs, with
+    # the game session key masked in both
+    setup_logging(default_home(), console_level=logging.INFO if verbose else logging.WARNING)
 
 
 @app.command()
@@ -53,6 +53,44 @@ def version() -> None:
     """Print the version and data directory."""
     s = load_settings()
     console.print(f"openwarframe {__version__}  -  data in {s.home}")
+
+
+@app.command()
+def backup(
+    out: Path | None = typer.Option(
+        None, "--out", help="Zip file to write (default: <data folder>/backups/)."
+    ),
+) -> None:
+    """Save your goals, settings, profile history and inventory to one zip file.
+
+    To restore, close OpenWarframe and unzip it into the data folder shown by
+    `openwarframe version`. Downloaded game data, caches and logs are left out: they come back
+    on their own.
+    """
+    import zipfile
+    from datetime import datetime
+
+    s = load_settings()
+    skip_dirs = {"cache", "logs", "webview", "app-window", "exports", "backups"}
+    skip_files = {"codex.sqlite", "app.lock"}
+    target = out or s.home / "backups" / f"openwarframe-backup-{datetime.now():%Y-%m-%d_%H%M}.zip"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    count = 0
+    with zipfile.ZipFile(target, "w", zipfile.ZIP_DEFLATED) as zf:
+        for p in sorted(s.home.rglob("*")):
+            rel = p.relative_to(s.home)
+            if (
+                not p.is_file()
+                or rel.parts[0] in skip_dirs
+                or "recordings" in rel.parts
+                or p.name in skip_files
+            ):
+                continue
+            if p.resolve() == target.resolve() or p.suffix == ".tmp":
+                continue
+            zf.write(p, rel.as_posix())
+            count += 1
+    console.print(f"Backed up {count} files to {target}", markup=False)
 
 
 @app.command(hidden=True)
@@ -68,6 +106,8 @@ def selfcheck() -> None:
         console.print(
             f"knowledge base: {kb.path} ({len(kb.tests.get('tests', []))} rank tests)", markup=False
         )
+        for f in kb.stale():
+            console.print(f"knowledge base file not checked recently: {f}", markup=False, style="yellow")
     except Exception as exc:  # noqa: BLE001 - report every problem, not just the first
         problems.append(f"knowledge base: {exc}")
     static = resources.files("openwarframe.app").joinpath("static")
@@ -128,8 +168,7 @@ def export(
     if budget not in ("compact", "full"):
         raise typer.BadParameter("budget must be compact or full")
     targets = _cloud_targets(copy_to)
-    codex = Codex(s.codex_path)
-    with console.status("Building report..."):
+    with Codex(s.codex_path) as codex, console.status("Building report..."):
         report = build_report(reparse(snap, codex), codex, anonymize=share, inventory=_saved_inventory(s))
     target = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M") / ("share" if share else "full"))
     with console.status("Writing exports..."):
@@ -157,17 +196,6 @@ def schema(out: Path = typer.Option(Path("docs/schema/account.schema.json"), "--
 
     out.parent.mkdir(parents=True, exist_ok=True)
     console.print(f"wrote {write_schema(out)}")
-
-
-@app.command()
-def plan() -> None:
-    """Recommend what to do next (milestone 7, not implemented yet)."""
-    raise typer.Exit(code=_not_yet("plan", "M7"))
-
-
-def _not_yet(cmd: str, milestone: str) -> int:
-    console.print(f"[yellow]`openwarframe {cmd}` arrives in {milestone}. See docs/ROADMAP.md.[/yellow]")
-    return 2
 
 
 # -- desktop app -------------------------------------------------------------------------
@@ -234,10 +262,9 @@ def inventory_import(
     except (ValueError, json.JSONDecodeError) as exc:
         console.print(f"[red]Could not read {path}: {exc}[/red]")
         raise typer.Exit(code=1) from None
-    data = json.loads(path.read_text(encoding="utf-8-sig"))
-    if isinstance(data, dict) and "InventoryJson" in data:
-        raw = data["InventoryJson"]
-        data = json.loads(raw) if isinstance(raw, str) else raw
+    from .inventory import unwrap
+
+    data = unwrap(json.loads(path.read_text(encoding="utf-8-sig")))
     atomic_write_text(s.inventory_path, json.dumps(data))
     console.print(
         f"[green]Inventory loaded:[/green] {len(inv.equipment)} built items, {len(inv.recipes)} blueprints, "
@@ -332,8 +359,12 @@ def _load_report(snapshot: str, share: bool = False):
     except FileNotFoundError:
         console.print("[red]No snapshot yet; run `openwarframe sync` first.[/red]")
         raise typer.Exit(code=1) from None
-    codex = Codex(s.codex_path)
-    return s, snap, build_report(reparse(snap, codex), codex, anonymize=share, inventory=_saved_inventory(s))
+    with Codex(s.codex_path) as codex:
+        return (
+            s,
+            snap,
+            build_report(reparse(snap, codex), codex, anonymize=share, inventory=_saved_inventory(s)),
+        )
 
 
 def _saved_inventory(s):
@@ -373,7 +404,14 @@ def guide_mastery(
     targets = _cloud_targets(copy_to)
 
     s, snap, report = _load_report(snapshot, share)
-    plan = build_mastery_plan(report, load_kb())
+    kb = load_kb()
+    for f in kb.stale():
+        console.print(
+            f"The guide's {f} hasn't been checked against the game in a while; some advice may be out of date.",
+            markup=False,
+            style="yellow",
+        )
+    plan = build_mastery_plan(report, kb)
     console.print(
         f"[bold]MR {plan.rank}[/bold]  estimated mastery ~{plan.estimate:,}  -  "
         f"~{plan.needed_to_target:,} to MR {plan.target_rank}"
@@ -614,6 +652,8 @@ def codex_update(force: bool = typer.Option(False, "--force", help="Ignore the H
     for k, v in report.counts.items():
         t.add_row(k, f"{v:,}")
     console.print(t)
+    for w in report.warnings:
+        console.print(w, markup=False, style="yellow")
     if report.unresolved:
         total = sum(c for c, _ in report.unresolved.values())
         console.print(

@@ -23,10 +23,12 @@ from pathlib import Path
 
 from platformdirs import user_data_dir
 
+from . import __version__
+
 log = logging.getLogger(__name__)
 
 APP_NAME = "OpenWarframe"
-USER_AGENT = "OpenWarframe/0.1 (+https://github.com/AES256Afro/OpenWarframe)"
+USER_AGENT = f"OpenWarframe/{__version__} (+https://github.com/AES256Afro/OpenWarframe)"
 
 
 @dataclass

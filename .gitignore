@@ -26,3 +26,8 @@ lastData.dat
 Thumbs.db
 .idea/
 .vscode/
+
+# coverage
+.coverage
+.coverage.*
+htmlcov/

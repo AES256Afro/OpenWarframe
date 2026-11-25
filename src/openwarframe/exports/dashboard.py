@@ -162,11 +162,8 @@ class DashboardData:
 
 def _get_next(report: Report, limit: int) -> list[MissingItem]:
     def score(m: MissingItem) -> tuple:
-        a = m.acquisition
-        order = (
-            0 if "farmable now" in a else 1 if "Vendor" in a else 2 if ("drops" in a or "Bount" in a) else 9
-        )
-        return (order, m.category != "Warframe", m.name)
+        order = m.priority()
+        return (order if order < 3 else 9, m.category != "Warframe", m.name)
 
     pool = [m for m in report.missing if not m.above_your_mr and not m.owned]  # owned: nothing to get
     pool = [m for m in pool if score(m)[0] < 9]
@@ -325,7 +322,7 @@ def render_dashboard_html(
     )
     a('<div class="list" style="grid-template-columns:repeat(auto-fill, minmax(min(340px, 100%), 1fr))">')
     for m in d.get_next:
-        chip = "v" if "Vendor" in m.acquisition else ""
+        chip = "v" if m.has("vendor") else ""
         a(
             f'<div class="it"><b>{_e(m.name)}<span class="chip {chip}">{_e(m.acquisition)}</span></b>'
             f'<span class="meta">{_e(m.category)} · MR {m.mastery_req}</span>'

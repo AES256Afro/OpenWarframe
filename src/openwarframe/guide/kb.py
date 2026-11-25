@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
 
 import yaml
@@ -27,6 +28,10 @@ def kb_dir() -> Path:
     )
 
 
+# Game updates change rank tests and farms; past this age the guide says its advice may be stale.
+STALE_AFTER_DAYS = 180
+
+
 @dataclass
 class MasteryKB:
     tests: dict  # tests.yaml
@@ -43,6 +48,28 @@ class MasteryKB:
     @property
     def route_order(self) -> list[str]:
         return list(self.routes["order"])
+
+    def verified(self) -> list[tuple[str, date | None]]:
+        """(file, last_verified) for each knowledge-base file."""
+        out = []
+        for name, doc in (("tests", self.tests), ("farms", self.farms), ("routes", self.routes)):
+            v = doc.get("last_verified")
+            if isinstance(v, str):
+                try:
+                    v = date.fromisoformat(v)
+                except ValueError:
+                    v = None
+            out.append((name, v if isinstance(v, date) else None))
+        return out
+
+    def stale(self, today: date | None = None, max_days: int = STALE_AFTER_DAYS) -> list[str]:
+        """Files not checked against the game for ``max_days`` (or never): advice may be out of date."""
+        today = today or date.today()
+        return [
+            f"{name}.yaml" + (f" (checked {v.isoformat()})" if v else " (never checked)")
+            for name, v in self.verified()
+            if v is None or (today - v).days > max_days
+        ]
 
     def sources(self) -> list[dict]:
         out: list[dict] = []

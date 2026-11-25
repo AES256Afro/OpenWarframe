@@ -40,6 +40,7 @@ def sync_profile(
         raise ProfileError(f"The profile came back in a form OpenWarframe can't read ({exc}).") from None
     finally:
         client.close()
+    mark_profile_checked(settings)
     store = SnapshotStore(settings.snapshots_dir)
     if skip_unchanged:  # compare the raw payload first: no need to parse an unchanged profile
         latest_path = store.list()[-1] if store.list() else None
@@ -60,6 +61,18 @@ def sync_profile(
         if codex:
             codex.close()
     return snapshot, store.save(snapshot), True
+
+
+def mark_profile_checked(settings: Settings) -> None:
+    """Remember when the profile was last fetched. An unchanged profile writes no new
+    snapshot, so without this a player back from a break would look out of date forever."""
+    p = profile_checked_path(settings)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.touch()
+
+
+def profile_checked_path(settings: Settings) -> Path:
+    return settings.account_dir / "profile-checked"
 
 
 def reparse(snapshot: Snapshot, codex: Codex | None) -> Snapshot:

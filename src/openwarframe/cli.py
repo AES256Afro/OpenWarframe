@@ -8,6 +8,7 @@ from pathlib import Path
 
 import typer
 from rich.console import Console
+from rich.markup import escape as _e
 from rich.table import Table
 from rich.tree import Tree
 
@@ -237,7 +238,7 @@ def inventory_import(
     if isinstance(data, dict) and "InventoryJson" in data:
         raw = data["InventoryJson"]
         data = json.loads(raw) if isinstance(raw, str) else raw
-    atomic_write_text(s.home / "inventory.json", json.dumps(data))
+    atomic_write_text(s.inventory_path, json.dumps(data))
     console.print(
         f"[green]Inventory loaded:[/green] {len(inv.equipment)} built items, {len(inv.recipes)} blueprints, "
         f"{sum(sum(v.values()) for v in inv.relics.values())} relics"
@@ -255,8 +256,11 @@ def inventory_grab(
 
     from .config import save_settings
     from .inventory import parse_inventory
-    from .sources.account.session import RISK_TEXT, SessionError, grab_inventory
+    from .sources.account.session import RISK_TEXT, SUPPORTED, UNSUPPORTED_TEXT, SessionError, grab_inventory
 
+    if not SUPPORTED:  # say so before asking for consent to something that can't run here
+        console.print(UNSUPPORTED_TEXT, markup=False, style="yellow")
+        raise typer.Exit(code=1)
     s = load_settings()
     if not s.extra.get("session_reader_ok"):
         # --yes never answers this first question: consent has to come from the player
@@ -272,7 +276,7 @@ def inventory_grab(
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from None
     inv = parse_inventory(data, source="game session")
-    atomic_write_text(s.home / "inventory.json", json.dumps(data))
+    atomic_write_text(s.inventory_path, json.dumps(data))
     console.print(
         f"[green]Inventory downloaded:[/green] {len(inv.equipment)} built items, {len(inv.recipes)} blueprints, "
         f"{sum(sum(v.values()) for v in inv.relics.values())} relics"
@@ -295,7 +299,7 @@ def inventory_forget_consent() -> None:
 @inventory_app.command("clear")
 def inventory_clear() -> None:
     """Forget the loaded inventory file."""
-    p = load_settings().home / "inventory.json"
+    p = load_settings().inventory_path
     if p.exists():
         p.unlink()
     console.print("Inventory cleared.")
@@ -336,7 +340,7 @@ def _saved_inventory(s):
     """The inventory the app or `inventory grab/import` saved, or None (with a warning if unreadable)."""
     from .inventory import load_inventory
 
-    path = s.home / "inventory.json"
+    path = s.inventory_path
     if not path.exists():
         return None
     try:
@@ -475,7 +479,7 @@ def _print_summary(snapshot, codex) -> None:
     age = ""
     if sm.account_age_days:
         age = f" - playing for {sm.account_age_days // 365} y {sm.account_age_days % 365 // 30} m"
-    console.print(f"[bold]{who}[/bold]  MR {sm.mastery_rank}{age}")
+    console.print(f"[bold]{_e(who)}[/bold]  MR {sm.mastery_rank}{age}")
     bits = []
     if sm.play_time_h:
         bits.append(f"{sm.play_time_h:,.0f} h played")
@@ -496,7 +500,7 @@ def _print_summary(snapshot, codex) -> None:
         t.add_row(c.category, str(c.mastered), str(c.leveling), str(c.total) if c.total is not None else "?")
     console.print(t)
     if sm.unmastered_names:
-        console.print("[dim]owned, not mastered: " + ", ".join(sm.unmastered_names) + "[/dim]")
+        console.print("[dim]owned, not mastered: " + _e(", ".join(sm.unmastered_names)) + "[/dim]")
 
 
 def _print_diff(d) -> None:
@@ -510,18 +514,20 @@ def _print_diff(d) -> None:
     if d.mastery_rank[0] != d.mastery_rank[1]:
         console.print(f"  mastery rank {d.mastery_rank[0]} -> {d.mastery_rank[1]}")
     if d.newly_mastered:
-        console.print("  [green]mastered:[/green] " + ", ".join(d.newly_mastered))
+        console.print("  [green]mastered:[/green] " + _e(", ".join(d.newly_mastered)))
     if d.rank_ups:
-        console.print("  ranked up: " + ", ".join(f"{n} {a}->{b}" for n, a, b in d.rank_ups[:15]))
+        console.print(
+            "  ranked up: " + ", ".join(f"{n} {a}->{b}" for n, a, b in d.rank_ups[:15]), markup=False
+        )
     new_only = [n for n in d.newly_leveled if n not in d.newly_mastered]
     if new_only:
-        console.print("  started leveling: " + ", ".join(new_only[:15]))
+        console.print("  started leveling: " + ", ".join(new_only[:15]), markup=False)
     if d.new_nodes:
-        console.print("  new nodes: " + ", ".join(d.new_nodes[:15]))
+        console.print("  new nodes: " + ", ".join(d.new_nodes[:15]), markup=False)
     if d.new_steel_path_nodes:
-        console.print("  [magenta]Steel Path:[/magenta] " + ", ".join(d.new_steel_path_nodes[:15]))
+        console.print("  [magenta]Steel Path:[/magenta] " + _e(", ".join(d.new_steel_path_nodes[:15])))
     if d.standing:
-        console.print("  standing: " + ", ".join(f"{n} {v:+,}" for n, v in d.standing[:10]))
+        console.print("  standing: " + ", ".join(f"{n} {v:+,}" for n, v in d.standing[:10]), markup=False)
     if d.challenges_progressed:
         console.print(f"  achievements progressed: {len(d.challenges_progressed)}")
 
@@ -643,7 +649,7 @@ def codex_info(
         t.add_column("rows", justify="right")
         t.add_column("seen in")
         for r in cx.unresolved():
-            t.add_row(r["name"], str(r["count"]), r["sample_source"] or "")
+            t.add_row(_e(r["name"]), str(r["count"]), _e(r["sample_source"] or ""))
         console.print(t)
 
 
@@ -659,16 +665,16 @@ def codex_search(text: str, limit: int = 25) -> None:
     t.add_column("MR", justify="right")
     t.add_column("uniqueName", style="dim")
     for r in cx.search(text, limit=limit):
-        t.add_row(r["name"], r["category"], str(r["mastery_req"] or ""), r["unique_name"])
+        t.add_row(_e(r["name"]), _e(r["category"]), str(r["mastery_req"] or ""), _e(r["unique_name"]))
     console.print(t)
 
 
 def _resolve_or_exit(cx, query: str) -> str:
     uid = cx.resolve(query)
     if not uid:
-        console.print(f"[red]No unique match for '{query}'.[/red]")
+        console.print(f"[red]No unique match for '{_e(query)}'.[/red]")
         for m in cx.search(query, limit=8):
-            console.print(f"  {m['name']}  [dim]{m['unique_name']}[/dim]")
+            console.print(f"  {_e(m['name'])}  [dim]{_e(m['unique_name'])}[/dim]")
         raise typer.Exit(code=1)
     return uid
 
@@ -683,11 +689,11 @@ def codex_item(query: str) -> None:
     it = cx.item(uid)
     if it:
         console.print(
-            f"[bold]{it['name']}[/bold]  [dim]{it['category']} - {it['type'] or ''} - MR {it['mastery_req'] or 0}[/dim]"
+            f"[bold]{_e(it['name'])}[/bold]  [dim]{_e(it['category'])} - {_e(it['type'] or '')} - MR {it['mastery_req'] or 0}[/dim]"
         )
-        console.print(f"[dim]{uid}[/dim]")
+        console.print(f"[dim]{_e(uid)}[/dim]")
         if it.get("description"):
-            console.print(it["description"])
+            console.print(it["description"], markup=False)
         if it.get("market"):
             console.print(f"warframe.market slug: {it['market']['slug']}")
     for r in cx.recipes_for(uid):
@@ -696,12 +702,12 @@ def codex_item(query: str) -> None:
             f"{(r['build_time_s'] or 0) // 3600} h - rush {r['rush_price']} p - makes {r['num']}"
         )
         for ing in cx.ingredients(r["unique_name"]):
-            console.print(f"  {ing['count']:>5} x {ing['name']}")
+            console.print(f"  {ing['count']:>5} x {ing['name']}", markup=False)
     uses = cx.what_needs(uid)
     if uses:
         console.print(f"\n[bold]Used by {len(uses)} recipes[/bold]")
         for u in uses[:20]:
-            console.print(f"  {u['count']:>5} x for {u['result_name']}")
+            console.print(f"  {u['count']:>5} x for {u['result_name']}", markup=False)
         if len(uses) > 20:
             console.print(f"  ... {len(uses) - 20} more")
 
@@ -714,7 +720,7 @@ def codex_sources(query: str) -> None:
     cx = Codex(load_settings().codex_path)
     uid = _resolve_or_exit(cx, query)
     srcs = cx.sources_for(uid)
-    console.print(f"[bold]{cx.name_of(uid)}[/bold]  [dim]{uid}[/dim]")
+    console.print(f"[bold]{_e(cx.name_of(uid))}[/bold]  [dim]{_e(uid)}[/dim]")
     if not srcs:
         console.print(
             "[yellow]No source recorded in the codex (crafted from parts, quest reward, or missing data).[/yellow]"
@@ -725,7 +731,7 @@ def codex_sources(query: str) -> None:
     t.add_column("where")
     t.add_column("detail")
     for src in srcs:
-        t.add_row(src.kind, src.where, src.detail)
+        t.add_row(src.kind, _e(src.where), _e(src.detail))
     console.print(t)
 
 
@@ -739,12 +745,12 @@ def codex_tree(query: str, count: int = 1, depth: int = 6) -> None:
     tree = cx.crafting_tree(uid, count=count, depth=depth)
 
     def render(n, parent):
-        label = f"{n.count} x {n.name}" + ("  [dim](crafted)[/dim]" if n.recipe else "")
+        label = f"{n.count} x {_e(n.name)}" + ("  [dim](crafted)[/dim]" if n.recipe else "")
         branch = parent.add(label)
         for ch in n.children:
             render(ch, branch)
 
-    root = Tree(f"[bold]{tree.count} x {tree.name}[/bold]")
+    root = Tree(f"[bold]{tree.count} x {_e(tree.name)}[/bold]")
     for ch in tree.children:
         render(ch, root)
     console.print(root)
@@ -753,9 +759,48 @@ def codex_tree(query: str, count: int = 1, depth: int = 6) -> None:
     t.add_column("count", justify="right")
     t.add_column("item")
     for _uid, (name, c) in sorted(totals.items(), key=lambda kv: -kv[1][1]):
-        t.add_row(f"{c:,}", name)
+        t.add_row(f"{c:,}", _e(name))
     console.print(t)
 
 
+def _friendly(exc: BaseException) -> str | None:
+    """A one-line explanation and next step for failures a player can fix, else None."""
+    import httpx
+
+    from .sources.account.profile import ProfileError
+    from .sources.account.session import SessionError
+
+    text = str(exc)
+    if isinstance(exc, FileNotFoundError):
+        if "codex not found" in text:
+            return "No game database yet. Run: openwarframe codex update"
+        if "previous snapshot" in text:
+            return (
+                "Comparing needs two snapshots. Run `openwarframe sync` again later, after you have played."
+            )
+        if "snapshot" in text:
+            return "No profile snapshot yet. Run: openwarframe sync"
+        return f"File not found: {exc.filename or text}"
+    if isinstance(exc, PermissionError):
+        return f"{exc.filename or 'A file'} is open in another program (Excel?). Close it and run this again."
+    if isinstance(exc, ProfileError | SessionError):
+        return text
+    if isinstance(exc, httpx.HTTPError):
+        return f"Network problem: {text}. Check your internet connection and try again."
+    return None
+
+
+def main() -> None:
+    """Console entry point: known problems print one line and a next step, not a traceback."""
+    try:
+        app(prog_name="openwarframe")
+    except Exception as exc:  # noqa: BLE001 - re-raised below unless it is one we can explain
+        message = _friendly(exc)
+        if message is None:
+            raise
+        console.print(message, markup=False, style="red")
+        raise SystemExit(1) from None
+
+
 if __name__ == "__main__":
-    app()
+    main()

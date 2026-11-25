@@ -294,7 +294,7 @@ def account_needs(settings) -> tuple[set[str], dict[str, int], set[str]]:
     except Exception as exc:  # noqa: BLE001 - ranking still works without account data
         log.info("reward ranking without account data: %s", exc)
         return set(), {}, set()
-    inv_path = settings.home / "inventory.json"
+    inv_path = settings.inventory_path
     if inv_path.exists():
         try:
             from ..inventory import load_inventory

@@ -293,8 +293,13 @@ def test_no_account_shows_setup_instead_of_an_error(tmp_path: Path, codex_path: 
 
 
 def test_typed_account_id_is_checked_saved_and_fetched(server, monkeypatch: pytest.MonkeyPatch):
+    import openwarframe.account.sync as sync_mod
+    from openwarframe.sources.account.profile import ProfileError
+
     base, state = server
-    monkeypatch.setattr(state, "sync", lambda: {"synced": True})
+    fetched: list[str] = []
+    monkeypatch.setattr(sync_mod, "sync_profile", lambda s, **_: fetched.append(s.account_id))
+    monkeypatch.setattr(state, "build", lambda force=False: {"synced": True})
 
     def post(body: dict):
         req = urllib.request.Request(base + "/api/account", data=json.dumps(body).encode(), method="POST")
@@ -305,8 +310,18 @@ def test_typed_account_id_is_checked_saved_and_fetched(server, monkeypatch: pyte
     assert err.value.code == 400 and "24 characters" in json.loads(err.value.read())["error"]
     assert state.settings.account_id is None
     assert post({"id": "AB" * 12, "platform": "pc"}) == {"synced": True}
-    assert state.settings.account_id == "ab" * 12
+    assert fetched == ["ab" * 12] and state.settings.account_id == "ab" * 12
     assert "ab" * 12 in (state.settings.home / "config.toml").read_text(encoding="utf-8")
+
+    # a profile that can't be fetched leaves the current account as it was
+    def refuse(s, **_):
+        raise ProfileError("profile response has no Results; account not found")
+
+    monkeypatch.setattr(sync_mod, "sync_profile", refuse)
+    with pytest.raises(urllib.error.HTTPError) as err:
+        post({"id": "cd" * 12, "platform": "pc"})
+    assert "account not found" in json.loads(err.value.read())["error"]
+    assert state.settings.account_id == "ab" * 12
 
 
 def test_first_grab_saves_the_account_and_fetches_the_profile(server, monkeypatch: pytest.MonkeyPatch):
@@ -320,3 +335,5 @@ def test_first_grab_saves_the_account_and_fetches_the_profile(server, monkeypatc
     assert state.grab(accept=False) == {"synced": True}
     assert state.settings.account_id == "cd" * 12
     assert load_inventory(state.inventory_path).owns(RHINO)
+    # stored in that account's own folder, not left behind in the shared one
+    assert state.inventory_path == state.settings.home / "accounts" / ("cd" * 12) / "inventory.json"

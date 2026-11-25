@@ -1,6 +1,7 @@
 """Settings and on-disk layout.
 
-Everything OpenWarframe stores lives under one directory:
+Everything OpenWarframe stores lives under one directory, with one sub-folder per account
+(``accounts/<account id>/`` holds that account's snapshots and inventory):
 
     %LOCALAPPDATA%\\OpenWarframe   (Windows)
     ~/.local/share/OpenWarframe    (Linux)
@@ -44,8 +45,17 @@ class Settings:
         return self.home / "codex.sqlite"
 
     @property
+    def account_dir(self) -> Path:
+        """Everything tied to one account. Before an account is set: the data folder itself."""
+        return self.home / "accounts" / self.account_id if self.account_id else self.home
+
+    @property
     def snapshots_dir(self) -> Path:
-        return self.home / "snapshots"
+        return self.account_dir / "snapshots"
+
+    @property
+    def inventory_path(self) -> Path:
+        return self.account_dir / "inventory.json"
 
     @property
     def exports_dir(self) -> Path:
@@ -85,8 +95,49 @@ def load_settings(home: Path | None = None) -> Settings:
         acc = data.get("account_id")
         settings.account_id = str(acc) if acc else None
         settings.extra = {k: v for k, v in data.items() if k not in {"platform", "account_id"}}
+    migrate_to_account_folders(settings)
     settings.ensure_dirs()
     return settings
+
+
+def migrate_to_account_folders(settings: Settings) -> int:
+    """Move data from the old shared layout into one folder per account. Returns files moved.
+
+    Up to 0.4.3 every snapshot and the inventory sat directly in the data folder, so
+    switching accounts mixed them up (diffs across accounts, the old inventory shown with
+    the new profile). Each old snapshot names its account, so it moves to that account's
+    folder; the old inventory belongs to the account that is set, because switching
+    accounts used to delete it.
+    """
+    if not settings.account_id:
+        return 0
+    legacy_snaps = settings.home / "snapshots"
+    moved = 0
+    if legacy_snaps.is_dir() and legacy_snaps != settings.snapshots_dir:
+        import json
+
+        for f in sorted(legacy_snaps.glob("*.json")):
+            try:
+                owner = (json.loads(f.read_text(encoding="utf-8")).get("identity") or {}).get("account_id")
+            except (OSError, ValueError):
+                owner = None
+            dest = settings.home / "accounts" / (owner or settings.account_id) / "snapshots" / f.name
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if not dest.exists():
+                with contextlib.suppress(OSError):
+                    f.replace(dest)
+                    moved += 1
+        with contextlib.suppress(OSError):
+            legacy_snaps.rmdir()  # only when empty
+    legacy_inv = settings.home / "inventory.json"
+    if legacy_inv.is_file() and not settings.inventory_path.exists():
+        settings.inventory_path.parent.mkdir(parents=True, exist_ok=True)
+        with contextlib.suppress(OSError):
+            legacy_inv.replace(settings.inventory_path)
+            moved += 1
+    if moved:
+        log.info("moved %d files into %s", moved, settings.account_dir)
+    return moved
 
 
 def save_settings(settings: Settings) -> Path:

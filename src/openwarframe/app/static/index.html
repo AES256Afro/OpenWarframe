@@ -705,10 +705,10 @@ function renderRewards(){
   h+='<div class="box"><h2>Recent screens <span class="muted">'+(d.history||[]).length+'</span></h2>'+((d.history||[]).length?(d.history||[]).map(function(r){return '<div class="goal"><b>'+esc(r.pick?r.pick.name:'(unreadable)')+'</b><span class="muted">'+new Date(r.time).toLocaleTimeString()+' · '+esc(r.source)+' · '+r.ranked.map(function(x){return esc(x.name)}).join(', ')+'</span></div>'}).join(''):'<p class="muted">Nothing yet.</p>')+'</div></div>';
   h+='</div>';
   $("view").innerHTML=h;
-  $("rw-toggle").onclick=function(){ api("/api/reward/watch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:!on})}).then(function(x){ REWARD=x; renderAll(); toast(on?"Stopped watching.":"Watching. Load into a fissure and the pick appears here and in the pop-out."); }); };
+  $("rw-toggle").onclick=function(){ api("/api/reward/watch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:!on})}).then(function(x){ REWARD=x; renderAll(); toast(on?"Stopped watching.":"Watching. Load into a fissure and the pick appears here and in the pop-out."); }).catch(unreachable); };
   $("rw-save").onchange=function(){ var on=this.checked; api("/api/reward/recordings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:on})}).then(function(x){ REWARD=x; renderAll(); toast(on?"Reward screens will be saved (newest 30 kept).":"Reward screens will not be saved."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
-  $("rw-pop").onclick=function(){ api("/api/reward/popout",{method:"POST"}).then(function(){ toast("Pop-out window opening. It stays on top of the game."); }); };
-  $("rw-demo").onclick=function(){ toast("Drawing a sample reward screen and reading it…",20000); api("/api/reward/demo",{method:"POST"}).then(function(x){ if(x.error){ toast(x.error,8000); return; } api("/api/reward").then(function(dd){ REWARD=dd; renderAll(); toast("Sample read. Compare the names."); }); }); };
+  $("rw-pop").onclick=function(){ api("/api/reward/popout",{method:"POST"}).then(function(){ toast("Pop-out window opening. It stays on top of the game."); }).catch(unreachable); };
+  $("rw-demo").onclick=function(){ toast("Drawing a sample reward screen and reading it…",20000); api("/api/reward/demo",{method:"POST"}).then(function(x){ if(x.error){ toast(x.error,8000); return; } api("/api/reward").then(function(dd){ REWARD=dd; renderAll(); toast("Sample read. Compare the names."); }); }).catch(unreachable); };
   return [];
 }
 
@@ -861,6 +861,7 @@ function renderFocus(){
   h+='<label class="tick opt"><input type="checkbox" id="st-bar"'+(st.bar!==false?' checked':'')+'><span class="t">Show the Next bar on every screen</span><span></span></label>';
   h+='<label class="tick opt"><input type="checkbox" id="st-owned"'+(st.ownedonly!==false?' checked':'')+'><span class="t">Only suggest relics I already have<small>Off: also suggests farming a relic first</small></span><span></span></label>';
   h+='<label class="tick opt"><input type="checkbox" id="st-start"'+(st.start!=="last"?' checked':'')+'><span class="t">Open on this Focus screen</span><span></span></label>';
+  h+='<div class="tick opt"><span class="t">Account: '+esc(DATA.meta.player||"not named")+' ('+esc((DATA.meta.platform||"pc").toUpperCase())+')<small>Switch to another account. Each account keeps its own profile history and inventory, so you can switch back.</small></span><button class="btn" type="button" id="st-account">Change account</button></div>';
   if(DATA.meta.session_ok) h+='<div class="tick"><span class="t">You allowed reading the game session<small>Get inventory from game reads the running game. Take this back and the app will ask again next time.</small></span><button class="btn" type="button" id="st-consent">Take back permission</button></div>';
   h+='<details><summary class="muted">Hide routine items I never do</summary>'+DAILY.concat(WEEKLY).map(function(x){return '<label class="tick opt"><input type="checkbox" data-hide="'+x.id+'"'+(hiddenRoutine(x.id)?' checked':'')+'><span class="t">Hide '+esc(x.t)+'</span><span></span></label>'}).join('')+'</details>';
   h+='</div>';
@@ -879,6 +880,7 @@ function renderFocus(){
   $("view").querySelectorAll("[data-ungoal]").forEach(function(b){ b.onclick=function(){ toggleGoal(b.dataset.ungoal); }; });
   $("view").querySelectorAll("[data-zoom]").forEach(function(b){ b.onclick=function(){ setSetting("zoom", +b.dataset.zoom); }; });
   $("view").querySelectorAll("[data-hide]").forEach(function(b){ b.onchange=function(){ var hd=((PREFS.settings||{}).hide||[]).filter(function(x){return x!==b.dataset.hide}); if(b.checked) hd.push(b.dataset.hide); setSetting("hide",hd); }; });
+  if($("st-account")) $("st-account").onclick=function(){ renderSetup({error:"Type the account ID to switch to. Your current account stays saved, so you can switch back the same way.", setup:true, has_account:false, switching:true}); };
   if($("st-consent")) $("st-consent").onclick=function(){ api("/api/consent/forget",{method:"POST"}).then(function(){ DATA.meta.session_ok=false; renderAll(); toast("Permission taken back. The app will ask before reading the game again."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
   var bind2=function(id,k,fn){ var e=$(id); if(e) e.onchange=function(){ setSetting(k, fn(e.checked)); }; };
   bind2("st-contrast","contrast",function(v){return v}); bind2("st-calm","calm",function(v){return v});
@@ -928,31 +930,40 @@ function checkPrices(){
     }).catch(function(){ toast("Could not reach warframe.market."); });
 }
 function renderSetup(d){
-  $("who").textContent=""; $("title").textContent="Get started"; $("csv").hidden=true;
-  var h='<div class="setup"><h1>Welcome to OpenWarframe</h1><p class="muted">'+esc(d.error)+'</p>';
+  if(!d.switching) $("who").textContent="";
+  $("title").textContent=d.switching?"Change account":"Get started"; $("csv").hidden=true;
+  var h='<div class="setup"><h1>'+(d.switching?'Change account':'Welcome to OpenWarframe')+'</h1><p class="muted">'+esc(d.error)+'</p>';
   if(d.has_account){
     h+='<div class="box"><p>Your account is set. Fetch your public profile to fill the app.</p><div class="row"><button class="btn primary" type="button" id="setup-refresh">Fetch my profile</button></div></div>';
   } else {
-    h+=(MAC?'':'<div class="box"><h2>From the running game (Windows only)</h2><p>Start Warframe, log in and wait until you are in your Orbiter. Then click the button. OpenWarframe finds your account and loads your full inventory (relics, blueprints, resources) in one go.</p><div class="row"><button class="btn primary" type="button" id="setup-grab">Find my account in the game</button></div></div>')
-      +'<div class="box"><h2>Or type your account ID</h2><ol><li>Log in at warframe.com in your browser.</li><li>Press F12 and open the Application tab (Storage in Firefox).</li><li>Under Cookies, pick www.warframe.com and copy the value of <b>gid</b>.</li></ol>'
+    if(d.switching) h+='<div class="row"><button class="btn" type="button" id="setup-back">Keep the current account</button></div>';
+    h+=(MAC||d.switching?'':'<div class="box"><h2>From the running game (Windows only)</h2><p>Start Warframe, log in and wait until you are in your Orbiter. Then click the button. OpenWarframe finds your account and loads your full inventory (relics, blueprints, resources) in one go.</p><div class="row"><button class="btn primary" type="button" id="setup-grab">Find my account in the game</button></div></div>')
+      +'<div class="box"><h2>'+(MAC||d.switching?'Type your account ID':'Or type your account ID')+'</h2><ol><li>Log in at warframe.com in your browser.</li><li>Press F12 and open the Application tab (Storage in Firefox).</li><li>Under Cookies, pick www.warframe.com and copy the value of <b>gid</b>.</li></ol>'
       +'<p class="muted">It works like a user name, not a password: it only opens the same read-only profile anyone can view in the game.</p>'
       +'<div class="row"><label for="setup-id" class="muted">Account ID</label><input id="setup-id" autocomplete="off" spellcheck="false" maxlength="40" placeholder="24 characters, 0-9 and a-f"><select id="setup-plat" aria-label="Platform"><option value="pc">PC</option><option value="ps4">PlayStation</option><option value="xb1">Xbox</option><option value="swi">Nintendo Switch</option><option value="mob">iOS</option><option value="and">Android</option></select><button class="btn" type="button" id="setup-save">Save and fetch</button></div></div>';
   }
   $("view").innerHTML=h+'</div>';
   if(d.has_account){ $("setup-refresh").onclick=function(){ $("refresh").click(); }; return; }
   if($("setup-grab")) $("setup-grab").onclick=function(){ grab(false); };
+  if($("setup-back")) $("setup-back").onclick=function(){ load(DATA); };
   $("setup-save").onclick=function(){
     var id=$("setup-id").value.trim();
     if(!id){ $("setup-id").focus(); return; }
     toast("Fetching your profile…", 20000);
     api("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:id, platform:$("setup-plat").value})})
-      .then(function(r){ if(r.error&&!r.setup){ toast(r.error,10000); return; } load(r); if(!r.error) toast("Profile loaded"); });
+      .then(function(r){ if(r.error&&!r.setup){ toast(r.error,10000); return; } load(r); if(!r.error) toast("Profile loaded"); })
+      .catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?",10000); });
   };
 }
 function api(path, opts){ return fetch(path, opts).then(function(r){ return r.json(); }); }
+// for things the player clicked: say so when the app can't be reached instead of doing nothing
+function unreachable(){ toast("Could not reach OpenWarframe. Is the app still running?", 10000); }
 
 $("q").oninput=function(){ Q=this.value.trim().toLowerCase(); if(VIEW==="overview"){ VIEW="all"; } renderAll(); };
-$("refresh").onclick=function(){ toast("Fetching your profile…", 20000); api("/api/sync",{method:"POST"}).then(function(d){ load(d); toast(d.error?d.error:"Profile refreshed"); }); };
+$("refresh").onclick=function(){ toast("Fetching your profile…", 20000); api("/api/sync",{method:"POST"}).then(function(d){
+  // a failed refresh keeps what is on screen: only the very first load has nothing to keep
+  if(d.error&&!d.setup&&DATA&&!DATA.error){ toast(d.error, 10000); return; }
+  load(d); toast(d.error?d.error:"Profile refreshed"); }).catch(unreachable); };
 $("loadinv").onclick=function(){ $("invfile").click(); };
 function grab(accept){
   toast("Reading the game session and downloading your inventory…", 60000);
@@ -961,7 +972,7 @@ function grab(accept){
       if(d.needs_consent){ $("toast").hidden=true; $("risktext").textContent=d.risk; $("consent").hidden=false; return; }
       if(d.error){ toast(d.error,10000); return; }
       load(d); toast("Inventory loaded from the game");
-    }).catch(function(){ toast("Could not reach the OpenWarframe server."); });
+    }).catch(unreachable);
 }
 $("grab").onclick=function(){ grab(false); };
 if(MAC) $("grab").hidden=true;
@@ -969,7 +980,8 @@ $("consent-yes").onclick=function(){ $("consent").hidden=true; grab(true); };
 $("consent-no").onclick=function(){ $("consent").hidden=true; };
 function sendInventory(file){
   file.text().then(function(txt){ toast("Reading inventory…",20000); return api("/api/inventory",{method:"POST",headers:{"Content-Type":"application/json"},body:txt}); })
-    .then(function(d){ if(d.error){ toast(d.error,8000); return; } load(d); toast("Inventory loaded"); });
+    .then(function(d){ if(d.error){ toast(d.error,8000); return; } load(d); toast("Inventory loaded"); })
+    .catch(unreachable);
 }
 $("invfile").onchange=function(){ if(this.files[0]) sendInventory(this.files[0]); this.value=""; };
 // Drop an inventory file anywhere. The overlay shows only while a file is dragged over the

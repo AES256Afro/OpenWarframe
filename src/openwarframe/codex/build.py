@@ -699,7 +699,13 @@ def build_codex(conn: sqlite3.Connection, payloads: CodexPayloads) -> BuildRepor
                 ("public_export", pe.version, now, json.dumps({"manifests": sorted(pe.manifests)})),
                 ("public_export_plus", plus.version, now, json.dumps({"files": sorted(plus.files)})),
                 ("wfcd_drops", drops.version, now, json.dumps({"modified_ms": drops.modified})),
-                ("warframe_market", _now(), now, json.dumps({"items": len(payloads.market)})),
+                # an empty item list means the fetch failed: say so instead of looking fresh
+                (
+                    "warframe_market",
+                    _now() if payloads.market else "unavailable",
+                    now,
+                    json.dumps({"items": len(payloads.market)}),
+                ),
             ],
         )
     report.unresolved = dict(resolver.unresolved)

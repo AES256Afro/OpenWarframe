@@ -48,6 +48,7 @@ class CachedClient:
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.retries = retries
+        self.last_was_network = False  # did the last get() send a request (rate limits care)
         self._client = httpx.Client(
             headers={"User-Agent": USER_AGENT, "Accept": "*/*"},
             timeout=timeout,
@@ -89,10 +90,12 @@ class CachedClient:
     def get(self, url: str, *, max_age: float | None = None, force: bool = False) -> bytes:
         body_path, meta_path = self._paths(url)
         entry = self._read_meta(meta_path)
+        self.last_was_network = False
         if entry and body_path.exists() and not force:
             effective = max_age if max_age is not None else entry.max_age
             if (time.time() - entry.fetched_at) < effective:
                 return body_path.read_bytes()
+        self.last_was_network = True
 
         headers: dict[str, str] = {}
         if entry and body_path.exists() and not force:
@@ -103,11 +106,18 @@ class CachedClient:
 
         last_error: Exception | None = None
         for attempt in range(self.retries):
+            last_try = attempt == self.retries - 1
             try:
                 resp = self._client.get(url, headers=headers)
             except httpx.HTTPError as exc:  # network trouble
                 last_error = exc
-                time.sleep(0.5 * (2**attempt))
+                if not last_try:
+                    time.sleep(0.5 * (2**attempt))
+                continue
+            if resp.status_code == 429:  # rate limited: wait as asked (briefly), then try again
+                last_error = httpx.HTTPStatusError(f"429 from {url}", request=resp.request, response=resp)
+                if not last_try:
+                    time.sleep(_retry_after(resp, default=1.0 * (2**attempt)))
                 continue
             if resp.status_code == 304 and entry and body_path.exists():
                 entry.fetched_at = time.time()
@@ -118,7 +128,8 @@ class CachedClient:
                 last_error = httpx.HTTPStatusError(
                     f"{resp.status_code} from {url}", request=resp.request, response=resp
                 )
-                time.sleep(0.5 * (2**attempt))
+                if not last_try:
+                    time.sleep(0.5 * (2**attempt))
                 continue
             if resp.status_code != 200:
                 raise httpx.HTTPStatusError(
@@ -154,6 +165,14 @@ class CachedClient:
 
     def close(self) -> None:
         self._client.close()
+
+
+def _retry_after(resp: httpx.Response, default: float, cap: float = 10.0) -> float:
+    """Seconds a 429 asks us to wait (Retry-After), never more than ``cap``."""
+    try:
+        return min(cap, max(0.0, float(resp.headers.get("retry-after", default))))
+    except ValueError:
+        return min(cap, default)
 
 
 def _max_age_from(resp: httpx.Response, default: float) -> float:

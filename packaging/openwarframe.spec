@@ -1,6 +1,6 @@
 # PyInstaller spec: one-folder build with two executables sharing one runtime.
 #
-#   uv run --with pyinstaller pyinstaller packaging/openwarframe.spec --noconfirm
+#   uv run pyinstaller packaging/openwarframe.spec --noconfirm   (PyInstaller is pinned in uv.lock)
 #
 # On macOS the same spec also wraps the folder in dist/OpenWarframe.app (see the end);
 # the CLI is then OpenWarframe.app/Contents/MacOS/openwarframe-cli.

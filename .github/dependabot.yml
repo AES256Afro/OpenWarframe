@@ -1,0 +1,20 @@
+# Actions are pinned to full commit SHAs and Python packages to uv.lock; Dependabot keeps
+# both current with reviewable pull requests instead of silent upgrades.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: uv
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      python-minor-and-patch:
+        update-types: [minor, patch]

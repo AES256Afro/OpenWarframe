@@ -5,6 +5,10 @@ on:
     branches: [main]
   pull_request:
 
+# Nothing here writes to the repository or releases.
+permissions:
+  contents: read
+
 jobs:
   test:
     strategy:
@@ -14,11 +18,47 @@ jobs:
         python: ["3.12", "3.13"]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           python-version: ${{ matrix.python }}
-      - run: uv sync --all-groups
+      - run: uv sync --locked --all-groups
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
+
+  # Build the standalone app the same way the release does, so a broken spec, missing data
+  # file or retired runner shows up on the pull request instead of after a tag is pushed.
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            cli: dist/OpenWarframe/openwarframe-cli.exe
+          - os: macos-latest
+            cli: dist/OpenWarframe.app/Contents/MacOS/openwarframe-cli
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        with:
+          python-version: "3.12"
+      - run: uv sync --locked --all-groups
+      - name: Build with PyInstaller
+        run: uv run pyinstaller packaging/openwarframe.spec --noconfirm
+      - name: Smoke test
+        run: uv run python packaging/smoke_test.py ${{ matrix.cli }}
+      - name: Third-party notices
+        run: uv run python packaging/third_party_notices.py dist/THIRD_PARTY_LICENSES.txt
+      - name: Check install.ps1 parses
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/packaging/install.ps1", [ref]$null, [ref]$errors) | Out-Null
+          if ($errors) { $errors | Format-List; throw "install.ps1 has syntax errors" }

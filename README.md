@@ -41,7 +41,7 @@ Or install with one line in PowerShell. This also adds a desktop icon, and runni
 updates the app:
 
 ```powershell
-irm https://raw.githubusercontent.com/AES256Afro/OpenWarframe/main/packaging/install.ps1 | iex
+irm https://github.com/AES256Afro/OpenWarframe/releases/latest/download/install.ps1 | iex
 ```
 
 The app opens in its own window, with its own taskbar button you can pin. The window uses

@@ -1,6 +1,6 @@
 # OpenWarframe installer for Windows.
 #
-#   irm https://raw.githubusercontent.com/AES256Afro/OpenWarframe/main/packaging/install.ps1 | iex
+#   irm https://github.com/AES256Afro/OpenWarframe/releases/latest/download/install.ps1 | iex
 #
 # What it does, in order:
 #   1. Installs uv (https://docs.astral.sh/uv/) with Astral's official installer if it is missing.

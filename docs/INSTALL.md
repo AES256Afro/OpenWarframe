@@ -14,7 +14,7 @@ There are two ways in. Both are free, need no admin rights and leave Warframe un
 Open PowerShell (Start menu, type `powershell`) and paste:
 
 ```powershell
-irm https://raw.githubusercontent.com/AES256Afro/OpenWarframe/main/packaging/install.ps1 | iex
+irm https://github.com/AES256Afro/OpenWarframe/releases/latest/download/install.ps1 | iex
 ```
 
 The script ([packaging/install.ps1](../packaging/install.ps1), read it first if you like):
@@ -36,10 +36,12 @@ Prefer the command line? In a new PowerShell window, `openwarframe account howto
 `openwarframe account set --id <your 24-character account id>`, then `openwarframe sync`.
 
 To update later, run the install command again.
-To install a specific version, set `$env:OPENWARFRAME_REF = "v0.4.1"` first. Releases from
-0.4.1 on also attach `install.ps1` itself, so
-`irm https://github.com/AES256Afro/OpenWarframe/releases/latest/download/install.ps1 | iex`
-runs the installer exactly as it shipped with the latest release.
+To install a specific version, set `$env:OPENWARFRAME_REF = "v0.4.1"` first.
+
+The command above runs the copy of `install.ps1` attached to the latest release, so it only
+changes when a new version ships. The copy in the repository
+(`https://raw.githubusercontent.com/AES256Afro/OpenWarframe/main/packaging/install.ps1`) still
+works, but follows `main` as it changes.
 
 To uninstall: `uv tool uninstall openwarframe` and delete the desktop shortcut. Your data lives in
 `%LOCALAPPDATA%\OpenWarframe`; delete that folder too if you want it gone.

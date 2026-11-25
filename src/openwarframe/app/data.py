@@ -215,12 +215,14 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
 
     # -- blueprints ------------------------------------------------------------------
     blueprints: list[dict] = []
+    unknown_blueprints = 0  # in the inventory but not in the game data yet (new content)
     if have_inv:
         for rid, n in inventory.recipes.items():
             row = conn.execute(
                 "SELECT result_item, build_price, build_time_s FROM recipe WHERE unique_name = ?", (rid,)
             ).fetchone()
             if not row:
+                unknown_blueprints += 1
                 continue
             result, price, seconds = row
             parts = []
@@ -306,6 +308,8 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             "estimate": m.estimated_total,
             "next": m.next_rank_threshold,
             "snapshot": report.snapshot_taken_at.isoformat(),
+            "game_data": _game_data_date(conn),
+            "unknown_blueprints": unknown_blueprints,
             # Steel Path opens once the whole star chart is done; until then, don't suggest it
             "steel_path_unlocked": bool(
                 report.headline.steel_path_done
@@ -332,6 +336,15 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
         "farm": farm,
         **extra,
     }
+
+
+def _game_data_date(conn) -> str | None:
+    """When the game data (the official Public Export) was last downloaded."""
+    try:
+        row = conn.execute("SELECT fetched_at FROM source_version WHERE source = 'public_export'").fetchone()
+    except Exception:  # noqa: BLE001 - an old or partial database
+        return None
+    return row[0] if row else None
 
 
 def _part_name(conn, uid: str) -> str:

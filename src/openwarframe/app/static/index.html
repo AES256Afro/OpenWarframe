@@ -36,6 +36,9 @@ nav.side{background:var(--panel); border-right:1px solid var(--line); display:fl
 .tab .n{font:12px var(--mono); color:var(--muted)}
 .side .spacer{flex:1}
 .side .btn{margin:4px 0}
+.side .upd{display:block; margin:6px 0 0; padding:8px 10px; border-radius:8px; background:var(--gold-soft); color:var(--gold); font-weight:600; font-size:13px; text-decoration:none}
+.fresh{margin:12px 18px 0; padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.fresh p{margin:0; flex:1 1 380px}
 main{display:flex; flex-direction:column; min-width:0; min-height:0}
 main > .wrap{flex:1}
 .top{display:flex; flex-wrap:wrap; gap:10px; align-items:center; padding:14px 18px 10px; border-bottom:1px solid var(--line)}
@@ -159,6 +162,9 @@ body.big-text .tab .n, body.big-text .brand span{display:none}
   <button class="btn" id="refresh" type="button">Refresh profile</button>
   <button class="btn primary" id="grab" type="button">Get inventory from game</button>
   <button class="btn" id="loadinv" type="button">Load inventory file…</button>
+  <button class="btn" id="export" type="button">Export my account…</button>
+  <button class="btn" id="updatedata" type="button">Update game data</button>
+  <a class="upd" id="newversion" hidden target="_blank" rel="noopener"></a>
   <input type="file" id="invfile" accept=".json,application/json" hidden>
 </nav>
 <main>
@@ -267,9 +273,17 @@ var BP_COLS=[
 var price=function(v){return v==null?'<span class="muted">-</span>':esc(v)};
 var FOUNDRY_COLS=[
   {k:"name",l:"Building",cls:"name"},
-  {k:"ready",l:"Status",fmt:function(v){return v?'<span class="pill p-owned">Ready to claim</span>':'<span class="pill p-leveling">Building</span>'}},
-  {k:"hours_left",l:"Hours left",cls:"num"}
+  // worked out from ready_at now, not when the inventory was loaded: long sessions stay right
+  {k:"ready",l:"Status",fmt:function(v,r){return foundryReady(r)?'<span class="pill p-owned">Ready to claim</span>':'<span class="pill p-leveling">Building</span>'}},
+  {k:"hours_left",l:"Time left",cls:"num",fmt:function(v,r){return esc(foundryLeft(r))}}
 ];
+function foundryReady(r){ return r.ready_at?Date.parse(r.ready_at)<=Date.now():!!r.ready; }
+function foundryLeft(r){
+  if(!r.ready_at) return r.hours_left==null?"-":r.hours_left+" h";
+  var min=Math.ceil((Date.parse(r.ready_at)-Date.now())/60000);
+  if(min<=0) return "Ready";
+  return min<60?min+" min":Math.floor(min/60)+" h "+(min%60?(min%60)+" min":"");
+}
 var RES_COLS=[
   {k:"name",l:"Resource",cls:"name"},{k:"short",l:"Short",cls:"num",fmt:function(v){return v?'<b>'+v.toLocaleString()+'</b>':'<span class="pill p-owned">Enough</span>'}},
   {k:"have",l:"You have",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},{k:"need",l:"Blueprints need",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},
@@ -333,7 +347,7 @@ var BARO_COLS=[
 ];
 function loadLive(force){
   if(!force && LIVE && Date.now()-LIVE_AT<55000) return;
-  api("/api/live").then(function(d){ LIVE=d; LIVE_AT=Date.now(); if(VIEW==="live") renderAll(); })
+  api("/api/live").then(function(d){ LIVE=d; LIVE_AT=Date.now(); if(VIEW==="live"||VIEW==="focus") renderAll(); else if(DATA) renderFocusBar(); })
     .catch(function(){ LIVE={error:"Could not load the world state."}; if(VIEW==="live") renderAll(); });
 }
 function liveHeader(){
@@ -344,7 +358,8 @@ function liveHeader(){
   if(best) h+='<div class="what">'+esc(best.tier)+' '+esc(best.mission)+' fissure on '+esc(best.where)+(best.steel_path?' (Steel Path)':'')+', '+mins(best.minutes_left)+' left</div><div class="why">'+(LIVE.inventory?'Bring '+esc(best.best_relic)+': it holds '+best.best_relic_needed+' part'+(best.best_relic_needed===1?'':'s')+' you need and you have '+best.best_relic_count+'.':esc(best.tier)+' relics like '+esc(best.best_relic)+' hold parts you need. Load your inventory to see which you own.')+'</div>';
   else h+='<div class="what">No open fissure matches your relics right now.</div>';
   h+='<div class="also">';
-  if(LIVE.here) h+='<span>You are here: <b>'+esc(LIVE.here.where||LIVE.here.node)+'</b>'+(LIVE.here.mission?' · '+esc(LIVE.here.mission):'')+(LIVE.here.fissure?' · fissure':'')+'</span>';
+  // the log keeps the last mission after the game closes: say how old it is, drop it when stale
+  if(LIVE.here && !(LIVE.here.log_age_min>120)) h+='<span>'+(LIVE.here.log_age_min>10?'Last seen':'You are here')+': <b>'+esc(LIVE.here.where||LIVE.here.node)+'</b>'+(LIVE.here.mission?' · '+esc(LIVE.here.mission):'')+(LIVE.here.fissure?' · fissure':'')+'</span>';
   if(LIVE.baro) h+='<span>Baro: '+(LIVE.baro.here?'at <b>'+esc(LIVE.baro.where)+'</b> for '+LIVE.baro.hours_left+' h':'arrives at '+esc(LIVE.baro.where)+' in '+LIVE.baro.hours_until+' h')+'</span>';
   var inv=(LIVE.invasions||[]).filter(function(i){return i.worth_it}).length;
   if(inv) h+='<span><b>'+inv+'</b> invasions reward things you need</span>';
@@ -536,6 +551,8 @@ function emptyText(spec){
   if(spec.key==="baro") return LIVE&&LIVE.baro&&!LIVE.baro.here?"Baro is not here yet. His stock appears when he arrives.":"No stock listed.";
   if(spec.key==="crack"&&!DATA.meta.inventory) return invHint("Relics to crack come from your inventory.");
   if(spec.key==="relics"&&!DATA.meta.inventory&&!spec.rows.length) return "No relics found.";
+  // an empty list is only a filter problem when there was something to filter
+  if(!spec.rows.length) return {foundry:"Nothing is building in your Foundry right now.", resources:"Your blueprints don't need any resources you're short of.", sell:"No spare Prime parts or blueprints to sell.", mods:"No mods or arcanes in your inventory."}[spec.key]||"Nothing here yet.";
   return "Nothing matches these filters.";
 }
 
@@ -589,12 +606,48 @@ function renderTabs(){
     return '<button class="tab" role="tab" type="button" data-v="'+v.id+'" aria-selected="'+on+'" aria-controls="view" tabindex="'+(on?0:-1)+'"'
       +(n!=null&&n!==''?' aria-label="'+esc(v.label+', '+n)+'"':'')+'>'+esc(v.label)+'<span class="n" aria-hidden="true">'+(n==null?'':n)+'</span></button>'; }).join("");
   var tabs=[].slice.call($("tabs").querySelectorAll(".tab"));
-  var open=function(b){ VIEW=b.dataset.v; F={}; OPEN={}; try{localStorage.setItem("owf-view",VIEW); history.replaceState(null,"","#"+VIEW);}catch(e){} renderAll(); var t=$("tabs").querySelector('[data-v="'+VIEW+'"]'); if(t) t.focus(); };
+  var open=function(b){ goView(b.dataset.v); try{localStorage.setItem("owf-view",VIEW); history.replaceState(null,"","#"+VIEW);}catch(e){} renderAll(); var t=$("tabs").querySelector('[data-v="'+VIEW+'"]'); if(t) t.focus(); };
   tabs.forEach(function(b,i){
     b.onclick=function(){ open(b); };
     // the view list works like tabs: arrows move and open, Home and End jump to the ends
     b.onkeydown=function(e){ var j={ArrowDown:i+1, ArrowUp:i-1, Home:0, End:tabs.length-1}[e.key]; if(j==null) return; e.preventDefault(); open(tabs[(j+tabs.length)%tabs.length]); };
   });
+}
+// How fresh the data is: an old profile, old game data, or an update that failed offline.
+function renderFreshness(){
+  var old=document.querySelector(".fresh"); if(old) old.remove();
+  if(!DATA||!(VIEW==="focus"||VIEW==="overview")) return;
+  var m=DATA.meta, days=function(iso){ return iso?Math.floor((Date.now()-Date.parse(iso))/86400000):null; };
+  var msg=null, btn=null, act=null;
+  var gd=days(m.game_data), pd=days(m.snapshot);
+  if(m.codex_warning){ msg=m.codex_warning; btn="Try again"; act=updateGameData; }
+  else if(m.unknown_blueprints>0){ msg=m.unknown_blueprints+" of your blueprints are newer than the game data, so they are left out."; btn="Update game data"; act=updateGameData; }
+  else if(gd!=null&&gd>14){ msg="The game data is "+gd+" days old, so recent items and drop changes may be missing."; btn="Update game data"; act=updateGameData; }
+  else if(pd!=null&&pd>7){ msg="Your profile is from "+pd+" days ago."; btn="Refresh profile"; act=function(){ $("refresh").click(); }; }
+  if(!msg) return;
+  var n=document.createElement("div"); n.className="fresh";
+  n.innerHTML='<p>'+esc(msg)+'</p><button class="btn" type="button">'+esc(btn)+'</button>';
+  n.querySelector("button").onclick=act;
+  $("filters").after(n);
+}
+function updateGameData(){
+  toast("Updating the game data. This takes about a minute…", 120000);
+  api("/api/codex/update",{method:"POST"}).then(function(d){ load(d); toast(d.error?d.error:"Game data updated."); }).catch(unreachable);
+}
+function exportAccount(){
+  toast("Writing your workbook, dashboard and guide…", 120000);
+  api("/api/export",{method:"POST",headers:{"Content-Type":"application/json"},body:"{}"}).then(function(d){
+    if(d.error){ toast(d.error, 10000); return; }
+    var warn=(d.files||[]).filter(function(f){return f.format==="warning"});
+    toast("Saved to "+d.folder+(warn.length?" ("+warn.length+" warning"+(warn.length===1?"":"s")+")":""), 15000, {label:"Open folder", run:function(){
+      api("/api/open-folder",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({folder:d.folder})}).catch(unreachable); }});
+  }).catch(unreachable);
+}
+function checkUpdate(){
+  api("/api/update").then(function(u){
+    var a=$("newversion");
+    if(u&&u.newer){ a.href=u.url; a.textContent="Version "+u.latest+" is out: see what's new"; a.hidden=false; } else a.hidden=true;
+  }).catch(function(){});
 }
 function renderNotice(){
   var old=document.querySelector(".notice"); if(old) old.remove();
@@ -866,7 +919,8 @@ function doneSuggestion(s){ if(s.action==="grab"){ if(caps().grab){ grab(false);
   toast("Nice. Next one is up.", 0, {label:"Undo", run:function(){ if(k&&PREFS.checks[k]) delete PREFS.checks[k][s.rid]; unskip(s.id); }}); }
 function renderFocusBar(){
   var el=$("fbar");
-  if(!DATA||VIEW==="focus"||(PREFS.settings||{}).bar===false){ el.hidden=true; return; }
+  // one next action per screen: Focus, Live and What to farm have their own headline card
+  if(!DATA||VIEW==="focus"||VIEW==="live"||VIEW==="farm"||(PREFS.settings||{}).bar===false){ el.hidden=true; return; }
   var s=suggestions()[0]; if(!s){ el.hidden=true; return; }
   el.hidden=false;
   el.innerHTML='<span class="lbl">Next</span><span class="what">'+esc(s.what)+' <span class="why">· '+esc(s.why)+'</span></span>'+
@@ -878,7 +932,15 @@ function renderFocusBar(){
 function planSession(minutes){
   var picked=[], used=0, seen={};
   suggestions().forEach(function(s){ var key=s.go||s.id; if(s.m+used<=minutes && !seen[s.id]){ picked.push(s); used+=s.m; seen[s.id]=1; } });
-  SESSION={minutes:minutes, items:picked, used:used}; SESSION_TICKS={}; renderAll();
+  SESSION={minutes:minutes, items:picked, used:used, day:dayKey(), started:Date.now()}; SESSION_TICKS={}; saveSession(); renderAll();
+}
+// the plan survives a reload or a restart on the same day
+function saveSession(){ PREFS.session=SESSION?{plan:SESSION, ticks:SESSION_TICKS}:null; savePrefs(); }
+function restoreSession(){ var p=PREFS.session; if(p&&p.plan&&p.plan.day===dayKey()){ SESSION=p.plan; SESSION_TICKS=p.ticks||{}; } }
+function sessionLeft(){ return SESSION&&SESSION.started?Math.ceil((SESSION.started+SESSION.minutes*60000-Date.now())/60000):null; }
+function sessionTimeCheck(){
+  var left=sessionLeft();
+  if(left!=null && left<=0 && !SESSION.ended){ SESSION.ended=true; saveSession(); toast("Your "+SESSION.minutes+" minutes are up. A good moment to stop or plan another session.", 10000); }
 }
 function applySettings(){
   var s=PREFS.settings||{}, root=document.documentElement;
@@ -903,7 +965,8 @@ function renderFocus(){
   h+='<div class="box"><h2>Plan a session <span class="muted">Picks things that fit your time</span></h2><div class="seg">'+[15,30,60,90].map(function(m){return '<button type="button" data-plan="'+m+'" aria-pressed="'+(SESSION&&SESSION.minutes===m)+'">'+m+' min</button>'}).join('')+'</div>';
   if(SESSION){
     var doneN=Object.keys(SESSION_TICKS).filter(function(k){return SESSION_TICKS[k]}).length;
-    h+='<div class="muted">'+SESSION.items.length+' steps, about '+SESSION.used+' min. '+doneN+' done.</div>';
+    var left=sessionLeft();
+    h+='<div class="muted">'+SESSION.items.length+' steps, about '+SESSION.used+' min. '+doneN+' done.'+(left!=null?(left>0?' <b>'+left+' min left.</b>':' <b>Time is up.</b>'):'')+'</div>';
     h+=SESSION.items.map(function(x,i){return '<label class="tick"><input type="checkbox" data-st="'+i+'"'+(SESSION_TICKS[i]?' checked':'')+'><span class="t">'+esc(x.what)+'<small>'+esc(x.why)+'</small></span><span class="m">'+x.m+' min</span></label>'}).join('');
     if(SESSION.items.length && doneN===SESSION.items.length) h+='<p><b>Session complete.</b> That is a good place to stop.</p>';
   } else h+='<p class="muted">How long do you want to play? Pick a time and you get a short list to work through.</p>';
@@ -935,6 +998,7 @@ function renderFocus(){
   h+='<label class="tick opt"><input type="checkbox" id="st-calm"'+(st.calm?' checked':'')+'><span class="t">No motion</span><span></span></label>';
   h+='<label class="tick opt"><input type="checkbox" id="st-bar"'+(st.bar!==false?' checked':'')+'><span class="t">Show the Next bar on every screen</span><span></span></label>';
   h+='<label class="tick opt"><input type="checkbox" id="st-owned"'+(st.ownedonly!==false?' checked':'')+'><span class="t">Only suggest relics I already have<small>Off: also suggests farming a relic first</small></span><span></span></label>';
+  h+='<label class="tick opt"><input type="checkbox" id="st-updates"'+(st.check_updates!==false?' checked':'')+'><span class="t">Tell me when a new version is out<small>Asks GitHub once a day. Nothing about you is sent.</small></span><span></span></label>';
   h+='<label class="tick opt"><input type="checkbox" id="st-start"'+(st.start!=="last"?' checked':'')+'><span class="t">Open on this Focus screen</span><span></span></label>';
   h+='<div class="tick opt"><span class="t">Account: '+esc(DATA.meta.player||"not named")+' ('+esc((DATA.meta.platform||"pc").toUpperCase())+')<small>Switch to another account. Each account keeps its own profile history and inventory, so you can switch back.</small></span><button class="btn" type="button" id="st-account">Change account</button></div>';
   if(DATA.meta.session_ok) h+='<div class="tick"><span class="t">You allowed reading the game session<small>Get inventory from game reads the running game. Take this back and the app will ask again next time.</small></span><button class="btn" type="button" id="st-consent">Take back permission</button></div>';
@@ -947,10 +1011,13 @@ function renderFocus(){
     if(s.action==="grab") $("fx-done").textContent=caps().grab?"Get inventory from game":"Load inventory file";
     $("fx-skip").onclick=function(){ skip(s.id); };
     $("fx-tired").onclick=function(){ EASY=!EASY; renderAll(); toast(EASY?"Quickest things first. Click again to switch back.":"Back to the usual order."); };
-    if($("fx-go")) $("fx-go").onclick=function(){ VIEW=s.go; F={}; renderAll(); };
+    if($("fx-go")) $("fx-go").onclick=function(){ goView(s.go); renderAll(); };
   }
   $("view").querySelectorAll("[data-plan]").forEach(function(b){ b.onclick=function(){ planSession(+b.dataset.plan); }; });
-  $("view").querySelectorAll("[data-st]").forEach(function(b){ b.onchange=function(){ SESSION_TICKS[b.dataset.st]=b.checked; var it=SESSION.items[+b.dataset.st]; if(b.checked && it.routine) setCheck(it.routine,it.rid,true); renderAll(); }; });
+  $("view").querySelectorAll("[data-st]").forEach(function(b){ b.onchange=function(){ SESSION_TICKS[b.dataset.st]=b.checked; var it=SESSION.items[+b.dataset.st];
+    if(b.checked && it.routine) setCheck(it.routine,it.rid,true);
+    else if(b.checked) skip(it.id, true);  // ticked here: the big card moves on too
+    saveSession(); renderAll(); }; });
   $("view").querySelectorAll("[data-ck]").forEach(function(b){ b.onchange=function(){ var p=b.dataset.ck.split(":"); setCheck(p[0],p[1],b.checked); renderAll(); }; });
   $("view").querySelectorAll("[data-ungoal]").forEach(function(b){ b.onclick=function(){ toggleGoal(b.dataset.ungoal); }; });
   $("view").querySelectorAll("[data-zoom]").forEach(function(b){ b.onclick=function(){ setSetting("zoom", +b.dataset.zoom); }; });
@@ -959,7 +1026,7 @@ function renderFocus(){
   if($("st-consent")) $("st-consent").onclick=function(){ api("/api/consent/forget",{method:"POST"}).then(function(){ DATA.meta.session_ok=false; renderAll(); toast("Permission taken back. The app will ask before reading the game again."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
   var bind2=function(id,k,fn){ var e=$(id); if(e) e.onchange=function(){ setSetting(k, fn(e.checked)); }; };
   bind2("st-contrast","contrast",function(v){return v}); bind2("st-calm","calm",function(v){return v});
-  bind2("st-bar","bar",function(v){return v}); bind2("st-owned","ownedonly",function(v){return v}); bind2("st-start","start",function(v){return v?"focus":"last"});
+  bind2("st-bar","bar",function(v){return v}); bind2("st-updates","check_updates",function(v){ setTimeout(checkUpdate, 300); return v; }); bind2("st-owned","ownedonly",function(v){return v}); bind2("st-start","start",function(v){return v?"focus":"last"});
   return [];
 }
 
@@ -977,12 +1044,22 @@ function keepFocus(fn){
   if(key){ var el=document.querySelector(key); if(el&&el!==document.activeElement) el.focus({preventScroll:true}); }
   return out;
 }
-function renderAll(){ return keepFocus(renderAllNow); }
+function renderAll(){ var out=keepFocus(renderAllNow); rememberView(); return out; }
+// Filters and sort are kept per view, so coming back (or restarting) shows the list as you left it.
+var VIEW_STATE_SAVED="";
+function rememberView(){
+  if(!DATA) return;
+  PREFS.views=PREFS.views||{};
+  PREFS.views[VIEW]={F:F, sort:SORT[VIEW]||null};
+  var now=JSON.stringify(PREFS.views);
+  if(now!==VIEW_STATE_SAVED){ VIEW_STATE_SAVED=now; clearTimeout(rememberView.t); rememberView.t=setTimeout(savePrefs, 800); }
+}
+function goView(v){ VIEW=v; OPEN={}; var st=(PREFS.views||{})[v]; F=st&&st.F?JSON.parse(JSON.stringify(st.F)):{}; if(st&&st.sort) SORT[v]=st.sort; }
 function renderAllNow(){
   if(!DATA) return;
   if(VIEW!=="rewards") rewardPoll(false);
   var v=VIEWS.find(function(x){return x.id===VIEW})||VIEWS[0];
-  $("title").textContent=v.label; renderTabs(); renderFilters(); renderNotice(); renderFocusBar();
+  $("title").textContent=v.label; renderTabs(); renderFilters(); renderNotice(); renderFreshness(); renderFocusBar();
   if(VIEW==="focus"){ $("filters").hidden=true; $("csv").hidden=true; renderFocus(); $("foot").innerHTML='<span>Goals, ticks and settings are saved in your OpenWarframe folder.</span>'; return; }
   if(VIEW==="overview"){ renderOverview(); $("csv").hidden=true; return; }
   $("csv").hidden=false;
@@ -1005,6 +1082,8 @@ function load(data){
   }
   DATA=data;
   $("grab").hidden=!caps().grab;
+  // the gold button is for the one thing to do next: loading the inventory, until it is loaded
+  $("grab").classList.toggle("primary", !data.meta.inventory);
   $("who").innerHTML='<b>'+esc((data.meta.player||"Your account").replace(/[-]/g,""))+'</b><br>MR '+data.meta.mr+' · '+esc((data.meta.platform||"").toUpperCase());
   renderAll();
 }
@@ -1058,7 +1137,7 @@ $("q").oninput=function(){
   clearTimeout(searchTimer);
   searchTimer=setTimeout(function(){  // wait for a pause in typing: every render rebuilds the list
     Q=v.trim().toLowerCase();
-    if(Q && NO_SEARCH[VIEW]){ VIEW="all"; F={}; OPEN={}; try{ history.replaceState(null,"","#all"); }catch(e){} toast("Searching All items."); }
+    if(Q && NO_SEARCH[VIEW]){ goView("all"); try{ history.replaceState(null,"","#all"); }catch(e){} toast("Searching All items."); }
     renderAll();
   }, 150);
 };
@@ -1067,6 +1146,8 @@ $("refresh").onclick=function(){ toast("Fetching your profile…", 20000); api("
   if(d.error&&!d.setup&&DATA&&!DATA.error){ toast(d.error, 10000); return; }
   load(d); toast(d.error?d.error:"Profile refreshed"); }).catch(unreachable); };
 $("loadinv").onclick=function(){ $("invfile").click(); };
+$("export").onclick=exportAccount;
+$("updatedata").onclick=updateGameData;
 function grab(accept){
   toast("Reading the game session and downloading your inventory…", 60000);
   api("/api/inventory/grab",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({accept:accept===true})})
@@ -1115,7 +1196,10 @@ $("csv").onclick=function(){
   var a=document.createElement("a"); a.href=URL.createObjectURL(new Blob(["﻿"+csv],{type:"text/csv"})); a.download="openwarframe-"+VIEW.toLowerCase()+".csv"; a.click();
 };
 setInterval(function(){ fetch("/api/ping").catch(function(){}); }, 10000);
-setInterval(function(){ if(VIEW==="live") loadLive(true); }, 60000);
+// the world state feeds Live, Focus and the Next bar on every screen: keep it current everywhere
+setInterval(function(){ if(DATA) loadLive(true); }, 60000);
+// Foundry timers and the session countdown move with the clock
+setInterval(function(){ if(DATA&&(VIEW==="foundry"||VIEW==="focus")) renderAll(); sessionTimeCheck(); }, 60000);
 var DATA_VERSION=null;
 setInterval(function(){
   api("/api/version").then(function(v){
@@ -1127,11 +1211,17 @@ try{ VIEW=localStorage.getItem("owf-view")||"focus"; }catch(e){}
 // deep links: http://127.0.0.1:<port>/#relics opens that tab
 // #farm/finish also opens a sub-tab (What to farm and Live)
 function hashView(){ var parts=decodeURIComponent((location.hash||"").slice(1)).toLowerCase().split("/"), hit=null; VIEWS.forEach(function(v){ if(v.id.toLowerCase()===parts[0]) hit=v.id; }); if(hit&&parts[1]) F={sub:parts[1]}; return hit; }
-window.addEventListener("hashchange", function(){ var keepF=F; F={}; var hv=hashView(); if(!hv){ F=keepF; return; } VIEW=hv; OPEN={}; if(DATA) renderAll(); });
+window.addEventListener("hashchange", function(){ var keepF=F; F={}; var hv=hashView(); if(!hv){ F=keepF; return; } var sub=F.sub; goView(hv); if(sub) F.sub=sub; if(DATA) renderAll(); });
 $("view").innerHTML='<div class="empty" id="boot">Loading your account…</div>';
 var bootTimer=setInterval(function(){ if(DATA||!$("boot")){ clearInterval(bootTimer); return; } api("/api/status").then(function(s){ var b=$("boot"); if(b&&s.status) b.textContent=s.status; }).catch(function(){}); }, 1500);
-api("/api/prefs").then(function(p){ PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{}); if((PREFS.settings||{}).start!=="last") VIEW="focus"; var hv=hashView(); if(hv) VIEW=hv; applySettings(); }).catch(function(){})
-.then(function(){ return api("/api/data"); }).then(load).catch(function(e){
+api("/api/prefs").then(function(p){ PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{});
+  if((PREFS.settings||{}).start!=="last") VIEW="focus";
+  var sub=null, hv=hashView(); if(hv){ sub=F.sub; VIEW=hv; }
+  goView(VIEW); if(sub) F.sub=sub;  // filters and sort as you left them
+  Object.keys(PREFS.views||{}).forEach(function(v){ if(PREFS.views[v]&&PREFS.views[v].sort) SORT[v]=PREFS.views[v].sort; });
+  VIEW_STATE_SAVED=JSON.stringify(PREFS.views||{});
+  restoreSession(); applySettings(); }).catch(function(){})
+.then(function(){ return api("/api/data"); }).then(function(d){ load(d); checkUpdate(); }).catch(function(e){
   var net=e&&e.name==="TypeError"&&/fetch/i.test(e.message||"");
   $("view").innerHTML='<div class="empty">'+(net?"Could not reach the OpenWarframe server. Close this window and open OpenWarframe again.":"Something went wrong showing your data: "+esc(String((e&&e.message)||e)))+'</div>';
 });

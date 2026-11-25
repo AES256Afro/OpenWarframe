@@ -162,7 +162,7 @@ Items you cannot get right now, and why: mastery rank, syndicate standing, vault
 
 ### Exports
 
-From the command line, `openwarframe export` writes your account as JSON, SQLite, CSV, an Excel
+**Export my account** in the app (or `openwarframe export` from the command line) writes your account as JSON, SQLite, CSV, an Excel
 workbook, an account dashboard (HTML, PDF and Word), and a summary sized for ChatGPT, Claude or
 another AI model. `openwarframe guide mastery` writes a step-by-step plan to mastery rank 30 that
 covers every remaining rank test.
@@ -193,6 +193,8 @@ Your data is saved in `%LOCALAPPDATA%\OpenWarframe` on Windows and
 ## Privacy and risk
 
 - The app sends requests to Digital Extremes, GitHub, drops.warframestat.us and warframe.market.
+  Once a day it also asks GitHub whether a newer OpenWarframe is out; turn that off under
+  **Comfort** on the Focus screen.
   Nothing about you is sent anywhere else. There is no account to create and no tracking.
 - Reading the game's memory only happens when you click **Get inventory from game**, and the app
   asks before the first time. Digital Extremes' terms mention programs that read the game's

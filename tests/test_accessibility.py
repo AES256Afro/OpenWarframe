@@ -126,7 +126,7 @@ def test_rows_tabs_and_dialogs_work_without_a_mouse():
     assert "tr.onkeydown" in PAGE and 'e.key==="Enter"' in PAGE
     assert "ArrowDown" in PAGE and 'aria-orientation","vertical' in PAGE  # the view list
     assert '<dialog id="consent"' in PAGE and "showModal()" in PAGE
-    assert "function keepFocus" in PAGE and "function renderAll(){ return keepFocus(renderAllNow); }" in PAGE
+    assert "function keepFocus" in PAGE and "keepFocus(renderAllNow)" in PAGE  # every redraw keeps focus
 
 
 def test_feedback_is_announced():

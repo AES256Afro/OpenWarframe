@@ -12,11 +12,13 @@ import contextlib
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 import threading
 import time
 import webbrowser
+from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import resources
 from pathlib import Path
@@ -28,6 +30,9 @@ log = logging.getLogger(__name__)
 # The browser-window page pings every 10 s, but browsers slow timers in hidden or minimised
 # windows to about once a minute, so the server waits well past that before stopping.
 IDLE_SECONDS = 150
+PRICE_MAX_AGE = 6 * 3600  # market prices are re-checked after six hours, even in a long session
+PROFILE_REFRESH_HOURS = 24  # the profile is fetched again on open once it is this old
+RELEASES_API = "https://api.github.com/repos/AES256Afro/OpenWarframe/releases/latest"
 MAX_BODY = 64 << 20  # an inventory file is a few MB; anything this big is not one of ours
 
 # The page only ever talks to this server. These headers stop other sites from framing it
@@ -52,7 +57,9 @@ class AppState:
         self.cache_fp: tuple | None = None
         self.status = ""
         self.last_ping = time.monotonic()
-        self.prices: dict[str, dict] = {}
+        self.prices: dict[str, dict] = {}  # id -> price, with "_at" (time.time()) for expiry
+        self.codex_warning: str | None = None
+        self.update_info: dict | None = None
         from .rewards import RewardWatcher
 
         self.rewards = RewardWatcher(
@@ -91,7 +98,7 @@ class AppState:
         Returns an error message, or None when the database is ready.
         """
         from ..codex import codex_schema_version, update_codex
-        from ..codex.schema import SCHEMA_VERSION
+        from ..codex.schema import READABLE_FROM, SCHEMA_VERSION
 
         have = codex_schema_version(self.settings.codex_path)
         if have >= SCHEMA_VERSION:
@@ -99,13 +106,27 @@ class AppState:
         self.status = "Updating the game database (first run after an update can take a minute)…"
         try:
             update_codex(self.settings)
+            self.codex_warning = None
         except PermissionError:
             return (
                 "The game database is out of date but is in use by another OpenWarframe window. "
                 "Close every OpenWarframe window, then open it again."
             )
         except Exception as exc:  # noqa: BLE001
-            return f"The game database is out of date and could not be updated ({exc}). Check your internet connection."
+            if have >= READABLE_FROM:
+                # offline after an update: the old database still works, so keep going with it
+                self.codex_warning = (
+                    f"The game data could not be updated ({exc}), so you are seeing the data you already "
+                    "had. Some newer details may be missing until it updates."
+                )
+                log.warning("codex update failed, using the existing database: %s", exc)
+                return None
+            if have > 0:
+                return (
+                    f"The game database is out of date and could not be updated ({exc}). "
+                    "Check your internet connection."
+                )
+            return f"The game database could not be downloaded ({exc}). Check your internet connection."
         finally:
             self.status = ""
         return None
@@ -178,7 +199,7 @@ class AppState:
                 slug = slugs.get(rid)
                 if not slug:
                     continue
-                if rid in self.prices:
+                if rid in self.prices and time.time() - self.prices[rid].get("_at", 0) < PRICE_MAX_AGE:
                     out[rid] = self.prices[rid]
                     continue
                 url = f"https://api.warframe.market/v2/orders/item/{slug}/top"
@@ -197,6 +218,7 @@ class AppState:
                     "typical": sells[len(sells) // 2] if sells else None,
                     "buy": buys[0] if buys else None,
                 }
+                price["_at"] = time.time()
                 self.prices[rid] = out[rid] = price
         finally:
             client.close()
@@ -225,6 +247,106 @@ class AppState:
             "platform_label": PLATFORM_LABELS.get(self.settings.platform or "pc", self.settings.platform),
             "os": "mac" if sys.platform == "darwin" else "windows" if sys.platform == "win32" else "other",
         }
+
+    # -- freshness -------------------------------------------------------------------
+    def profile_age_hours(self) -> float | None:
+        """How old the newest profile snapshot is, from its file name (UTC), or None."""
+        d = self.settings.snapshots_dir
+        snaps = sorted(d.glob("*.json")) if d.exists() else []
+        if not snaps:
+            return None
+        try:
+            taken = datetime.strptime(snaps[-1].stem, "%Y-%m-%dT%H%M%SZ").replace(tzinfo=UTC)
+        except ValueError:
+            return None
+        return (datetime.now(UTC) - taken).total_seconds() / 3600
+
+    def refresh_on_open(self) -> None:
+        """Warm the cache, and fetch the profile again when it is more than a day old.
+
+        A player coming back after a long break should see where they are now, not where
+        they were. Failures (offline) are only logged: the app works with what it has.
+        """
+        age = self.profile_age_hours()
+        if self.settings.account_id and age is not None and age > PROFILE_REFRESH_HOURS:
+            self.status = "Fetching your latest profile…"
+            try:
+                self.sync()
+                return
+            except Exception as exc:  # noqa: BLE001
+                log.info("profile refresh on open failed: %s", exc)
+            finally:
+                self.status = ""
+        self.build()
+
+    def check_for_update(self) -> dict:
+        """Is a newer OpenWarframe released? Asks GitHub at most once a day; can be turned off."""
+        from .. import __version__
+        from ..http import CachedClient
+
+        if self.get_prefs().get("settings", {}).get("check_updates") is False:
+            return {"current": __version__, "disabled": True}
+        if self.update_info is not None:
+            return self.update_info
+        client = CachedClient(self.settings.cache_dir, timeout=8, retries=1)
+        try:
+            rel = client.get_json(RELEASES_API, max_age=24 * 3600)
+        except Exception as exc:  # noqa: BLE001 - offline: just don't show anything
+            log.info("update check failed: %s", exc)
+            return {"current": __version__, "error": True}
+        finally:
+            client.close()
+        tag = str(rel.get("tag_name") or "")
+        info = {
+            "current": __version__,
+            "latest": tag.lstrip("v"),
+            "newer": _version_tuple(tag) > _version_tuple(__version__),
+            "url": rel.get("html_url") or "https://github.com/AES256Afro/OpenWarframe/releases/latest",
+        }
+        self.update_info = info
+        return info
+
+    def export(self, body: bytes) -> dict:
+        """Write the account exports (Excel, dashboard, guide...) like `openwarframe export`."""
+        from ..account.store import SnapshotStore
+        from ..account.sync import reparse
+        from ..codex import Codex
+        from ..exports import run_exports
+        from ..inventory import load_inventory
+        from ..report import build_report
+
+        req = json.loads(body.decode("utf-8") or "{}")
+        formats = [str(f) for f in req.get("formats") or ["xlsx", "dashboard", "guide", "json", "csv"]]
+        s = self.settings
+        snap = SnapshotStore(s.snapshots_dir).load("latest")
+        inv = None
+        if s.inventory_path.exists():
+            with contextlib.suppress(Exception):
+                inv = load_inventory(s.inventory_path)
+        codex = Codex(s.codex_path)
+        try:
+            report = build_report(reparse(snap, codex), codex, inventory=inv)
+        finally:
+            codex.close()
+        folder = s.exports_dir / datetime.now().strftime("%Y-%m-%d_%H%M")
+        results = run_exports(report, folder, formats, guide_pdf=bool(req.get("pdf", True)), guide_docx=True)
+        return {
+            "folder": str(folder),
+            "files": [{"format": r.format, "path": str(r.path), "detail": r.detail} for r in results],
+        }
+
+    def open_folder(self, body: bytes) -> dict:
+        """Show an export folder in Finder or Explorer. Only folders under the exports folder."""
+        req = json.loads(body.decode("utf-8") or "{}")
+        target = Path(str(req.get("folder", ""))).resolve()
+        root = self.settings.exports_dir.resolve()
+        if root not in (target, *target.parents) or not target.is_dir():
+            raise ValueError("Only export folders can be opened.")
+        if sys.platform == "win32":
+            os.startfile(target)  # noqa: S606
+        else:
+            subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(target)])  # noqa: S603
+        return {"ok": True}
 
     @property
     def session_ok(self) -> bool:
@@ -319,7 +441,9 @@ class AppState:
         data = json.loads(body.decode("utf-8") or "{}")
         if not isinstance(data, dict):
             raise ValueError("preferences must be an object")
-        allowed = {k: data[k] for k in ("goals", "checks", "settings", "skipped") if k in data}
+        allowed = {
+            k: data[k] for k in ("goals", "checks", "settings", "skipped", "views", "session") if k in data
+        }
         with self.prefs_lock:  # read-merge-write must not interleave between request threads
             current = self.get_prefs()
             if isinstance(allowed.get("settings"), dict):
@@ -356,6 +480,12 @@ class AppState:
     def save_inventory(self, body: bytes) -> dict:
         self._store_inventory(json.loads(body.decode("utf-8-sig")))
         return self.build(force=True)
+
+
+def _version_tuple(v: str) -> tuple[int, ...]:
+    """'v0.5.1' -> (0, 5, 1); anything unreadable sorts as oldest."""
+    parts = re.findall(r"\d+", v)
+    return tuple(int(p) for p in parts[:3]) if parts else ()
 
 
 def _page(name: str = "static/index.html") -> bytes:
@@ -405,6 +535,7 @@ def make_handler(state: AppState):
                     if isinstance(data.get("meta"), dict):
                         data["meta"]["session_ok"] = state.session_ok
                         data["meta"]["caps"] = state.capabilities()
+                        data["meta"]["codex_warning"] = state.codex_warning
                     else:  # the setup screen needs to know what works here too
                         data = {**data, "caps": state.capabilities()}
                     self._json(data)
@@ -426,6 +557,8 @@ def make_handler(state: AppState):
                 self._json(state.rewards.status())
             elif self.path == "/mini":
                 self._send(200, _page("static/mini.html"), "text/html; charset=utf-8")
+            elif self.path == "/api/update":
+                self._json(state.check_for_update())
             elif self.path == "/api/version":
                 self._json({"version": repr(state._fingerprint())})
             elif self.path == "/api/ping":
@@ -496,6 +629,10 @@ def make_handler(state: AppState):
                     with state.lock:
                         update_codex(state.settings)
                     self._json(state.build(force=True))
+                elif self.path == "/api/export":
+                    self._json(state.export(body))
+                elif self.path == "/api/open-folder":
+                    self._json(state.open_folder(body))
                 elif self.path == "/api/consent/forget":
                     self._json(state.forget_consent())
                 elif self.path == "/api/inventory/clear":
@@ -612,7 +749,7 @@ def run_app(
         with contextlib.suppress(OSError):
             lock.write_text(json.dumps({"port": server.server_port, "pid": os.getpid()}), encoding="utf-8")
     print(f"OpenWarframe is running at {url}  (close the window to stop)")
-    threading.Thread(target=state.build, daemon=True).start()  # warm the cache
+    threading.Thread(target=state.refresh_on_open, daemon=True).start()  # warm the cache, refresh old data
     if state.get_prefs().get("settings", {}).get("reward_watch"):
         state.rewards.start()
     threading.Thread(target=server.serve_forever, name="app-server", daemon=True).start()

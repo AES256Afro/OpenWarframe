@@ -201,8 +201,8 @@ Your data is saved in `%LOCALAPPDATA%\OpenWarframe` on Windows and
   permission back at any time under **Comfort** on the Focus screen, or with
   `openwarframe inventory forget-consent`.
 - The reward helper only reads the game's log file and takes screenshots of the game window. It
-  never touches game memory or sends key presses. The screens it reads are saved in your data
-  folder, so you can check its accuracy. You can delete them.
+  never touches game memory or sends key presses. It only saves the screens it reads if you
+  turn that on (to help fix misreads); it then keeps the newest 30 in your data folder.
 - The app never asks for your password and never changes anything in the game.
 
 More detail: [docs/ACCOUNT_DATA_ACCESS.md](docs/ACCOUNT_DATA_ACCESS.md).

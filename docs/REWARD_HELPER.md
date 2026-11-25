@@ -1,6 +1,7 @@
-# Relic reward helper (milestone 0.7): backend status
+# Relic reward helper
 
-The helper only reads `%LOCALAPPDATA%\Warframe\EE.log` and pixels from the screen. It never
+The helper only reads the game's `EE.log` (`%LOCALAPPDATA%\Warframe\EE.log` on Windows; on a Mac,
+the native client's or CrossOver/Whisky bottle's copy) and pixels from the game window. It never
 reads or writes game memory and never sends input to the game.
 
 Code: `src/openwarframe/live/`
@@ -8,7 +9,7 @@ Code: `src/openwarframe/live/`
 | File | What it does |
 | --- | --- |
 | `eelog.py` | Follows EE.log (re-opens per poll, survives the file being recreated at launch, partial lines, bad bytes) and emits events: `login`, `mission_loaded` (node, missionType, faction), `reward_reported`, `reward_screen_opened`, `reward_screen_closed`, `log_reset` |
-| `ocr.py` | Finds the `Warframe.x64.exe` window, captures its client area (mss), crops one name box per reward using WFInfo's geometry, reads it with `Windows.Media.Ocr` (winrt) |
+| `ocr.py` | Finds the `Warframe.x64.exe` window, captures its client area (mss), crops one name box per reward using WFInfo's geometry, reads it with `Windows.Media.Ocr` (winrt) on Windows or Apple Vision on macOS |
 | `match.py` | Fuzzy-matches OCR text to relic reward names from the codex (difflib) and ranks: needed for an item you haven't mastered, then vaulted, then platinum (from a price dict you pass in), then ducats |
 | `reward.py` | Screenshot -> OCR -> match -> ranking, and saving recordings |
 | `synthetic.py` | Draws a fake reward screen for tests |
@@ -47,7 +48,13 @@ line to `<data dir>\live\candidates.log`.
 
 ## What still needs a real fissure recording
 
-Run `openwarframe live record` during a few fissure missions, then share the folders.
+Run `openwarframe live record` during a few fissure missions (or turn on **Save each reward
+screen** in the app), then share a few of the folders.
+
+Before you share one, look at what is in it: `screenshot.png` is the reward screen and shows
+your squadmates' names, and the CLI's `log.txt` and `candidates.log` hold lines from EE.log,
+which can include your account name. Crop or remove what you don't want to share; the
+reward boxes and `result.json` are what matter.
 
 1. **Crop geometry on the real screen.** The boxes come from WFInfo's 1920x1080
    measurements and have only been checked on synthetic images. Needed: recordings at

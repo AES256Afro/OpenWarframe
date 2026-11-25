@@ -29,6 +29,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import ctypes
+import os
 import re
 import sys
 import threading
@@ -172,14 +173,15 @@ async def _recognize(img: Image.Image, language: str | None) -> list[str]:
     bmp = SoftwareBitmap.create_copy_from_buffer(
         w.detach_buffer(), BitmapPixelFormat.BGRA8, rgba.width, rgba.height, BitmapAlphaMode.PREMULTIPLIED
     )
+    engine = None
     if language:
         from winrt.windows.globalization import Language
 
         engine = OcrEngine.try_create_from_language(Language(language))
-    else:
+    if engine is None:  # no pack for that language: fall back to the user's own languages
         engine = OcrEngine.try_create_from_user_profile_languages()
     if engine is None:
-        raise RuntimeError("Windows OCR has no engine for this language; add an OCR language pack.")
+        raise RuntimeError("Windows OCR has no engine for this language; add the English OCR language pack.")
     result = await engine.recognize_async(bmp)
     return [ln.text for ln in result.lines]
 
@@ -233,7 +235,8 @@ def _recognize_vision(img: Image.Image, language: str | None) -> list[str]:
         req.setRecognitionLanguages_([language])
     ok, err = handler.performRequests_error_([req], None)
     if not ok:
-        raise RuntimeError(f"macOS text recognition failed: {err}")
+        why = err.localizedDescription() if err is not None else "no reason given"
+        raise RuntimeError(f"macOS text recognition failed ({why}).")
     found = []
     for obs in req.results() or []:
         cands = obs.topCandidates_(1)
@@ -258,8 +261,23 @@ def read_slots(
 def read_all_layouts(
     image: Image.Image, ui_scale: float = 1.0, *, language: str | None = None
 ) -> dict[int, list[str]]:
-    """OCR for every squad size; the matcher picks the layout that reads best."""
-    return {n: read_slots(image, n, ui_scale, language=language) for n in (4, 3, 2, 1)}
+    """OCR for every squad size; the matcher picks the layout that reads best.
+
+    Smaller layouts reuse boxes of bigger ones (2 players = the middle two of 4), so each
+    distinct box is read once: 7 reads instead of 10.
+    """
+    seen: dict[tuple, str] = {}
+    out: dict[int, list[str]] = {}
+    for n in (4, 3, 2, 1):
+        row = []
+        for box in slot_boxes(image.width, image.height, n, ui_scale):
+            key = box.as_tuple()
+            if key not in seen:
+                lines = ocr_lines(prepare(image.crop(key)), language)
+                seen[key] = " ".join(t.strip() for t in lines if t.strip())
+            row.append(seen[key])
+        out[n] = row
+    return out
 
 
 # -- finding and capturing the game window ------------------------------------------------
@@ -285,6 +303,31 @@ def _dpi_aware() -> None:
     except Exception:
         with contextlib.suppress(Exception):
             ctypes.windll.user32.SetProcessDPIAware()
+
+
+@contextlib.contextmanager
+def _per_monitor_dpi():
+    """Real pixels for window positions and screenshots on every monitor (Windows 10+).
+
+    The app's window library makes the process "system" DPI aware before we can ask for
+    per-monitor awareness, and that request then fails silently. On a second monitor with
+    different scaling, positions and the capture would be scaled wrongly. Asking for it
+    per thread works regardless of what the process set, and is undone afterwards.
+    """
+    previous = None
+    try:
+        user32 = ctypes.windll.user32
+        user32.SetThreadDpiAwarenessContext.restype = ctypes.c_void_p
+        user32.SetThreadDpiAwarenessContext.argtypes = [ctypes.c_void_p]
+        previous = user32.SetThreadDpiAwarenessContext(ctypes.c_void_p(-4))  # PER_MONITOR_AWARE_V2
+    except Exception:  # older Windows: fall back to the process-wide setting
+        _dpi_aware()
+    try:
+        yield
+    finally:
+        if previous:
+            with contextlib.suppress(Exception):
+                ctypes.windll.user32.SetThreadDpiAwarenessContext(ctypes.c_void_p(previous))
 
 
 def _exe_of(hwnd: int) -> str:
@@ -318,12 +361,15 @@ def _find_game_window_mac() -> GameWindow | None:
 
     opts = Quartz.kCGWindowListOptionOnScreenOnly | Quartz.kCGWindowListExcludeDesktopElements
     found: list[GameWindow] = []
+    me = os.getpid()
     for w in Quartz.CGWindowListCopyWindowInfo(opts, Quartz.kCGNullWindowID) or []:
         if int(w.get("kCGWindowLayer", 0)) != 0:
             continue
+        if int(w.get("kCGWindowOwnerPID", -1)) == me:
+            continue  # OpenWarframe's own window or pop-out: its name contains "Warframe" too
         owner = str(w.get("kCGWindowOwnerName") or "")
         title = str(w.get("kCGWindowName") or "")
-        if "warframe" not in owner.lower() and title != "Warframe":
+        if not is_game_window(owner, title):
             continue
         b = w.get("kCGWindowBounds") or {}
         x, y = int(b.get("X", 0)), int(b.get("Y", 0))
@@ -336,6 +382,13 @@ def _find_game_window_mac() -> GameWindow | None:
     if not found:
         return None
     return max(found, key=lambda w: w.box.width * w.box.height)
+
+
+def is_game_window(owner: str, title: str) -> bool:
+    """The native Mac client's process is "Warframe"; under CrossOver/Wine the process is
+    Wine's and only the window title says Warframe. "OpenWarframe" is neither."""
+    o = owner.strip().lower()
+    return o in ("warframe", "warframe.x64.exe", "warframe.exe") or title.strip() == "Warframe"
 
 
 def _capture_mac(win: GameWindow) -> Image.Image:
@@ -354,6 +407,14 @@ def _capture_mac(win: GameWindow) -> Image.Image:
             "permission in System Settings > Privacy & Security, then restart it."
         )
     w, h = Quartz.CGImageGetWidth(cg), Quartz.CGImageGetHeight(cg)
+    if Quartz.CGImageGetBitsPerPixel(cg) != 32:
+        # HDR / wide-gamut displays can hand back 64-bit pixels; let AppKit convert
+        import io
+
+        from AppKit import NSBitmapImageRep
+
+        rep = NSBitmapImageRep.alloc().initWithCGImage_(cg)
+        return Image.open(io.BytesIO(bytes(rep.TIFFRepresentation()))).convert("RGB")
     stride = Quartz.CGImageGetBytesPerRow(cg)
     data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(cg))
     return Image.frombuffer("RGB", (w, h), bytes(data), "raw", "BGRX", stride, 1)
@@ -368,9 +429,13 @@ def find_game_window() -> GameWindow | None:
             return None
     if sys.platform != "win32":
         return None
+    with _per_monitor_dpi():
+        return _find_game_window_windows()
+
+
+def _find_game_window_windows() -> GameWindow | None:
     from ctypes import wintypes
 
-    _dpi_aware()
     user32 = _user32()
     found: list[GameWindow] = []
 
@@ -408,6 +473,6 @@ def capture(win: GameWindow) -> Image.Image:
     import mss
 
     b = win.box
-    with mss.mss() as sct:
+    with _per_monitor_dpi(), mss.mss() as sct:
         shot = sct.grab({"left": b.left, "top": b.top, "width": b.width, "height": b.height})
         return Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX")

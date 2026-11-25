@@ -130,7 +130,8 @@ def parse_profile(
         path, xp = e.get("ItemType", ""), int(e.get("XP", 0))
         name, cat = item_meta.get(path, (path.rsplit("/", 1)[-1], category_from_path(path)))
         suit = cat in SUIT_CATEGORIES
-        rank = rank_from_xp(xp, suit, max_rank(name, cat, path))
+        cap = max_rank(name, cat, path)
+        rank = rank_from_xp(xp, suit, cap)
         items.append(
             ItemXP(
                 item=path,
@@ -139,7 +140,8 @@ def parse_profile(
                 xp=xp,
                 rank=rank,
                 mastery_xp=mastery_for(rank, suit),
-                mastered=rank >= 30,
+                # rank-40 items (Kuva, Tenet, Coda, Necramechs...) keep giving mastery to 40
+                mastered=rank >= cap,
             )
         )
     items.sort(key=lambda i: (-i.xp, i.name))

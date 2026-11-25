@@ -27,7 +27,6 @@ TARGET_RANK = 30
 INTRINSIC_MASTERY = 1500
 JUNCTIONS = 13
 JUNCTION_MASTERY = 1000
-INTRINSIC_POINT = 1000  # pools are stored in thousandths of a point
 
 # Cost in points of raising a school from rank r to r + 1 (index r).
 DRIFTER_COSTS = (20, 25, 30, 45, 65, 90, 125, 160, 205, 255)
@@ -278,7 +277,9 @@ def classify_missing(report: Report) -> list[Unit]:
         vendor_names = sorted(
             {VENDOR_SYNDICATE.get(s.where, s.where) for s in sources if s.kind in ("vendor", "syndicate")}
         )
-        if max_rank(m.name, m.category) > MAX_RANK:
+        if m.owned:
+            route = "partial"  # already in your arsenal: it only needs leveling
+        elif max_rank(m.name, m.category) > MAX_RANK:
             route = "extended"
         elif "Vendor / standing" in acq and any(r >= 1 for r in vendor_ranks):
             route = "standing_owned"
@@ -344,7 +345,9 @@ def intrinsic_units(report: Report) -> list[Unit]:
     pools = {"Drifter": "LPP_DRIFTER", "Railjack": "LPP_SPACE"}
     for tree, schools in (("Drifter", DRIFTER_SCHOOLS), ("Railjack", RAILJACK_SCHOOLS)):
         ranks = tree_ranks(values, schools)
-        bought, _ = spend_points(tree, ranks, values.get(pools[tree], 0) // INTRINSIC_POINT)
+        bought, _ = spend_points(
+            tree, ranks, values.get(pools[tree], 0)
+        )  # whole points (the report converts)
         for step in bought:
             now.append(
                 Unit(
@@ -369,6 +372,21 @@ def intrinsic_units(report: Report) -> list[Unit]:
     return now + [u for _, u in later]
 
 
+def starchart_units(report: Report, block: int = 20) -> list[Unit]:
+    """Normal star chart nodes and junctions not cleared yet (each counts once)."""
+    done = min(report.headline.starchart_done, STARCHART_MASTERY_NODES)
+    left = STARCHART_MASTERY_NODES - done
+    per_node = STARCHART_MASTERY_TOTAL / STARCHART_MASTERY_NODES
+    units: list[Unit] = []
+    while left > 0:
+        n = min(block, left)
+        units.append(Unit(route="starchart", label=f"{n} star chart nodes", mastery=round(n * per_node)))
+        left -= n
+    for _ in range(max(0, JUNCTIONS - report.mastery.junctions_done)):
+        units.append(Unit(route="starchart", label="Junction", mastery=JUNCTION_MASTERY))
+    return units
+
+
 def steel_path_units(report: Report, block: int = 20) -> list[Unit]:
     done = min(report.headline.steel_path_done, STARCHART_MASTERY_NODES)
     left = STARCHART_MASTERY_NODES - done
@@ -378,9 +396,8 @@ def steel_path_units(report: Report, block: int = 20) -> list[Unit]:
         n = min(block, left)
         units.append(Unit(route="steel_path", label=f"{n} Steel Path nodes", mastery=round(n * per_node)))
         left -= n
-    # 13 junctions, each worth 1,000 once normally and once on the Steel Path
-    cleared = report.mastery.from_junctions // JUNCTION_MASTERY
-    for _ in range(max(0, 2 * JUNCTIONS - cleared)):
+    # each junction is worth 1,000 once more on the Steel Path
+    for _ in range(max(0, JUNCTIONS - report.mastery.steel_path_junctions_done)):
         units.append(Unit(route="steel_path", label="Junction (Steel Path)", mastery=JUNCTION_MASTERY))
     return units
 
@@ -388,11 +405,15 @@ def steel_path_units(report: Report, block: int = 20) -> list[Unit]:
 def build_queue(report: Report, kb: MasteryKB) -> list[Unit]:
     by_route: dict[str, list[Unit]] = defaultdict(list)
     for u in (
-        partial_units(report) + intrinsic_units(report) + steel_path_units(report) + classify_missing(report)
+        partial_units(report)
+        + intrinsic_units(report)
+        + starchart_units(report)
+        + steel_path_units(report)
+        + classify_missing(report)
     ):
         by_route[u.route].append(u)
     for route, units in by_route.items():
-        if route in ("partial", "intrinsics", "intrinsics_grind", "steel_path"):
+        if route in ("partial", "intrinsics", "intrinsics_grind", "starchart", "steel_path"):
             continue  # already in a meaningful order
         if route == "extended":
             # Forma on owned items first, then new items; within each, biggest first
@@ -524,8 +545,8 @@ def build_mastery_plan(report: Report, kb: MasteryKB, *, now: datetime | None = 
     values = {i.key: i.value for i in report.intrinsics}
     drifter = tree_ranks(values, DRIFTER_SCHOOLS)
     railjack = tree_ranks(values, RAILJACK_SCHOOLS)
-    drifter_pts = values.get("LPP_DRIFTER", 0) // INTRINSIC_POINT
-    railjack_pts = values.get("LPP_SPACE", 0) // INTRINSIC_POINT
+    drifter_pts = values.get("LPP_DRIFTER", 0)
+    railjack_pts = values.get("LPP_SPACE", 0)
     drifter_buy, drifter_left_pts = spend_points("Drifter", drifter, drifter_pts)
     railjack_buy, railjack_left_pts = spend_points("Railjack", railjack, railjack_pts)
     drifter_ranks_left = sum(INTRINSIC_MAX - r for r in drifter.values()) - len(drifter_buy)

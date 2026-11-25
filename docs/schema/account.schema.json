@@ -317,6 +317,16 @@
      "title": "From Junctions",
      "type": "integer"
     },
+    "junctions_done": {
+     "default": 0,
+     "title": "Junctions Done",
+     "type": "integer"
+    },
+    "steel_path_junctions_done": {
+     "default": 0,
+     "title": "Steel Path Junctions Done",
+     "type": "integer"
+    },
     "estimated_total": {
      "default": 0,
      "title": "Estimated Total",
@@ -398,6 +408,18 @@
     "wiki_url": {
      "title": "Wiki Url",
      "type": "string"
+    },
+    "owned": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "title": "Owned"
     }
    },
    "required": [
@@ -609,6 +631,11 @@
     },
     "standing": {
      "title": "Standing",
+     "type": "integer"
+    },
+    "max_rank": {
+     "default": 5,
+     "title": "Max Rank",
      "type": "integer"
     }
    },

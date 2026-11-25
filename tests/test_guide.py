@@ -205,6 +205,8 @@ def _report() -> Report:
             from_intrinsics=48_000,
             visible_total=0,
             from_junctions=18_000,  # 13 normal + 5 Steel Path
+            junctions_done=13,
+            steel_path_junctions_done=5,
             estimated_total=estimate,
             note="test",
         ),
@@ -218,8 +220,8 @@ def _report() -> Report:
         ],
         achievements=[],
         intrinsics=[
-            IntrinsicRow(key="LPP_DRIFTER", name="pool", value=115_000),
-            IntrinsicRow(key="LPP_SPACE", name="pool", value=25_685),
+            IntrinsicRow(key="LPP_DRIFTER", name="pool", value=115),  # whole points
+            IntrinsicRow(key="LPP_SPACE", name="pool", value=25),
             IntrinsicRow(key="LPS_DRIFT_COMBAT", name="c", value=1),
             IntrinsicRow(key="LPS_DRIFT_RIDING", name="r", value=1),
             IntrinsicRow(key="LPS_TACTICAL", name="t", value=7),

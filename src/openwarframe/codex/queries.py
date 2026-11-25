@@ -7,7 +7,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .names import normalize
+from .names import mission_label, normalize
 
 
 @dataclass
@@ -35,6 +35,7 @@ class Codex:
             raise FileNotFoundError(f"codex not found at {path}; run `openwarframe codex update`")
         self.conn = sqlite3.connect(f"file:{Path(path).as_posix()}?mode=ro", uri=True)
         self.conn.row_factory = sqlite3.Row
+        self._graph = None
 
     def close(self) -> None:
         self.conn.close()
@@ -134,22 +135,37 @@ class Codex:
         return dict(row) if row else None
 
     # -- recipes -------------------------------------------------------------------------
+    @property
+    def graph(self):
+        """The shared crafting graph (codex.recipes.RecipeGraph), built once per Codex."""
+        if self._graph is None:
+            from .recipes import RecipeGraph
+
+            self._graph = RecipeGraph(self.conn)
+        return self._graph
+
     def recipes_for(self, result_item: str) -> list[sqlite3.Row]:
-        return list(self.conn.execute("SELECT * FROM recipe WHERE result_item = ?", (result_item,)))
+        """Every recipe for an item, the one players normally build first."""
+        rows = list(self.conn.execute("SELECT * FROM recipe WHERE result_item = ?", (result_item,)))
+        preferred = self.graph.recipe_for(result_item)
+        return sorted(rows, key=lambda r: (r["unique_name"] != preferred, r["unique_name"]))
 
     def ingredients(self, recipe: str) -> list[sqlite3.Row]:
+        """Ingredients with their total count (an item listed twice counts twice)."""
         return list(
             self.conn.execute(
-                """SELECT ri.item, ri.count, COALESCE(i.name, ri.item) AS name
+                """SELECT ri.item, SUM(ri.count) AS count, COALESCE(i.name, ri.item) AS name
                    FROM recipe_ingredient ri LEFT JOIN item i ON i.unique_name = ri.item
-                   WHERE ri.recipe = ? ORDER BY ri.count DESC""",
+                   WHERE ri.recipe = ? GROUP BY ri.item ORDER BY count DESC, ri.item""",
                 (recipe,),
             )
         )
 
     def is_component(self, unique_name: str) -> bool:
         """Parts such as 'Rhino Prime Chassis' live under /Recipes/; farmable resources do not."""
-        return "/Recipes/" in unique_name
+        from .recipes import is_component
+
+        return is_component(unique_name)
 
     def crafting_tree(
         self, unique_name: str, *, count: int = 1, depth: int = 6, expand_resources: bool = False
@@ -244,7 +260,7 @@ class Codex:
                 LEFT JOIN node n ON n.id = nr.node WHERE nr.item IN ({q}) ORDER BY nr.chance DESC""",
             targets,
         ):
-            mode = r["mission_type"] or r["game_mode"] or ""
+            mode = mission_label(r["mission_type"] or r["game_mode"])
             out.append(
                 Source(
                     "node",
@@ -316,13 +332,14 @@ class Codex:
                 )
             )
         for r in self.conn.execute(f"SELECT * FROM syndicate_drop WHERE item IN ({q})", targets):
+            detail = [r["place"]]
+            if r["standing"]:
+                detail.append(f"{r['standing']} standing")
+            if r["cost"]:
+                detail.append(f"{r['cost']} credits")
             out.append(
                 Source(
-                    "syndicate",
-                    r["syndicate"],
-                    f"{r['place']} - {r['standing']} standing - {r['cost']} credits",
-                    r["chance"],
-                    r["rarity"],
+                    "syndicate", r["syndicate"], " - ".join(d for d in detail if d), r["chance"], r["rarity"]
                 )
             )
         m = self._market(unique_name)

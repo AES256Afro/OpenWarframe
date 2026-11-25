@@ -23,14 +23,25 @@ def _src(s: SourceRow) -> str:
     return f"{s.where}{vault}"
 
 
+def _unique(labels) -> list[str]:
+    """Drop repeats that differ only in case ("Necraloid, NecraLoid")."""
+    seen: set[str] = set()
+    out = []
+    for label in labels:
+        if label.lower() not in seen:
+            seen.add(label.lower())
+            out.append(label)
+    return out
+
+
 def best_sources(m: MissingItem, limit: int = 3) -> str:
     """Short human summary: blueprint sources first, then one line per component."""
     parts: list[str] = []
     if m.blueprint_sources:
-        parts.append("Blueprint: " + ", ".join(_src(s) for s in m.blueprint_sources[:limit]))
+        parts.append("Blueprint: " + ", ".join(_unique(_src(s) for s in m.blueprint_sources)[:limit]))
     for c in m.components:
         if c.sources:
-            parts.append(f"{c.name}: " + ", ".join(_src(s) for s in c.sources[:limit]))
+            parts.append(f"{c.name}: " + ", ".join(_unique(_src(s) for s in c.sources)[:limit]))
     if not parts and m.tradeable:
         parts.append(f"warframe.market: {m.market_slug}")
     return " | ".join(parts)

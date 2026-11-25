@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import sqlite3
 import time
 from dataclasses import dataclass, field
@@ -299,8 +300,13 @@ def load_recipes(conn: sqlite3.Connection, pe: PublicExport, resolver: NameResol
                 rec.get("primeSellingPrice"),
             )
         )
+        # one row per ingredient with the total: the export lists some twice (dual weapons
+        # name the base weapon on two lines, and the recipe takes two)
+        totals: dict[str, int] = {}
         for ing in rec.get("ingredients", []):
-            irows.append((uid, ing.get("ItemType"), ing.get("ItemCount", 1)))
+            if ing.get("ItemType"):
+                totals[ing["ItemType"]] = totals.get(ing["ItemType"], 0) + int(ing.get("ItemCount", 1) or 0)
+        irows.extend((uid, item, count) for item, count in totals.items())
         if result in names:
             resolver.add_recipe(names[result], uid)
     conn.executemany("INSERT OR REPLACE INTO recipe VALUES (?,?,?,?,?,?,?,?)", rrows)
@@ -364,7 +370,32 @@ def load_nodes(conn: sqlite3.Connection, pe: PublicExport, plus: PlusExport) -> 
             )
         )
     conn.executemany("INSERT OR REPLACE INTO node VALUES (?,?,?,?,?,?,?,?,?,?,?)", rows)
-    return len(rows)
+    # Railjack nodes (void storms) are not regions; the export lists their names separately
+    railjack = pe.manifests.get("ExportSortieRewards", {}).get("ExportRailjack", {})
+    extra = [
+        (rec["uniqueName"], rec["name"], "Railjack", None, "Railjack", None, None, None, None, None, None)
+        for rec in (railjack.get("nodes", []) if isinstance(railjack, dict) else [])
+        if rec.get("uniqueName") and rec.get("name")
+    ]
+    conn.executemany("INSERT OR IGNORE INTO node VALUES (?,?,?,?,?,?,?,?,?,?,?)", extra)
+    return len(rows) + len(extra)
+
+
+_PLACE_SUFFIX = re.compile(r"\s*\([^()]*\)\s*$")
+
+
+def _node_for(place: str, planet: str, nodes: dict, nodes_by_name: dict) -> str | None:
+    """The node a drop-table place belongs to.
+
+    The drop tables list some rewards under "Adrastea (Caches)" or "Annihilation (Extra)":
+    the same node, a different reward pool. Those rows keep their own place name but
+    link to the node, so they get its mission type and level.
+    """
+    for name in (place, _PLACE_SUFFIX.sub("", place)):
+        node = nodes.get((normalize(name), normalize(planet))) or nodes_by_name.get(normalize(name))
+        if node:
+            return node
+    return None
 
 
 def load_drops(conn: sqlite3.Connection, drops: DropData, resolver: NameResolver) -> dict[str, int]:
@@ -381,7 +412,7 @@ def load_drops(conn: sqlite3.Connection, drops: DropData, resolver: NameResolver
     rows = []
     for planet, places in d.get("missionRewards", {}).items():
         for place, info in places.items():
-            node_id = nodes.get((normalize(place), normalize(planet))) or nodes_by_name.get(normalize(place))
+            node_id = _node_for(place, planet, nodes, nodes_by_name)
             rewards = info.get("rewards", {})
             rot_iter = rewards.items() if isinstance(rewards, dict) else [("A", rewards)]
             for rotation, entries in rot_iter:

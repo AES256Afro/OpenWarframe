@@ -47,6 +47,7 @@ from pathlib import Path
 REWARD_OPEN_MARKERS = ("ProjectionRewardChoice.lua: Got rewards",)
 # The screen is gone; EndSession (also a WFInfo marker) covers leaving the mission early.
 REWARD_CLOSE_MARKERS = ("Relic reward screen shut down", "MatchingService::EndSession")
+REPEAT_WINDOW = 3.0  # seconds: the same open line logged twice this close together is one screen
 # One player's reward, by item path, logged while the screen loads (not every player's):
 #   VoidProjections: <your account id> gets reward /Lotus/StoreItems/Types/Recipes/...
 GETS_REWARD_RE = re.compile(r"VoidProjections: (?P<player>\w+) gets reward (?P<item>/\S+)")
@@ -185,6 +186,7 @@ class EventParser:
 
     def __init__(self) -> None:
         self.reward_open = False
+        self._opened_at: float | None = None
         self._mission: dict | None = None  # {"line", "time", "head", "body": [...]}
 
     def reset(self) -> list[Event]:
@@ -214,10 +216,16 @@ class EventParser:
             return events
 
         if any(k in line for k in REWARD_OPEN_MARKERS):
-            if not self.reward_open:  # both markers can fire for one screen
-                self.reward_open = True
-                marker = next(k for k in REWARD_OPEN_MARKERS if k in line)
-                events.append(Event("reward_screen_opened", t, line, {"marker": marker}))
+            # Each "Got rewards" is a new screen. If the last one never logged its close line
+            # (everyone picked early, endless missions), close it first instead of ignoring
+            # every later round. Only an immediate repeat of the same line is a duplicate.
+            if self.reward_open:
+                if t is not None and self._opened_at is not None and 0 <= t - self._opened_at < REPEAT_WINDOW:
+                    return events
+                events.append(Event("reward_screen_closed", t, line, {"marker": "next reward screen"}))
+            self.reward_open, self._opened_at = True, t
+            marker = next(k for k in REWARD_OPEN_MARKERS if k in line)
+            events.append(Event("reward_screen_opened", t, line, {"marker": marker}))
             return events
         if any(k in line for k in REWARD_CLOSE_MARKERS):
             if self.reward_open:

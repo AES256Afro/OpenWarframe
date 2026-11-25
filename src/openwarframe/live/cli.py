@@ -71,6 +71,12 @@ def _print_analysis(a) -> None:
     console.print(t)
 
 
+_NO_LOG = (
+    "No game log at {path} yet. Start Warframe once; if the game lives somewhere else, "
+    "pass --log or set OPENWARFRAME_WARFRAME_DIR to its folder. Waiting for it to appear."
+)
+
+
 @app.command("watch")
 def watch_cmd(
     log: Path | None = LOG_OPT,
@@ -82,7 +88,9 @@ def watch_cmd(
 
     path = log or default_log_path()
     if not as_json:
-        console.print(f"Following {path}  (Ctrl+C to stop)")
+        console.print(f"Following {path}  (Ctrl+C to stop)", markup=False)
+        if not path.exists():
+            console.print(_NO_LOG.format(path=path), markup=False, style="yellow")
     try:
         for ev in watch(path, from_start=from_start):
             if as_json:
@@ -102,11 +110,15 @@ def _grab_and_save(s, catalog, needs, prices, *, event=None, log_tail=None, ui_s
     from . import ocr
     from .reward import analyze, save_recording
 
-    win = ocr.find_game_window()
-    if win is None:
-        console.print("[yellow]Warframe window not found; nothing captured.[/yellow]")
+    try:  # a missing permission or a vanished window must not end the recording session
+        win = ocr.find_game_window()
+        if win is None:
+            console.print("[yellow]Warframe window not found; nothing captured.[/yellow]")
+            return None
+        image = ocr.capture(win)
+    except Exception as exc:  # noqa: BLE001
+        console.print(f"Could not capture the game window: {exc}", markup=False, style="red")
         return None
-    image = ocr.capture(win)
     scale = ui_scale or ocr.read_ui_scale()
     analysis, error = None, None
     try:
@@ -148,6 +160,8 @@ def record_cmd(
     needs = account_needs(s)
     price_map = _prices(prices)
     path = log or default_log_path()
+    if not path.exists():
+        console.print(_NO_LOG.format(path=path), markup=False, style="yellow")
     (s.home / "live").mkdir(parents=True, exist_ok=True)
     cand = (s.home / "live" / "candidates.log").open("a", encoding="utf-8")
     tail: deque[str] = deque(maxlen=300)

@@ -52,7 +52,9 @@ class AppState:
         self.prices: dict[str, dict] = {}
         from .rewards import RewardWatcher
 
-        self.rewards = RewardWatcher(settings)
+        self.rewards = RewardWatcher(
+            settings, save_recordings=bool(self.get_prefs().get("settings", {}).get("save_recordings"))
+        )
         self.prefs_lock = threading.Lock()
         self.windows = None  # NativeWindows when the app has its own window
 
@@ -289,7 +291,12 @@ class AppState:
             raise ValueError("preferences must be an object")
         allowed = {k: data[k] for k in ("goals", "checks", "settings", "skipped") if k in data}
         with self.prefs_lock:  # read-merge-write must not interleave between request threads
-            merged = {**self.get_prefs(), **allowed}
+            current = self.get_prefs()
+            if isinstance(allowed.get("settings"), dict):
+                # merge settings key by key: the page's copy may not know a setting the server
+                # changed (reward watching, saving screens), and must not erase it
+                allowed["settings"] = {**current.get("settings", {}), **allowed["settings"]}
+            merged = {**current, **allowed}
             atomic_write_text(self.prefs_path, json.dumps(merged))
         return merged
 
@@ -430,10 +437,13 @@ def make_handler(state: AppState):
                 elif self.path == "/api/reward/watch":
                     req = json.loads(body.decode("utf-8") or "{}")
                     on = bool(req.get("on"))
-                    prefs = state.get_prefs()
-                    settings_ = {**prefs.get("settings", {}), "reward_watch": on}
-                    state.save_prefs(json.dumps({"settings": settings_}).encode())
+                    state.save_prefs(json.dumps({"settings": {"reward_watch": on}}).encode())
                     self._json(state.rewards.start() if on else state.rewards.stop())
+                elif self.path == "/api/reward/recordings":
+                    req = json.loads(body.decode("utf-8") or "{}")
+                    on = bool(req.get("on"))
+                    state.save_prefs(json.dumps({"settings": {"save_recordings": on}}).encode())
+                    self._json(state.rewards.set_recording(on))
                 elif self.path == "/api/reward/demo":
                     self._json(state.rewards.demo())
                 elif self.path == "/api/reward/popout":

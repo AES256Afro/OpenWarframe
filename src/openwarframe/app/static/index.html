@@ -121,6 +121,7 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 .tick .m{font:12px var(--mono); color:var(--muted); white-space:nowrap}
 .tick small{display:block; color:var(--muted)}
 .tick:has(input:checked) .t{text-decoration:line-through; color:var(--muted)}
+.tick.opt:has(input:checked) .t{text-decoration:none; color:inherit} /* a setting that is on, not a task done */
 .goal{display:grid; gap:4px; padding:6px 0; border-bottom:1px dashed var(--line)}
 .goal:last-child{border-bottom:0}
 .goal .bar{margin-top:0}
@@ -699,11 +700,13 @@ function renderRewards(){
      '<li>The pick order: parts you need for something you have not mastered, then vaulted parts, then market price, then ducats.</li>'+
      '<li>The pop-out window stays on top of the game, so you can see the pick without alt-tabbing.</li>'+
      '<li>It only reads the game log and the screen, never game memory.</li>'+
-     '<li><b>Still being tuned.</b> Every real reward screen is saved with what it read, so wrong names can be fixed. Share those folders to improve it.</li></ul></div>';
+     '<li><b>Still being tuned.</b> If it misreads names, turn on saving screens below and send a few of them along with a bug report.</li></ul>'+
+     '<label class="tick opt" style="margin-top:10px"><input type="checkbox" id="rw-save"'+(d.save_recordings?' checked':'')+'><span class="t">Save each reward screen to help fix misreads<small>Keeps the newest 30 in your data folder (live/recordings). A saved screen shows your squadmates\' names, so look at it before you share it.</small></span><span></span></label></div>';
   h+='<div class="box"><h2>Recent screens <span class="muted">'+(d.history||[]).length+'</span></h2>'+((d.history||[]).length?(d.history||[]).map(function(r){return '<div class="goal"><b>'+esc(r.pick?r.pick.name:'(unreadable)')+'</b><span class="muted">'+new Date(r.time).toLocaleTimeString()+' · '+esc(r.source)+' · '+r.ranked.map(function(x){return esc(x.name)}).join(', ')+'</span></div>'}).join(''):'<p class="muted">Nothing yet.</p>')+'</div></div>';
   h+='</div>';
   $("view").innerHTML=h;
   $("rw-toggle").onclick=function(){ api("/api/reward/watch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:!on})}).then(function(x){ REWARD=x; renderAll(); toast(on?"Stopped watching.":"Watching. Load into a fissure and the pick appears here and in the pop-out."); }); };
+  $("rw-save").onchange=function(){ var on=this.checked; api("/api/reward/recordings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:on})}).then(function(x){ REWARD=x; renderAll(); toast(on?"Reward screens will be saved (newest 30 kept).":"Reward screens will not be saved."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
   $("rw-pop").onclick=function(){ api("/api/reward/popout",{method:"POST"}).then(function(){ toast("Pop-out window opening. It stays on top of the game."); }); };
   $("rw-demo").onclick=function(){ toast("Drawing a sample reward screen and reading it…",20000); api("/api/reward/demo",{method:"POST"}).then(function(x){ if(x.error){ toast(x.error,8000); return; } api("/api/reward").then(function(dd){ REWARD=dd; renderAll(); toast("Sample read. Compare the names."); }); }); };
   return [];
@@ -853,13 +856,13 @@ function renderFocus(){
   var st=PREFS.settings||{};
   h+='<div class="box"><h2>Comfort</h2>';
   h+='<div>Text size <span class="seg">'+[[1,"Normal"],[1.15,"Large"],[1.3,"Larger"]].map(function(z){return '<button type="button" data-zoom="'+z[0]+'" aria-pressed="'+((st.zoom||1)===z[0])+'">'+z[1]+'</button>'}).join('')+'</span></div>';
-  h+='<label class="tick"><input type="checkbox" id="st-contrast"'+(st.contrast?' checked':'')+'><span class="t">Higher contrast</span><span></span></label>';
-  h+='<label class="tick"><input type="checkbox" id="st-calm"'+(st.calm?' checked':'')+'><span class="t">No motion</span><span></span></label>';
-  h+='<label class="tick"><input type="checkbox" id="st-bar"'+(st.bar!==false?' checked':'')+'><span class="t">Show the Next bar on every screen</span><span></span></label>';
-  h+='<label class="tick"><input type="checkbox" id="st-owned"'+(st.ownedonly!==false?' checked':'')+'><span class="t">Only suggest relics I already have<small>Off: also suggests farming a relic first</small></span><span></span></label>';
-  h+='<label class="tick"><input type="checkbox" id="st-start"'+(st.start!=="last"?' checked':'')+'><span class="t">Open on this Focus screen</span><span></span></label>';
+  h+='<label class="tick opt"><input type="checkbox" id="st-contrast"'+(st.contrast?' checked':'')+'><span class="t">Higher contrast</span><span></span></label>';
+  h+='<label class="tick opt"><input type="checkbox" id="st-calm"'+(st.calm?' checked':'')+'><span class="t">No motion</span><span></span></label>';
+  h+='<label class="tick opt"><input type="checkbox" id="st-bar"'+(st.bar!==false?' checked':'')+'><span class="t">Show the Next bar on every screen</span><span></span></label>';
+  h+='<label class="tick opt"><input type="checkbox" id="st-owned"'+(st.ownedonly!==false?' checked':'')+'><span class="t">Only suggest relics I already have<small>Off: also suggests farming a relic first</small></span><span></span></label>';
+  h+='<label class="tick opt"><input type="checkbox" id="st-start"'+(st.start!=="last"?' checked':'')+'><span class="t">Open on this Focus screen</span><span></span></label>';
   if(DATA.meta.session_ok) h+='<div class="tick"><span class="t">You allowed reading the game session<small>Get inventory from game reads the running game. Take this back and the app will ask again next time.</small></span><button class="btn" type="button" id="st-consent">Take back permission</button></div>';
-  h+='<details><summary class="muted">Hide routine items I never do</summary>'+DAILY.concat(WEEKLY).map(function(x){return '<label class="tick"><input type="checkbox" data-hide="'+x.id+'"'+(hiddenRoutine(x.id)?' checked':'')+'><span class="t">Hide '+esc(x.t)+'</span><span></span></label>'}).join('')+'</details>';
+  h+='<details><summary class="muted">Hide routine items I never do</summary>'+DAILY.concat(WEEKLY).map(function(x){return '<label class="tick opt"><input type="checkbox" data-hide="'+x.id+'"'+(hiddenRoutine(x.id)?' checked':'')+'><span class="t">Hide '+esc(x.t)+'</span><span></span></label>'}).join('')+'</details>';
   h+='</div>';
   h+='</div></div>';
   $("view").innerHTML=h;

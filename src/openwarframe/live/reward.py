@@ -61,6 +61,7 @@ def analyze(
     needs: tuple[set[str], dict[str, int], set[str]] | None = None,
     prices: dict | None = None,
 ) -> Analysis:
+    language = language or "en-US"  # item names are English; a profile-language engine misreads them
     if players:
         layouts = {players: ocr.read_slots(image, players, ui_scale, language=language)}
     else:

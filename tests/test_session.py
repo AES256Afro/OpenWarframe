@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import subprocess
 import sys
 from collections import Counter
@@ -32,7 +33,7 @@ def test_find_sessions_counts_well_formed_matches_only():
         b"junk?accountId=" + ACC.encode() + b"&nonce=123456789 more "
         b"?accountId=" + ACC.encode() + b"&nonce=123456789&x=1 "
         b"?accountId=nothex_______________&nonce=1 "
-        b"?accountId=" + OTHER.encode() + b"&nonce=55555"
+        b"?accountId=" + OTHER.encode() + b"&nonce=55555\x00"  # strings in memory end in a null
     )
     found = find_sessions(buf)
     assert found[(ACC, "123456789")] == 2
@@ -124,3 +125,34 @@ def test_app_explains_grab_is_windows_only(tmp_path: Path, monkeypatch: pytest.M
     with pytest.raises(sess.SessionError, match="only works on Windows"):
         state.grab(accept=True)
     assert not state.session_ok  # no consent is recorded for something that cannot run
+
+
+def test_a_nonce_cut_off_at_the_end_of_a_block_is_not_counted():
+    # the scanner reads memory in overlapping blocks; a copy cut mid-nonce at the end of one
+    # block must not rank as a shorter, wrong key (the next block sees it whole)
+    full = b"?accountId=" + ACC.encode() + b"&nonce=123456789&"
+    found = find_sessions(full + b" " + full[:-5])
+    assert found == Counter({(ACC, "123456789"): 1})
+
+
+def test_a_longer_digit_run_is_not_read_as_a_shorter_nonce():
+    buf = b"?accountId=" + ACC.encode() + b"&nonce=" + b"9" * 30 + b"\x00"
+    assert not find_sessions(buf)
+
+
+def test_the_session_key_never_reaches_the_logs(caplog):
+    nonce = "987654321"
+    client = httpx.Client(transport=httpx.MockTransport(lambda req: httpx.Response(200, json={"Suits": []})))
+    caplog.set_level(logging.DEBUG)
+    assert fetch_inventory(Session(account_id=ACC, nonce=nonce, hits=1), client) == {"Suits": []}
+    assert "inventory.php" in caplog.text  # the request was logged...
+    assert nonce not in caplog.text  # ...without the key
+    assert "nonce=<hidden>" in caplog.text
+
+
+def test_redaction_also_covers_other_loggers():
+    from openwarframe.logsafe import redact
+
+    assert redact("GET https://x/api/inventory.php?accountId=abc&nonce=42&x=1") == (
+        "GET https://x/api/inventory.php?accountId=abc&nonce=<hidden>&x=1"
+    )

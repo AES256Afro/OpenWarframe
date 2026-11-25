@@ -9,6 +9,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from openpyxl import Workbook
+from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
 from openpyxl.chart import BarChart, Reference
 from openpyxl.formatting.rule import CellIsRule, FormulaRule
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
@@ -71,6 +72,21 @@ SHEET_ORDER = [
 ]
 
 
+def _v(v):
+    """A cell value openpyxl will accept: control characters in game text would raise."""
+    return ILLEGAL_CHARACTERS_RE.sub("", v) if isinstance(v, str) else v
+
+
+def _no_formulas(wb: Workbook) -> None:
+    """Store every value as data. This workbook writes no formulas of its own, so a cell that
+    openpyxl took for one ("=HYPERLINK(...)" in an item name from upstream data) is text."""
+    for ws in wb.worksheets:
+        for row in ws.iter_rows():
+            for cell in row:
+                if cell.data_type == "f":
+                    cell.data_type = "s"
+
+
 def _fill(color: str) -> PatternFill:
     return PatternFill("solid", fgColor=color)
 
@@ -89,7 +105,7 @@ def _write_table(ws: Worksheet, t: Table, *, start_row: int = 1) -> int:
             v = row.get(col)
             if isinstance(v, list | dict):
                 v = str(v)
-            cell = ws.cell(row=ri, column=ci, value=v)
+            cell = ws.cell(row=ri, column=ci, value=_v(v))
             if col == "wiki_url" and v:
                 cell.hyperlink = v
                 cell.value = "wiki"
@@ -113,7 +129,7 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> No
     ws.sheet_view.showGridLines = False
     h = report.headline
     who = report.identity.display_name or "Account"
-    ws["B2"] = f"{who}  -  Mastery Rank {h.mastery_rank}"
+    ws["B2"] = _v(f"{who}  -  Mastery Rank {h.mastery_rank}")
     ws["B2"].font = TITLE_FONT
     sub = f"{report.identity.platform.upper()}"
     if h.account_age_days:
@@ -162,7 +178,7 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> No
             row["percent_mastered"] / 100,
         ]
         for i, v in enumerate(vals):
-            c = ws.cell(row=ri, column=2 + i, value=v)
+            c = ws.cell(row=ri, column=2 + i, value=_v(v))
             c.border = BOX
             if i == 5:
                 c.number_format = "0%"
@@ -205,7 +221,7 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> No
         m.note,
     ] + report.notes
     for i, line in enumerate(lines, start=1):
-        c = ws.cell(row=row + i, column=2, value=line)
+        c = ws.cell(row=row + i, column=2, value=_v(line))
         c.font = Font(color=MUTED if i > 3 else INK, size=10)
     ws.cell(
         row=row + len(lines) + 2,
@@ -323,5 +339,6 @@ def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
                     ws[f"{letter}{r}"].number_format = "#,##0"
     wb.properties.title = "OpenWarframe account export"
     wb.properties.creator = "OpenWarframe"
+    _no_formulas(wb)
     wb.save(path)
     return path

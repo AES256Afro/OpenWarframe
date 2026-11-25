@@ -196,8 +196,10 @@ Your data is saved in `%LOCALAPPDATA%\OpenWarframe` on Windows and
   Nothing about you is sent anywhere else. There is no account to create and no tracking.
 - Reading the game's memory only happens when you click **Get inventory from game**, and the app
   asks before the first time. Digital Extremes' terms mention programs that read the game's
-  memory, and their policy is that third-party tools are used at your own risk. Everything else
-  in the app works without it.
+  memory, and their policy is that third-party tools are used at your own risk; an account could
+  be suspended or banned for it. Everything else in the app works without it. You can take your
+  permission back at any time under **Comfort** on the Focus screen, or with
+  `openwarframe inventory forget-consent`.
 - The reward helper only reads the game's log file and takes screenshots of the game window. It
   never touches game memory or sends key presses. The screens it reads are saved in your data
   folder, so you can check its accuracy. You can delete them.
@@ -216,6 +218,7 @@ by the PowerShell line) for exports:
 | `sync` | Download your public profile |
 | `inventory grab` | Download your inventory from the running game |
 | `inventory import <file>` | Load an inventory file |
+| `inventory forget-consent` | Take back permission to read the game session |
 | `export` | Write your account to JSON, SQLite, CSV, Excel, HTML, PDF and Word |
 | `guide mastery` | Write your plan to mastery rank 30 (`--pdf`, `--docx`) |
 | `codex sources "<item>"` | Where to get an item |

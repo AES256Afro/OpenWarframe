@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 
+from ..fsutil import atomic_write_text
 from .model import Snapshot
+
+log = logging.getLogger(__name__)
 
 
 class SnapshotStore:
@@ -17,19 +21,37 @@ class SnapshotStore:
     def save(self, snapshot: Snapshot) -> Path:
         stamp = snapshot.taken_at.strftime("%Y-%m-%dT%H%M%SZ")
         path = self.directory / f"{stamp}.json"
-        path.write_text(snapshot.model_dump_json(indent=1), encoding="utf-8")
+        atomic_write_text(path, snapshot.model_dump_json(indent=1))
         return path
 
     def list(self) -> list[Path]:
         return sorted(self.directory.glob("*.json"))
 
     def load(self, ref: str | Path) -> Snapshot:
-        path = self._resolve(ref)
+        if ref in ("latest", "previous"):
+            # skip damaged files, so one bad snapshot never locks the player out
+            want, seen = (0 if ref == "latest" else 1), 0
+            for path in reversed(self.list()):
+                try:
+                    snap = self._read(path)
+                except (ValueError, OSError) as exc:  # pydantic's ValidationError is a ValueError
+                    log.warning("skipping unreadable snapshot %s: %s", path.name, exc)
+                    continue
+                if seen == want:
+                    return snap
+                seen += 1
+            raise FileNotFoundError(f"no readable {ref} snapshot in {self.directory}")
+        return self._read(self._resolve(ref))
+
+    @staticmethod
+    def _read(path: Path) -> Snapshot:
         return Snapshot.model_validate_json(path.read_text(encoding="utf-8"))
 
     def latest(self) -> Snapshot | None:
-        paths = self.list()
-        return self.load(paths[-1]) if paths else None
+        try:
+            return self.load("latest")
+        except FileNotFoundError:
+            return None
 
     def _resolve(self, ref: str | Path) -> Path:
         candidates = self.list()

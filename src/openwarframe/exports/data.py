@@ -42,6 +42,19 @@ def _cell(v):
     return v
 
 
+# Spreadsheet apps run a CSV cell that starts with one of these as a formula
+_FORMULA_START = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _csv_cell(v):
+    """Like _cell, but text that a spreadsheet would run as a formula gets a leading quote
+    (the OWASP CSV-injection guidance). Numbers stay numbers."""
+    v = _cell(v)
+    if isinstance(v, str) and v.startswith(_FORMULA_START):
+        return "'" + v
+    return v
+
+
 def write_sqlite(tables: list[Table], report: Report, path: Path) -> Path:
     if path.exists():
         path.unlink()
@@ -80,5 +93,5 @@ def write_csv(tables: list[Table], directory: Path) -> Path:
             w = csv.DictWriter(fh, fieldnames=t.columns, extrasaction="ignore")
             w.writeheader()
             for r in t.rows:
-                w.writerow({c: _cell(r.get(c)) for c in t.columns})
+                w.writerow({c: _csv_cell(r.get(c)) for c in t.columns})
     return directory

@@ -21,6 +21,7 @@ from pathlib import Path
 import httpx
 
 from .config import USER_AGENT
+from .fsutil import atomic_write_bytes, atomic_write_text
 
 log = logging.getLogger(__name__)
 
@@ -69,8 +70,15 @@ class CachedClient:
 
     def _write(self, url: str, body: bytes, entry: CacheEntry) -> None:
         body_path, meta_path = self._paths(url)
-        body_path.write_bytes(body)
-        meta_path.write_text(json.dumps(entry.__dict__), encoding="utf-8")
+        # body first, then the metadata that vouches for it: a crash in between leaves no
+        # metadata pointing at a half-written body
+        atomic_write_bytes(body_path, body)
+        atomic_write_text(meta_path, json.dumps(entry.__dict__))
+
+    def drop(self, url: str) -> None:
+        """Forget the cached copy of ``url``."""
+        for p in self._paths(url):
+            p.unlink(missing_ok=True)
 
     def cached(self, url: str) -> bytes | None:
         """Return the cached body regardless of freshness, or None."""
@@ -104,7 +112,7 @@ class CachedClient:
             if resp.status_code == 304 and entry and body_path.exists():
                 entry.fetched_at = time.time()
                 entry.max_age = max_age if max_age is not None else _max_age_from(resp, entry.max_age)
-                meta_path.write_text(json.dumps(entry.__dict__), encoding="utf-8")
+                atomic_write_text(meta_path, json.dumps(entry.__dict__))
                 return body_path.read_bytes()
             if resp.status_code >= 500:
                 last_error = httpx.HTTPStatusError(
@@ -134,7 +142,15 @@ class CachedClient:
         raise last_error
 
     def get_json(self, url: str, **kw):
-        return json.loads(self.get(url, **kw).decode("utf-8"))
+        try:
+            return json.loads(self.get(url, **kw).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            # a damaged cache file would otherwise be served until it expires (up to weeks)
+            self.drop(url)
+            if kw.get("force"):
+                raise
+            log.warning("cached copy of %s was damaged; downloading it again", url)
+            return json.loads(self.get(url, **{**kw, "force": True}).decode("utf-8"))
 
     def close(self) -> None:
         self._client.close()

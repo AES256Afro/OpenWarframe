@@ -21,9 +21,24 @@ from importlib import resources
 from pathlib import Path
 
 from ..config import Settings, load_settings
+from ..fsutil import atomic_write_text
 
 log = logging.getLogger(__name__)
 IDLE_SECONDS = 45
+MAX_BODY = 64 << 20  # an inventory file is a few MB; anything this big is not one of ours
+
+# The page only ever talks to this server. These headers stop other sites from framing it
+# (clickjacking the consent button) and stop injected markup from loading or sending anything.
+SECURITY_HEADERS = {
+    "Content-Security-Policy": (
+        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; object-src 'none'; "
+        "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    ),
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+}
 
 
 class AppState:
@@ -38,6 +53,7 @@ class AppState:
         from .rewards import RewardWatcher
 
         self.rewards = RewardWatcher(settings)
+        self.prefs_lock = threading.Lock()
         self.windows = None  # NativeWindows when the app has its own window
 
     @property
@@ -140,6 +156,7 @@ class AppState:
     def fetch_prices(self, ids: list[str], limit: int = 80, kind: str = "relics") -> dict:
         """Lowest and typical sell price on warframe.market for up to `limit` rows (cached 6 h)."""
         from ..http import CachedClient
+        from ..sources.static.market import order_prices
 
         if kind not in ("relics", "sell", "mods", "pieces"):
             raise ValueError("unknown price list")
@@ -166,8 +183,8 @@ class AppState:
                 except Exception as exc:  # noqa: BLE001
                     log.warning("price for %s failed: %s", slug, exc)
                     continue
-                sells = sorted(o["platinum"] for o in top.get("sell", []))[:5]
-                buys = sorted((o["platinum"] for o in top.get("buy", [])), reverse=True)[:5]
+                sells = sorted(order_prices(top.get("sell")))[:5]
+                buys = sorted(order_prices(top.get("buy")), reverse=True)[:5]
                 price = {
                     "low": sells[0] if sells else None,
                     "typical": sells[len(sells) // 2] if sells else None,
@@ -271,11 +288,18 @@ class AppState:
         if not isinstance(data, dict):
             raise ValueError("preferences must be an object")
         allowed = {k: data[k] for k in ("goals", "checks", "settings", "skipped") if k in data}
-        merged = {**self.get_prefs(), **allowed}
-        tmp = self.prefs_path.with_suffix(".tmp")
-        tmp.write_text(json.dumps(merged), encoding="utf-8")
-        tmp.replace(self.prefs_path)
+        with self.prefs_lock:  # read-merge-write must not interleave between request threads
+            merged = {**self.get_prefs(), **allowed}
+            atomic_write_text(self.prefs_path, json.dumps(merged))
         return merged
+
+    def forget_consent(self) -> dict:
+        """Take back permission to read the game session; the next grab asks again."""
+        from ..config import save_settings
+
+        if self.settings.extra.pop("session_reader_ok", None) is not None:
+            save_settings(self.settings)
+        return {"ok": True, "session_ok": False}
 
     def sync(self) -> dict:
         from ..account.sync import sync_profile
@@ -290,7 +314,7 @@ class AppState:
             raw = data["InventoryJson"]
             data = json.loads(raw) if isinstance(raw, str) else raw
         parse_inventory(data)  # validates
-        self.inventory_path.write_text(json.dumps(data), encoding="utf-8")
+        atomic_write_text(self.inventory_path, json.dumps(data))
 
     def save_inventory(self, body: bytes) -> dict:
         self._store_inventory(json.loads(body.decode("utf-8-sig")))
@@ -311,19 +335,39 @@ def make_handler(state: AppState):
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
+            for k, v in SECURITY_HEADERS.items():
+                self.send_header(k, v)
             self.end_headers()
             self.wfile.write(body)
 
         def _json(self, obj, code: int = 200) -> None:
             self._send(code, json.dumps(obj).encode("utf-8"), "application/json; charset=utf-8")
 
+        def _host_ok(self) -> bool:
+            """Only answer requests addressed to this server by name.
+
+            A web page can point its own hostname at 127.0.0.1 (DNS rebinding) and then read
+            responses as if they were its own; such requests carry that page's hostname.
+            """
+            port = self.server.server_port
+            if self.headers.get("Host") in (f"127.0.0.1:{port}", f"localhost:{port}"):
+                return True
+            self.close_connection = True
+            self._send(403, b"forbidden", "text/plain")
+            return False
+
         def do_GET(self):  # noqa: N802
+            if not self._host_ok():
+                return
             state.last_ping = time.time()
             if self.path in ("/", "/index.html"):
                 self._send(200, _page(), "text/html; charset=utf-8")
             elif self.path == "/api/data":
                 try:
-                    self._json(state.build())
+                    data = state.build()
+                    if isinstance(data.get("meta"), dict):
+                        data["meta"]["session_ok"] = state.session_ok
+                    self._json(data)
                 except Exception as exc:  # noqa: BLE001 - show the real problem instead of a dropped connection
                     log.exception("building app data failed")
                     self._json(
@@ -350,11 +394,22 @@ def make_handler(state: AppState):
                 self._send(404, b"not found", "text/plain")
 
         def do_POST(self):  # noqa: N802
+            if not self._host_ok():
+                return
             state.last_ping = time.time()
             if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}"):
                 self._json({"error": "forbidden"}, 403)
                 return
-            length = int(self.headers.get("Content-Length") or 0)
+            raw_length = (self.headers.get("Content-Length") or "0").strip()
+            if not raw_length.isdigit():
+                self.close_connection = True
+                self._json({"error": "bad request"}, 400)
+                return
+            length = int(raw_length)
+            if length > MAX_BODY:
+                self.close_connection = True
+                self._json({"error": "That file is too large to be a Warframe inventory."}, 413)
+                return
             body = self.rfile.read(length) if length else b""
             try:
                 if self.path == "/api/sync":
@@ -398,6 +453,8 @@ def make_handler(state: AppState):
                     with state.lock:
                         update_codex(state.settings)
                     self._json(state.build(force=True))
+                elif self.path == "/api/consent/forget":
+                    self._json(state.forget_consent())
                 elif self.path == "/api/inventory/clear":
                     if state.inventory_path.exists():
                         state.inventory_path.unlink()

@@ -24,7 +24,10 @@ from dataclasses import dataclass
 
 import httpx
 
+from ... import logsafe
 from ...config import USER_AGENT
+
+logsafe.install()  # the inventory request carries the session key in its URL
 
 PROCESS_NAMES = ("Warframe.x64.exe",)
 # macOS does not let one app read another's memory without root and a disabled SIP, so the
@@ -35,14 +38,17 @@ UNSUPPORTED_TEXT = (
     "Load inventory file instead; everything else in the app works without it."
 )
 INVENTORY_HOSTS = ("https://mobile.warframe.com", "https://api.warframe.com")
-SESSION_RE = re.compile(rb"\?accountId=([0-9a-f]{24})&nonce=(\d{4,24})")
+# (?!\d): a nonce must end where its digits end, so a cut-off copy never matches as a shorter key
+SESSION_RE = re.compile(rb"\?accountId=([0-9a-f]{24})&nonce=(\d{4,24})(?!\d)")
 MARKER = b"?accountId="
 
 RISK_TEXT = (
     "OpenWarframe will read the running game's memory (read-only) to find your session key, "
     "then download your inventory from Digital Extremes with it. Nothing is changed in the game, "
     "and the key is never saved. Digital Extremes' EULA names software that reads game memory, "
-    "and their policy is that third-party tools are used at your own risk."
+    "and third-party tools are used at your own risk: tolerated tools have been caught in "
+    "automated ban waves before, so this could get your account suspended or banned. Your answer is remembered; you can take it back at any time in Settings "
+    "(or with: openwarframe inventory forget-consent). Load inventory file avoids this entirely."
 )
 
 
@@ -69,7 +75,9 @@ def find_sessions(buf: bytes) -> Counter:
         if i < 0:
             return found
         m = SESSION_RE.match(buf, i)
-        if m:
+        # a match that runs into the end of the block may be cut short; the overlapping
+        # next block sees it whole
+        if m and m.end() < len(buf):
             found[(m.group(1).decode(), m.group(2).decode())] += 1
         start = i + len(MARKER)
 

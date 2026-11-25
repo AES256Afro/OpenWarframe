@@ -33,3 +33,17 @@ def fetch_market_items(client: CachedClient, *, force: bool = False) -> list[Mar
             MarketItem(unique_name=ref, slug=it.get("slug", ""), name=name, tags=list(it.get("tags", [])))
         )
     return out
+
+
+def order_prices(orders) -> list[float]:
+    """Platinum prices from a warframe.market order list, ignoring anything not a number.
+
+    The prices are shown in the app, so a malformed or hostile response must not be able
+    to put text there.
+    """
+    out: list[float] = []
+    for o in orders if isinstance(orders, list) else []:
+        v = o.get("platinum") if isinstance(o, dict) else None
+        if isinstance(v, int | float) and not isinstance(v, bool) and v == v and abs(v) != float("inf"):
+            out.append(v)
+    return out

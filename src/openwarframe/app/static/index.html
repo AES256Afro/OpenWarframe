@@ -172,6 +172,8 @@ var MAC=/Macintosh|Mac OS X/.test(navigator.userAgent);
 var DATA=null, LIVE=null, LIVE_AT=0, VIEW="overview", SORT={relics:{k:"count",dir:-1}}, Q="", F={}, OPEN={};
 var $=function(id){return document.getElementById(id)};
 var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+// numbers from files and third-party sites: show them only if they really are numbers
+var amt=function(v){var n=Number(v);return v==null||v===""||!isFinite(n)?0:n};
 function toast(msg, ms){ var t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(t._h); t._h=setTimeout(function(){t.hidden=true}, ms||4000); }
 
 var VIEWS=[
@@ -223,7 +225,7 @@ var RELIC_COLS=[
   {k:"count",l:"You have",cls:"num",fmt:function(v,r){ if(v==null) return '<span class="muted">?</span>'; var parts=Object.keys(r.refinements||{}).map(function(k){return r.refinements[k]+" "+k}); return '<b>'+v+'</b>'+(parts.length?' <span class="muted">('+esc(parts.join(", "))+')</span>':""); }},
   {k:"vaulted_parts",l:"Vaulted gear",fmt:function(v){return v?'<span class="pill p-violet">'+v+' vaulted</span>':'<span class="muted">-</span>'}},
   {k:"needed",l:"Parts you need",cls:"num"},
-  {k:"price",l:"Market (p)",cls:"num",fmt:function(v){return v==null?'<span class="muted">-</span>':v}}
+  {k:"price",l:"Market (p)",cls:"num",fmt:function(v){return v==null?'<span class="muted">-</span>':esc(v)}}
 ];
 var BP_COLS=[
   {k:"name",l:"Blueprint for",cls:"name"},
@@ -232,7 +234,7 @@ var BP_COLS=[
   {k:"blueprints",l:"Copies",cls:"num"},{k:"credits",l:"Credits",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},{k:"hours",l:"Build h",cls:"num"}
 ];
 
-var price=function(v){return v==null?'<span class="muted">-</span>':v};
+var price=function(v){return v==null?'<span class="muted">-</span>':esc(v)};
 var FOUNDRY_COLS=[
   {k:"name",l:"Building",cls:"name"},
   {k:"ready",l:"Status",fmt:function(v){return v?'<span class="pill p-owned">Ready to claim</span>':'<span class="pill p-leveling">Building</span>'}},
@@ -521,7 +523,7 @@ function renderOverview(){
     h+=card("Foundry", ready+" ready", (DATA.foundry||[]).length+" items building or done");
     var duc=(DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0);
     h+=card("Spare Prime parts", duc.toLocaleString()+" ducats", "You hold "+(m.inventory.ducats||0).toLocaleString()+" ducats now");
-    h+=card("Wallet", (m.inventory.credits||0).toLocaleString()+" cr", (m.inventory.platinum||0)+" platinum · "+(m.inventory.endo||0).toLocaleString()+" endo");
+    h+=card("Wallet", amt(m.inventory.credits).toLocaleString()+" cr", amt(m.inventory.platinum).toLocaleString()+" platinum · "+amt(m.inventory.endo).toLocaleString()+" endo");
   }
   if(m.inventory){ h+=card("Blueprints ready to build", DATA.blueprints.filter(function(b){return b.ready}).length, DATA.blueprints.length+" blueprints owned"); }
   h+='</div>';
@@ -600,7 +602,7 @@ function renderFinish(){
       var priced=buyable.filter(function(p){return p.price!=null});
       if(priced.length===buyable.length){
         var tot=priced.reduce(function(a,p){return a+p.price*(p.short||1)},0);
-        h+='<div class="src"><b>Buy instead:</b> about '+tot+' platinum on warframe.market ('+priced.map(function(p){return esc(p.name)+' '+p.price+'p'}).join(', ')+')</div>';
+        h+='<div class="src"><b>Buy instead:</b> about '+tot+' platinum on warframe.market ('+priced.map(function(p){return esc(p.name)+' '+esc(p.price)+'p'}).join(', ')+')</div>';
       } else {
         h+='<button class="btn" type="button" data-buy="'+esc(c.id)+'">Price the missing pieces</button>';
       }
@@ -639,7 +641,7 @@ function renderEarnings(){
   h+=card("Spare Prime parts", duc.toLocaleString()+' ducats', pl(s)+' · '+cov(s));
   h+=card("Relics you own", relics.reduce(function(a,r){return a+r.count},0).toLocaleString()+' relics', pl(rl)+' · '+cov(rl));
   h+=card("Spare rare mods", mods.reduce(function(a,r){return a+r.spare},0).toLocaleString()+' spare', pl(md)+' · '+cov(md));
-  h+=card("Wallet now", (inv.platinum||0)+' p', (inv.ducats||0).toLocaleString()+' ducats · '+(inv.credits||0).toLocaleString()+' credits');
+  h+=card("Wallet now", amt(inv.platinum).toLocaleString()+' p', amt(inv.ducats).toLocaleString()+' ducats · '+amt(inv.credits).toLocaleString()+' credits');
   h+='</div>';
   var top=[].concat(sell.map(function(r){return {name:r.name, what:'spare part ×'+r.spare, p:r.price!=null?r.price*r.spare:null, d:r.ducats_total}}),
     relics.map(function(r){return {name:r.name, what:'relic ×'+r.count, p:r.price!=null?r.price*r.count:null, d:null}}),
@@ -856,6 +858,7 @@ function renderFocus(){
   h+='<label class="tick"><input type="checkbox" id="st-bar"'+(st.bar!==false?' checked':'')+'><span class="t">Show the Next bar on every screen</span><span></span></label>';
   h+='<label class="tick"><input type="checkbox" id="st-owned"'+(st.ownedonly!==false?' checked':'')+'><span class="t">Only suggest relics I already have<small>Off: also suggests farming a relic first</small></span><span></span></label>';
   h+='<label class="tick"><input type="checkbox" id="st-start"'+(st.start!=="last"?' checked':'')+'><span class="t">Open on this Focus screen</span><span></span></label>';
+  if(DATA.meta.session_ok) h+='<div class="tick"><span class="t">You allowed reading the game session<small>Get inventory from game reads the running game. Take this back and the app will ask again next time.</small></span><button class="btn" type="button" id="st-consent">Take back permission</button></div>';
   h+='<details><summary class="muted">Hide routine items I never do</summary>'+DAILY.concat(WEEKLY).map(function(x){return '<label class="tick"><input type="checkbox" data-hide="'+x.id+'"'+(hiddenRoutine(x.id)?' checked':'')+'><span class="t">Hide '+esc(x.t)+'</span><span></span></label>'}).join('')+'</details>';
   h+='</div>';
   h+='</div></div>';
@@ -873,6 +876,7 @@ function renderFocus(){
   $("view").querySelectorAll("[data-ungoal]").forEach(function(b){ b.onclick=function(){ toggleGoal(b.dataset.ungoal); }; });
   $("view").querySelectorAll("[data-zoom]").forEach(function(b){ b.onclick=function(){ setSetting("zoom", +b.dataset.zoom); }; });
   $("view").querySelectorAll("[data-hide]").forEach(function(b){ b.onchange=function(){ var hd=((PREFS.settings||{}).hide||[]).filter(function(x){return x!==b.dataset.hide}); if(b.checked) hd.push(b.dataset.hide); setSetting("hide",hd); }; });
+  if($("st-consent")) $("st-consent").onclick=function(){ api("/api/consent/forget",{method:"POST"}).then(function(){ DATA.meta.session_ok=false; renderAll(); toast("Permission taken back. The app will ask before reading the game again."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
   var bind2=function(id,k,fn){ var e=$(id); if(e) e.onchange=function(){ setSetting(k, fn(e.checked)); }; };
   bind2("st-contrast","contrast",function(v){return v}); bind2("st-calm","calm",function(v){return v});
   bind2("st-bar","bar",function(v){return v}); bind2("st-owned","ownedonly",function(v){return v}); bind2("st-start","start",function(v){return v?"focus":"last"});

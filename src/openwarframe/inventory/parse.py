@@ -121,14 +121,31 @@ def parse_inventory(data: dict, *, source: str = "file") -> Inventory:
             continue
         try:
             lvl = int(json.loads(e.get("UpgradeFingerprint") or "{}").get("lvl", 0))
-        except (ValueError, AttributeError):
+        except (ValueError, AttributeError, TypeError):
             lvl = 0
         inv.mods.setdefault(t, {"unranked": 0, "ranks": []})["ranks"].append(lvl)
-    inv.endo = data.get("FusionPoints")
-    inv.regal_aya = data.get("PrimeTokens")
-    inv.credits = data.get("RegularCredits")
-    inv.platinum = (data.get("PremiumCredits") or 0) + (data.get("PremiumCreditsFree") or 0) or None
+    # wallet values end up on screen: only whole numbers get through, whatever the file says
+    inv.endo = _amount(data.get("FusionPoints"))
+    inv.regal_aya = _amount(data.get("PrimeTokens"))
+    inv.credits = _amount(data.get("RegularCredits"))
+    paid, free = _amount(data.get("PremiumCredits")), _amount(data.get("PremiumCreditsFree"))
+    inv.platinum = None if paid is None and free is None else (paid or 0) + (free or 0)
     return inv
+
+
+def _amount(v) -> int | None:
+    """A wallet amount as an int, or None when it is missing or not a number."""
+    if isinstance(v, bool):
+        return None
+    if isinstance(v, int):
+        return v
+    if isinstance(v, float) and v == v and abs(v) != float("inf"):
+        return int(v)
+    if isinstance(v, str) and v.strip().lstrip("-").isdigit():
+        return int(v.strip())
+    if isinstance(v, dict):  # MongoDB-style {"$numberLong": "123"}
+        return _amount(v.get("$numberLong") or v.get("$numberInt"))
+    return None
 
 
 def load_inventory(path: Path) -> Inventory:

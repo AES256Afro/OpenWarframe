@@ -13,6 +13,7 @@ from rich.tree import Tree
 
 from . import __version__
 from .config import load_settings
+from .fsutil import atomic_write_text
 
 app = typer.Typer(help="Export, explain and plan your Warframe account.", no_args_is_help=True)
 codex_app = typer.Typer(
@@ -39,6 +40,9 @@ def _main(
     logging.basicConfig(
         level=logging.INFO if verbose else logging.WARNING, format="%(levelname)s %(name)s: %(message)s"
     )
+    from . import logsafe
+
+    logsafe.install()  # -v must never print the game session key
     if home:
         os.environ["OPENWARFRAME_HOME"] = str(home)
 
@@ -207,7 +211,7 @@ def inventory_import(
     if isinstance(data, dict) and "InventoryJson" in data:
         raw = data["InventoryJson"]
         data = json.loads(raw) if isinstance(raw, str) else raw
-    (s.home / "inventory.json").write_text(json.dumps(data), encoding="utf-8")
+    atomic_write_text(s.home / "inventory.json", json.dumps(data))
     console.print(
         f"[green]Inventory loaded:[/green] {len(inv.equipment)} built items, {len(inv.recipes)} blueprints, "
         f"{sum(sum(v.values()) for v in inv.relics.values())} relics"
@@ -216,7 +220,9 @@ def inventory_import(
 
 @inventory_app.command("grab")
 def inventory_grab(
-    yes: bool = typer.Option(False, "--yes", help="Accept the risk without asking (after the first time)."),
+    yes: bool = typer.Option(
+        False, "--yes", help="Kept for scripts. The first run always asks; later runs never do."
+    ),
 ) -> None:
     """Read the running game's session (read-only) and download your full inventory."""
     import json
@@ -227,8 +233,9 @@ def inventory_grab(
 
     s = load_settings()
     if not s.extra.get("session_reader_ok"):
-        console.print(f"[yellow]{RISK_TEXT}[/yellow]")
-        if not yes and not typer.confirm("Continue?", default=False):
+        # --yes never answers this first question: consent has to come from the player
+        console.print(f"[yellow]{RISK_TEXT}[/yellow]", markup=False)
+        if not typer.confirm("Continue?", default=False):
             raise typer.Exit(code=1)
         s.extra["session_reader_ok"] = True
         save_settings(s)
@@ -239,11 +246,24 @@ def inventory_grab(
         console.print(f"[red]{exc}[/red]")
         raise typer.Exit(code=1) from None
     inv = parse_inventory(data, source="game session")
-    (s.home / "inventory.json").write_text(json.dumps(data), encoding="utf-8")
+    atomic_write_text(s.home / "inventory.json", json.dumps(data))
     console.print(
         f"[green]Inventory downloaded:[/green] {len(inv.equipment)} built items, {len(inv.recipes)} blueprints, "
         f"{sum(sum(v.values()) for v in inv.relics.values())} relics"
     )
+
+
+@inventory_app.command("forget-consent")
+def inventory_forget_consent() -> None:
+    """Take back permission to read the game session. The next grab asks again."""
+    from .config import save_settings
+
+    s = load_settings()
+    if s.extra.pop("session_reader_ok", None) is None:
+        console.print("No permission was stored.")
+        return
+    save_settings(s)
+    console.print("Permission removed. OpenWarframe will ask again before reading the game session.")
 
 
 @inventory_app.command("clear")

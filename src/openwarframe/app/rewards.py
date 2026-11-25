@@ -26,6 +26,7 @@ MARKET_TOP = "https://api.warframe.market/v2/orders/item/{slug}/top"
 def _price_map(slugs: list[str], cache_dir) -> dict[str, float]:
     """Typical sell price per market slug (cached 6 h). Best effort."""
     from ..http import CachedClient
+    from ..sources.static.market import order_prices
 
     out: dict[str, float] = {}
     client = CachedClient(cache_dir, timeout=8, retries=1)
@@ -35,7 +36,7 @@ def _price_map(slugs: list[str], cache_dir) -> dict[str, float]:
                 top = client.get_json(MARKET_TOP.format(slug=slug), max_age=6 * 3600).get("data", {})
             except Exception:  # noqa: BLE001
                 continue
-            sells = sorted(o["platinum"] for o in top.get("sell", []))[:5]
+            sells = sorted(order_prices(top.get("sell")))[:5]
             if sells:
                 out[slug] = sells[len(sells) // 2]
     finally:

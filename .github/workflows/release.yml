@@ -1,9 +1,20 @@
 name: Release
 
-# On a version tag, build the standalone apps with PyInstaller and attach
-# OpenWarframe-<tag>-windows.zip, OpenWarframe-<tag>-macos.zip and SHA256SUMS*.txt to the
-# GitHub release. The builds are unsigned (the Mac app is ad-hoc signed only);
-# docs/INSTALL.md explains SmartScreen, Gatekeeper and checksum checks.
+# On a version tag, build the standalone apps with PyInstaller and publish one GitHub
+# release with:
+#   OpenWarframe-<tag>-windows.zip, SHA256SUMS.txt
+#   OpenWarframe-<tag>-macos.zip,   SHA256SUMS-macos.txt
+#   constraints.txt   exact dependency versions, used by install.ps1
+#   install.ps1       the installer, pinned to this release's files
+# Each zip carries LICENSE, INSTALL.md and THIRD_PARTY_LICENSES.txt.
+#
+# The build jobs only get a read-only token. The release is created as a draft by the last
+# job, which runs only after both builds pass, and is published once every file is
+# attached, so a release is never public with one platform missing.
+#
+# The builds are unsigned (the Mac app is ad-hoc signed only); docs/INSTALL.md explains
+# SmartScreen, Gatekeeper and checksum checks. workflow_dispatch re-runs a tag from 0.4.1
+# on; earlier tags predate the scripts this workflow calls.
 
 on:
   push:
@@ -11,143 +22,119 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to (re)build and attach assets to, e.g. v0.3.0"
+        description: "Existing tag to (re)build and attach assets to, e.g. v0.4.1"
         required: true
 
 permissions:
-  contents: write
+  contents: read
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
 
 jobs:
-  windows:
-    runs-on: windows-latest
-    env:
-      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+            cli: dist/OpenWarframe/openwarframe-cli.exe
+          # Apple Silicon; the native Mac Warframe client is Apple Silicon only too.
+          - os: macos-latest
+            name: macos
+            cli: dist/OpenWarframe.app/Contents/MacOS/openwarframe-cli
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           ref: ${{ env.TAG }}
+          persist-credentials: false
 
-      - uses: astral-sh/setup-uv@v5
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
         with:
           python-version: "3.12"
 
       - name: Check tag matches package version
-        shell: pwsh
-        run: |
-          $v = (Select-String -Path src/openwarframe/__init__.py -Pattern '__version__ = "([^"]+)"').Matches[0].Groups[1].Value
-          if ("v$v" -ne $env:TAG) { throw "Tag $env:TAG does not match __version__ $v" }
-
-      - run: uv sync --all-groups
-      - name: Test
-        run: uv run pytest -q
-
-      - name: Build with PyInstaller
-        run: uv run --with pyinstaller pyinstaller packaging/openwarframe.spec --noconfirm
-
-      - name: Smoke test
-        shell: pwsh
-        run: |
-          $d = "dist/OpenWarframe"
-          & "$d/openwarframe-cli.exe" --help | Out-Null
-          if ($LASTEXITCODE -ne 0) { throw "CLI --help failed" }
-          & "$d/openwarframe-cli.exe" version
-          if ($LASTEXITCODE -ne 0) { throw "CLI version failed" }
-          $env:OPENWARFRAME_HOME = "$env:RUNNER_TEMP/owhome"
-          $p = Start-Process "$d/openwarframe-cli.exe" -ArgumentList 'gui','--no-window','--port','8765' -PassThru
-          try {
-            $ok = $false
-            foreach ($i in 1..30) {
-              Start-Sleep 1
-              try { if ((Invoke-RestMethod http://127.0.0.1:8765/api/ping).ok) { $ok = $true; break } } catch {}
-            }
-            if (-not $ok) { throw "app server did not answer /api/ping" }
-            $html = Invoke-WebRequest http://127.0.0.1:8765/ -UseBasicParsing
-            if ($html.StatusCode -ne 200) { throw "index.html not served" }
-          } finally { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue }
-
-      - name: Zip and checksum
-        shell: pwsh
-        run: |
-          $zip = "OpenWarframe-$env:TAG-windows.zip"
-          Copy-Item LICENSE, docs/INSTALL.md dist/OpenWarframe/
-          Compress-Archive -Path dist/OpenWarframe -DestinationPath $zip
-          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
-          "$hash  $zip" | Out-File SHA256SUMS.txt -Encoding ascii
-          Get-Content SHA256SUMS.txt
-          "ZIP=$zip" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
-
-      - name: Attach to release
-        shell: pwsh
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release view $env:TAG *> $null
-          if ($LASTEXITCODE -ne 0) {
-            gh release create $env:TAG --title "OpenWarframe $env:TAG" --generate-notes --verify-tag
-          }
-          gh release upload $env:TAG $env:ZIP SHA256SUMS.txt --clobber
-
-  macos:
-    # Apple Silicon build; the native Mac Warframe client is Apple Silicon only too.
-    runs-on: macos-latest
-    env:
-      TAG: ${{ github.event.inputs.tag || github.ref_name }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ env.TAG }}
-
-      - uses: astral-sh/setup-uv@v5
-        with:
-          python-version: "3.12"
-
-      - name: Check tag matches package version
+        shell: bash
         run: |
           v=$(sed -n 's/^__version__ = "\(.*\)"/\1/p' src/openwarframe/__init__.py)
           [ "v$v" = "$TAG" ] || { echo "Tag $TAG does not match __version__ $v"; exit 1; }
 
-      - run: uv sync --all-groups
+      - run: uv sync --locked --all-groups
       - name: Test
         run: uv run pytest -q
 
       - name: Build with PyInstaller
-        run: uv run --with pyinstaller pyinstaller packaging/openwarframe.spec --noconfirm
+        run: uv run pyinstaller packaging/openwarframe.spec --noconfirm
 
       - name: Smoke test
-        run: |
-          cli="dist/OpenWarframe.app/Contents/MacOS/openwarframe-cli"
-          "$cli" --help > /dev/null
-          "$cli" version
-          export OPENWARFRAME_HOME="$RUNNER_TEMP/owhome"
-          "$cli" gui --no-window --port 8765 & pid=$!
-          ok=0
-          for i in $(seq 1 30); do
-            sleep 1
-            if curl -sf http://127.0.0.1:8765/api/ping > /dev/null; then ok=1; break; fi
-          done
-          [ $ok = 1 ] || { kill $pid; echo "app server did not answer /api/ping"; exit 1; }
-          curl -sf -o /dev/null http://127.0.0.1:8765/ || { kill $pid; echo "index.html not served"; exit 1; }
-          kill $pid
+        run: uv run python packaging/smoke_test.py ${{ matrix.cli }}
 
-      - name: Zip and checksum
+      - name: Third-party notices
+        run: uv run python packaging/third_party_notices.py dist/THIRD_PARTY_LICENSES.txt
+
+      - name: Zip and checksum (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $zip = "OpenWarframe-$env:TAG-windows.zip"
+          New-Item -ItemType Directory -Force out | Out-Null
+          Copy-Item LICENSE, docs/INSTALL.md, dist/THIRD_PARTY_LICENSES.txt dist/OpenWarframe/
+          Compress-Archive -Path dist/OpenWarframe -DestinationPath "out/$zip" -Force
+          Push-Location out
+          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
+          "$hash  $zip" | Out-File SHA256SUMS.txt -Encoding ascii
+          Get-Content SHA256SUMS.txt
+          Pop-Location
+          # installer and pinned dependency list, attached once (from this job)
+          Copy-Item packaging/install.ps1 out/
+          uv export --locked --no-dev --no-emit-project --no-hashes --format requirements-txt -o out/constraints.txt
+
+      - name: Zip and checksum (macOS)
+        if: runner.os == 'macOS'
+        shell: bash
         run: |
           zip="OpenWarframe-$TAG-macos.zip"
+          mkdir -p out
           cp LICENSE docs/INSTALL.md dist/
           # ditto keeps the bundle's symlinks, permissions and signature intact
-          (cd dist && ditto -c -k --sequesterRsrc --keepParent OpenWarframe.app "../$zip")
-          (cd dist && zip -q "../$zip" LICENSE INSTALL.md)
-          shasum -a 256 "$zip" > SHA256SUMS-macos.txt
-          cat SHA256SUMS-macos.txt
-          echo "ZIP=$zip" >> "$GITHUB_ENV"
+          (cd dist && ditto -c -k --sequesterRsrc --keepParent OpenWarframe.app "../out/$zip")
+          (cd dist && zip -q "../out/$zip" LICENSE INSTALL.md THIRD_PARTY_LICENSES.txt)
+          (cd out && shasum -a 256 "$zip" > SHA256SUMS-macos.txt && cat SHA256SUMS-macos.txt)
 
-      - name: Attach to release
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-${{ matrix.name }}
+          path: out/
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: out
+
+      - name: Attach to a draft release, then publish it
         env:
           GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
-          # the Windows job may be creating the release at the same moment
-          for i in 1 2 3 4 5 6; do
-            gh release view "$TAG" > /dev/null 2>&1 && break
-            gh release create "$TAG" --title "OpenWarframe $TAG" --generate-notes --verify-tag && break
-            sleep 10
-          done
-          gh release upload "$TAG" "$ZIP" SHA256SUMS-macos.txt --clobber
+          ls -l out
+          # gh's view/upload find draft releases too; list them explicitly to be sure
+          existing=$(gh release list -R "$REPO" --limit 200 --json tagName,isDraft \
+            --jq "map(select(.tagName == \"$TAG\")) | first | if . == null then \"none\" elif .isDraft then \"draft\" else \"published\" end")
+          if [ "$existing" = "none" ]; then
+            gh release create "$TAG" -R "$REPO" --draft --verify-tag \
+              --title "OpenWarframe $TAG" --generate-notes
+          fi
+          gh release upload "$TAG" -R "$REPO" out/* --clobber
+          if [ "$existing" != "published" ]; then
+            gh release edit "$TAG" -R "$REPO" --draft=false --latest
+          fi

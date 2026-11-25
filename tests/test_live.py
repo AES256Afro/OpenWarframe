@@ -423,9 +423,12 @@ def test_pick_layout_prefers_fully_matched(catalog: RewardCatalog) -> None:
 
 # -- OCR (Windows only) -------------------------------------------------------------------
 
-needs_ocr = pytest.mark.skipif(not ocr.ocr_available(), reason="Windows OCR (winrt) not available")
+needs_ocr = pytest.mark.skipif(
+    not ocr.ocr_available(), reason="no OCR engine on this machine (Windows OCR or Apple Vision)"
+)
 
 
+@pytest.mark.host
 @needs_ocr
 @pytest.mark.parametrize("size", [(1920, 1080), (2560, 1440)])
 def test_ocr_synthetic_screen(catalog: RewardCatalog, size: tuple[int, int]) -> None:

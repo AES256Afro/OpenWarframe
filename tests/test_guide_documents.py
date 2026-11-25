@@ -119,6 +119,7 @@ def test_pdf_without_browser_explains(tmp_path: Path, monkeypatch: pytest.Monkey
         html_to_pdf(page, tmp_path / "p.pdf")
 
 
+@pytest.mark.host
 @pytest.mark.skipif(find_browser() is None, reason="no Chromium-based browser on this machine")
 def test_pdf_prints_with_local_browser(plan, tmp_path: Path):
     bundle = write_guide_bundle(plan, tmp_path, docx=False, folders={})

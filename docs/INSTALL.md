@@ -21,8 +21,12 @@ The script ([packaging/install.ps1](../packaging/install.ps1), read it first if 
 
 1. installs [uv](https://docs.astral.sh/uv/) with Astral's official installer if you do not have it
    (uv also downloads the Python it needs; nothing touches a Python you already have),
-2. installs the latest OpenWarframe release with `uv tool install`,
+2. installs the latest OpenWarframe release with `uv tool install`, on Python 3.12 and with the
+   exact dependency versions that release was built and tested with (its `constraints.txt`),
 3. puts an **OpenWarframe** shortcut on your desktop.
+
+If it can't find the latest release (no internet, or GitHub is down), it stops with a message
+rather than installing anything else.
 
 Then double-click **OpenWarframe** on the desktop. The first start downloads the game database
 (about a minute) and shows a welcome screen. With Warframe running, click **Find my account in the
@@ -32,7 +36,10 @@ Prefer the command line? In a new PowerShell window, `openwarframe account howto
 `openwarframe account set --id <your 24-character account id>`, then `openwarframe sync`.
 
 To update later, run the install command again.
-To install a specific version, set `$env:OPENWARFRAME_REF = "v0.3.0"` first.
+To install a specific version, set `$env:OPENWARFRAME_REF = "v0.4.1"` first. Releases from
+0.4.1 on also attach `install.ps1` itself, so
+`irm https://github.com/AES256Afro/OpenWarframe/releases/latest/download/install.ps1 | iex`
+runs the installer exactly as it shipped with the latest release.
 
 To uninstall: `uv tool uninstall openwarframe` and delete the desktop shortcut. Your data lives in
 `%LOCALAPPDATA%\OpenWarframe`; delete that folder too if you want it gone.

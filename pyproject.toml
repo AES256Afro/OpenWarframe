@@ -37,6 +37,7 @@ openwarframe-app = "openwarframe.app:main"
 
 [dependency-groups]
 dev = [
+  "pyinstaller>=6.22.3",
   "pytest>=8.2",
   "ruff>=0.5",
 ]
@@ -63,3 +64,6 @@ ignore = ["E501", "B008"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["tests"]
+markers = [
+  "host: needs something from the machine itself (a Chromium browser, Windows OCR or Apple Vision); skip with -m \"not host\"",
+]

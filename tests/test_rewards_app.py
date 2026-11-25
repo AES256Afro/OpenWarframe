@@ -27,7 +27,8 @@ def test_watcher_starts_off_and_stops_cleanly(tmp_path: Path, codex_path: Path):
     assert w.stop()["state"] == "off"
 
 
-@pytest.mark.skipif(not ocr_available(), reason="Windows OCR not available")
+@pytest.mark.host
+@pytest.mark.skipif(not ocr_available(), reason="no OCR engine on this machine (Windows OCR or Apple Vision)")
 def test_sample_screen_runs_the_whole_pipeline(
     tmp_path: Path,
     codex_path: Path,  # noqa: F811

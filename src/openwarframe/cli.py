@@ -50,6 +50,32 @@ def version() -> None:
     console.print(f"openwarframe {__version__}  -  data in {s.home}")
 
 
+@app.command(hidden=True)
+def selfcheck() -> None:
+    """Check that the files bundled with the app are present (used by the build smoke test)."""
+    from importlib import resources
+
+    from .guide.kb import load_kb
+
+    problems: list[str] = []
+    try:
+        kb = load_kb()
+        console.print(
+            f"knowledge base: {kb.path} ({len(kb.tests.get('tests', []))} rank tests)", markup=False
+        )
+    except Exception as exc:  # noqa: BLE001 - report every problem, not just the first
+        problems.append(f"knowledge base: {exc}")
+    static = resources.files("openwarframe.app").joinpath("static")
+    for name in ("index.html", "mini.html", "icon.ico"):
+        if not static.joinpath(name).is_file():
+            problems.append(f"missing app file: static/{name}")
+    if problems:
+        for p in problems:
+            console.print(p, markup=False, style="red")
+        raise typer.Exit(code=1)
+    console.print("bundled files: ok")
+
+
 @app.command()
 def export(
     formats: str = typer.Option(

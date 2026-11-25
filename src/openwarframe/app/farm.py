@@ -12,6 +12,8 @@ from pathlib import Path
 
 import yaml
 
+from ..codex.names import mission_label
+from ..codex.recipes import RecipeGraph
 from ..inventory import Inventory, relic_base
 from ..report.model import Report
 
@@ -26,21 +28,29 @@ def load_popular(kb_root: Path | None) -> dict[str, dict]:
     return {f["place"].lower(): f for f in data.get("farms", [])}
 
 
-def needed_parts(conn, report: Report, inventory: Inventory | None, skip_items: set[str]) -> dict[str, str]:
-    """Part or blueprint uniqueName -> the item it is for."""
+def needed_parts(
+    conn, report: Report, inventory: Inventory | None, skip_items: set[str], graph: RecipeGraph | None = None
+) -> dict[str, str]:
+    """Part or blueprint uniqueName -> the item it is for.
+
+    A part stays needed until you hold as many as the recipe takes (two barrels for
+    Akstiletto Prime), counting part blueprints and built parts together.
+    """
+    graph = graph or RecipeGraph(conn)
     names = dict(conn.execute("SELECT unique_name, name FROM item"))
     out: dict[str, str] = {}
 
     def held(uid: str) -> int:
         return inventory.count(uid) if inventory else 0
 
-    def add(uid: str, for_name: str) -> None:
-        if held(uid) > 0:
+    def add(uid: str, for_name: str, need: int = 1) -> None:
+        have = held(uid)
+        if have >= need:
             return
         out[uid] = for_name
         # warframe parts drop as blueprints: a part counts as needed through its blueprint too
-        for (bp,) in conn.execute("SELECT unique_name FROM recipe WHERE result_item = ?", (uid,)):
-            if held(bp) == 0:
+        for bp in graph.blueprints_for(uid):
+            if have + held(bp) < need:
                 out[bp] = for_name
 
     for m in report.missing:
@@ -48,22 +58,20 @@ def needed_parts(conn, report: Report, inventory: Inventory | None, skip_items: 
             continue
         if inventory and inventory.owns(m.unique_name):
             continue
-        for (bp,) in conn.execute("SELECT unique_name FROM recipe WHERE result_item = ?", (m.unique_name,)):
+        for bp in graph.blueprints_for(m.unique_name):
             if held(bp) == 0:
                 out[bp] = m.name
         for c in m.components:
-            add(c.unique_name, m.name)
+            add(c.unique_name, m.name, c.count)
     if inventory:
         for rid in inventory.recipes:
-            row = conn.execute("SELECT result_item FROM recipe WHERE unique_name = ?", (rid,)).fetchone()
-            if not row:
+            result = graph.result.get(rid)
+            if not result:
                 continue
-            for_name = names.get(row[0], row[0].rsplit("/", 1)[-1])
-            for ing, cnt in conn.execute(
-                "SELECT item, count FROM recipe_ingredient WHERE recipe = ?", (rid,)
-            ):
-                if "/Recipes/" in ing and inventory.count(ing) < cnt:
-                    add(ing, for_name)
+            for_name = names.get(result, result.rsplit("/", 1)[-1])
+            for ing, cnt in graph.ingredients(rid).items():
+                if "/Recipes/" in ing:
+                    add(ing, for_name, cnt)
     return out
 
 
@@ -112,7 +120,8 @@ def rank_missions(
         value = (chance or 0) / 100 * weight
         g["score"] += value
         g["rotations"][rotation or "-"] += value
-        g["gives"][what] += chance or 0
+        # the best single chance, not a sum: two rotations at 50% are not "100%"
+        g["gives"][what] = max(g["gives"][what], chance or 0)
         if tier:
             g["tiers"].add(tier)
 
@@ -123,7 +132,16 @@ def rank_missions(
             continue
         info = nodes.get(node) or (None, None, None, None)
         level = f"{info[2]}-{info[3]}" if info[2] is not None else ""
-        bump((place, planet), f"{place} ({planet})", "Mission", info[0] or mode, level, rot, item, chance)
+        bump(
+            (place, planet),
+            f"{place} ({planet})",
+            "Mission",
+            mission_label(info[0] or mode),
+            level,
+            rot,
+            item,
+            chance,
+        )
     for region, bounty, rot, item, chance in conn.execute(
         "SELECT region, bounty, rotation, item, chance FROM bounty_reward WHERE item IS NOT NULL"
     ):
@@ -172,34 +190,32 @@ def _slug(conn, uid: str) -> str | None:
     return None
 
 
-def build_cost(conn, item_uid: str, inventory: Inventory | None) -> dict:
+def build_cost(conn, item_uid: str, inventory: Inventory | None, graph: RecipeGraph | None = None) -> dict:
     """Credits and resources to build an item from its blueprint and part blueprints."""
+    graph = graph or RecipeGraph(conn)
     credits = 0
     resources: dict[str, int] = {}
-    main = conn.execute(
-        "SELECT unique_name, build_price FROM recipe WHERE result_item = ?", (item_uid,)
-    ).fetchone()
+    main = graph.recipe_for(item_uid)
     if not main:
         return {"credits": 0, "resources": []}
-    queue = [(main[0], main[1] or 0)]
-    for rid, price in queue:
-        credits += price
-        for ing, cnt in conn.execute("SELECT item, count FROM recipe_ingredient WHERE recipe = ?", (rid,)):
+    queue = [(main, 1)]
+    for rid, times in queue:
+        credits += graph.build_price.get(rid, 0) * times
+        for ing, cnt in graph.ingredients(rid).items():
             if "/Recipes/" in ing:
                 held = inventory.count(ing) if inventory else 0
                 if held >= cnt:
-                    continue  # part already built
-                sub = conn.execute(
-                    "SELECT unique_name, build_price FROM recipe WHERE result_item = ?", (ing,)
-                ).fetchone()
+                    continue  # parts already built
+                sub = graph.recipe_for(ing)
                 if sub:
-                    queue.append((sub[0], sub[1] or 0))
+                    queue.append((sub, cnt - held))  # each missing part is one build
             else:
-                resources[ing] = resources.get(ing, 0) + cnt
+                resources[ing] = resources.get(ing, 0) + cnt * times
     rows = []
     for uid, need in resources.items():
         name = conn.execute("SELECT name FROM item WHERE unique_name = ?", (uid,)).fetchone()
-        have = inventory.misc.get(uid, 0) if inventory else None
+        # anything can be an ingredient (Akbronco Prime takes two built Bronco Primes)
+        have = inventory.count(uid) if inventory else None
         rows.append(
             {
                 "name": name[0] if name else uid.rsplit("/", 1)[-1],
@@ -274,7 +290,7 @@ def relic_route(conn, item_uid: str, inventory: Inventory | None) -> dict:
                 best = {
                     "relic": name,
                     "where": f"{place} ({planet})",
-                    "mission": mode or "",
+                    "mission": mission_label(mode),
                     "rotation": rotation,
                     "chance": chance,
                 }
@@ -313,8 +329,11 @@ def _route_fields(route: dict) -> dict:
     return {"crack": route["crack"], "relic_only": route["relic_only"], "farm_relic": route["farm_relic"]}
 
 
-def finish_cards(conn, report: Report, inventory: Inventory | None) -> list[dict]:
+def finish_cards(
+    conn, report: Report, inventory: Inventory | None, graph: RecipeGraph | None = None
+) -> list[dict]:
     """One card per not-yet-mastered item: each piece, what you hold, and the best sources."""
+    graph = graph or RecipeGraph(conn)
     cards = []
     for m in report.missing:
         if m.above_your_mr or not m.components:
@@ -323,7 +342,8 @@ def finish_cards(conn, report: Report, inventory: Inventory | None) -> list[dict
             continue
         pieces = []
         missing = 0
-        bp = conn.execute("SELECT unique_name FROM recipe WHERE result_item = ?", (m.unique_name,)).fetchone()
+        main = graph.recipe_for(m.unique_name)
+        bp = (main,) if main else None
         if bp:
             have = inventory.count(bp[0]) if inventory else None
             short = None if have is None else (0 if have else 1)
@@ -376,7 +396,7 @@ def finish_cards(conn, report: Report, inventory: Inventory | None) -> list[dict
                 if inventory is None
                 else all(p["short"] == 0 or p["crack"] or not p["relic_only"] for p in pieces),
                 "slug": m.market_slug,
-                "cost": build_cost(conn, m.unique_name, inventory),
+                "cost": build_cost(conn, m.unique_name, inventory, graph),
             }
         )
     cards.sort(key=lambda c: (c["missing"], c["name"]))

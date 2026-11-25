@@ -73,6 +73,11 @@ routes:
     blurb: Vendors where you still need standing first. Each frame is 6,000.
     tired: Spend Drifter and Railjack points.
     too_hard: Level new frames in normal Sanctuary Onslaught. Ability kills give the frame all the affinity.
+  starchart:
+    title: The star chart
+    blurb: Every node gives mastery the first time you clear it, and each junction 1,000.
+    tired: Replay a quick node you like; Exterminate and Capture take minutes.
+    too_hard: Bring a friend or join a public squad for the node.
   steel_path:
     title: The Steel Path chart
     blurb: Steel Path nodes award the same mastery as normal nodes again, and junctions 1,000 each.
@@ -100,6 +105,7 @@ order:
   - standing_owned
   - relics_farmable
   - drops
+  - starchart
   - market
   - standing_other
   - steel_path

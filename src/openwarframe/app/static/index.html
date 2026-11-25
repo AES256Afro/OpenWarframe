@@ -230,7 +230,7 @@ var RELIC_COLS=[
 var BP_COLS=[
   {k:"name",l:"Blueprint for",cls:"name"},
   {k:"ready",l:"Status",fmt:function(v,r){return v?'<span class="pill p-owned">Ready to build</span>':'<span class="pill p-warn">'+r.missing+' part'+(r.missing===1?"":"s")+' missing</span>'}},
-  {k:"mastered",l:"Mastery",fmt:function(v){return v?'<span class="pill p-mastered">Mastered</span>':'<span class="pill p-leveling">Not mastered</span>'}},
+  {k:"mastered",l:"Mastery",fmt:function(v){return v==null?'<span class="muted">-</span>':v?'<span class="pill p-mastered">Mastered</span>':'<span class="pill p-leveling">Not mastered</span>'}},
   {k:"blueprints",l:"Copies",cls:"num"},{k:"credits",l:"Credits",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},{k:"hours",l:"Build h",cls:"num"}
 ];
 
@@ -455,7 +455,7 @@ function renderFilters(){
   el.querySelectorAll("[data-sub]").forEach(function(b){ b.onclick=function(){ var keep=b.dataset.sub; F={sub:keep}; OPEN={}; try{ history.replaceState(null,"","#"+VIEW+"/"+keep); }catch(e){} renderAll(); }; });
   var pb=$("prices"); if(pb) pb.onclick=checkPrices;
   bind("fready","_ready",function(r){return r.ready});
-  bind("funm","_unm",function(r){return !r.mastered});
+  bind("funm","_unm",function(r){return r.mastered===false});
 }
 
 // ---- table --------------------------------------------------------------------

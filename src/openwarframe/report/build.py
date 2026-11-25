@@ -10,6 +10,7 @@ from urllib.parse import quote
 from ..account.model import SUIT_CATEGORIES, Snapshot
 from ..account.summary import MASTERY_CATEGORIES
 from ..codex.queries import Codex
+from ..inventory import Inventory
 from .model import (
     AchievementRow,
     CategoryRow,
@@ -42,6 +43,7 @@ INTRINSIC_NAMES = {
     "LPP_DRIFTER": "Drifter intrinsic points (unspent pool)",
 }
 INTRINSIC_MASTERY_PER_RANK = 1500
+INTRINSIC_POINT = 1000  # the profile stores point pools in thousandths of a point
 # Star chart mastery: 241 nodes award mastery, 14,569 in total (about 60 each); Steel
 # Path awards the same again. Junctions are 1,000 each, normal and Steel Path.
 STARCHART_MASTERY_NODES = 241
@@ -51,8 +53,15 @@ WIKI = "https://wiki.warframe.com/w/"
 _CAMEL = re.compile(r"(?<=[a-z0-9])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])")
 
 
+LEGENDARY_BASE = 2_250_000  # mastery for rank 30
+LEGENDARY_STEP = 147_500  # each Legendary rank above 30 costs the same
+
+
 def rank_threshold(rank: int) -> int:
-    return 2500 * rank * rank
+    """Total mastery a rank needs: 2,500 x rank² up to 30, then 147,500 per Legendary rank."""
+    if rank <= 30:
+        return 2500 * rank * rank
+    return LEGENDARY_BASE + LEGENDARY_STEP * (rank - 30)
 
 
 def starchart_mastery(nodes_done: int) -> int:
@@ -105,6 +114,23 @@ def _eligible_items(codex: Codex) -> list[tuple[str, str, str, int, bool]]:
     return out
 
 
+def _syndicate_max_ranks(codex: Codex) -> dict[str, int]:
+    """Highest rank per syndicate tag, from the rank titles in the codex.
+
+    Nightwave seasons list prestige ranks into the hundreds; the season itself is 30 ranks,
+    which is what "maxed" means there.
+    """
+    out: dict[str, int] = {}
+    for tag, data in codex.conn.execute("SELECT tag, data FROM syndicate"):
+        try:
+            levels = [int(t["level"]) for t in json.loads(data or "{}").get("titles") or [] if "level" in t]
+        except (ValueError, TypeError, KeyError):
+            continue
+        if levels:
+            out[tag] = 30 if tag.startswith("RadioLegion") else max(levels)
+    return out
+
+
 def _farmable_relics(codex: Codex) -> set[str]:
     q = """SELECT item FROM node_reward WHERE item LIKE '%/Projections/%'
            UNION SELECT item FROM transient_reward WHERE item LIKE '%/Projections/%'
@@ -149,7 +175,14 @@ def _acquisition(bp: list[SourceRow], comps: list[ComponentRow], tradeable: bool
     return " + ".join(labels)
 
 
-def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -> Report:
+def build_report(
+    snapshot: Snapshot, codex: Codex, *, anonymize: bool = False, inventory: Inventory | None = None
+) -> Report:
+    """Turn a profile snapshot into the report every export and guide is built from.
+
+    With an ``inventory``, never-leveled items you already own are marked as owned, so the
+    exports and the mastery plan say "level it" instead of "farm it".
+    """
     snap = snapshot.anonymized() if anonymize else snapshot
     p = snap.progression
     owned_by_uid = {i.item: i for i in p.items}
@@ -200,6 +233,10 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
                     )
                 )
         bp = _source_rows(codex, uid, farmable)
+        in_arsenal = inventory.owns(uid) if inventory is not None else None
+        acquisition = _acquisition(bp, comps, bool(market), bool(recipes))
+        if in_arsenal:
+            acquisition = f"Owned: level it ({acquisition})"
         missing.append(
             MissingItem(
                 unique_name=uid,
@@ -207,12 +244,13 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
                 category=cat,
                 mastery_req=mr,
                 above_your_mr=mr > p.mastery_rank,
-                acquisition=_acquisition(bp, comps, bool(market), bool(recipes)),
+                acquisition=acquisition,
                 tradeable=bool(market),
                 market_slug=market["slug"] if market else None,
                 blueprint_sources=bp,
                 components=comps,
                 wiki_url=wiki_url(name),
+                owned=in_arsenal,
             )
         )
     missing.sort(key=lambda m: (MASTERY_CATEGORIES.index(m.category), m.above_your_mr, m.name))
@@ -281,6 +319,8 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
         from_starchart=from_starchart,
         from_steel_path=from_steel_path,
         from_junctions=from_junctions,
+        junctions_done=len(junctions),
+        steel_path_junctions_done=sum(1 for n in junctions if n.steel_path),
         estimated_total=visible + from_starchart + from_steel_path + from_junctions,
         note="Items and intrinsics are computed from the profile. The estimated total adds star chart and "
         f"Steel Path nodes (about {STARCHART_MASTERY_TOTAL // STARCHART_MASTERY_NODES} each, "
@@ -292,6 +332,7 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
     name_counts: dict[str, int] = {}
     for a in p.affiliations:
         name_counts[a.name] = name_counts.get(a.name, 0) + 1
+    top_ranks = _syndicate_max_ranks(codex)
     syndicates = sorted(
         (
             SyndicateRow(
@@ -299,6 +340,7 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
                 name=syndicate_label(a.name, a.tag, name_counts[a.name] > 1),
                 rank=a.title,
                 standing=a.standing,
+                max_rank=top_ranks.get(a.tag, 30 if a.tag.startswith("RadioLegion") else 5),
             )
             for a in p.affiliations
         ),
@@ -315,8 +357,13 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
             AchievementRow(key=c.name, name=name, description=desc or None, progress=c.progress)
         )
     achievements.sort(key=lambda a: a.name.lower())
+    # the profile stores the unspent point pools (LPP_*) in thousandths of a point
     intrinsics = [
-        IntrinsicRow(key=k, name=INTRINSIC_NAMES.get(k, _pretty(k)), value=v)
+        IntrinsicRow(
+            key=k,
+            name=INTRINSIC_NAMES.get(k, _pretty(k)),
+            value=v // INTRINSIC_POINT if k.startswith("LPP_") else v,
+        )
         for k, v in sorted(p.intrinsics.items())
     ]
     usage = []
@@ -354,13 +401,14 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
         starchart_done=sc_done,
         starchart_total=len(nodes),
         steel_path_done=sum(1 for n in nodes if n.steel_path),
-        syndicates_maxed=sum(1 for s in syndicates if s.rank >= 5),
+        syndicates_maxed=sum(1 for s in syndicates if s.rank >= s.max_rank),
         achievements_tracked=len(achievements),
     )
-    if "inventory" not in snap.coverage:
+    if inventory is None and "inventory" not in snap.coverage:
         notes.append(
-            "Profile-only snapshot: resource counts, owned blueprints, foundry, relics and mods need an inventory "
-            "source (milestone 3). 'Missing' means never leveled, which includes items you own but never used."
+            "No inventory loaded, so this report can't tell what you own: 'missing' means never leveled, which "
+            "includes items you own but never used. Load one with `openwarframe inventory grab` or "
+            "`openwarframe inventory import <file>`."
         )
 
     stamps = [
@@ -373,7 +421,8 @@ def build_report(snapshot: Snapshot, codex: Codex, *, anonymize: bool = False) -
     return Report(
         generated_at=datetime.now(UTC),
         snapshot_taken_at=snap.taken_at,
-        coverage=list(snap.coverage),
+        coverage=list(snap.coverage)
+        + (["inventory"] if inventory is not None and "inventory" not in snap.coverage else []),
         identity=Identity(
             display_name=ident.display_name,
             platform=ident.platform,

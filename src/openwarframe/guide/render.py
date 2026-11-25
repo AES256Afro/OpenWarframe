@@ -222,6 +222,7 @@ def _short(n: int) -> str:
 
 def track_svg(rank: int, estimate: int, target: int = 30) -> str:
     """Rank track drawn to one scale from the current rank's threshold to the target."""
+    target = max(target, rank + 1)  # past the target (Legendary ranks): show the next rank
     lo, hi = rank_threshold(rank), rank_threshold(target)
     span = max(1, hi - lo)
     width, x0 = 1000, 20

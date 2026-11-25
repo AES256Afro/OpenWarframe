@@ -6,6 +6,7 @@ where it drops) and, when present, an inventory file (what you own right now).
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 
 from ..codex import Codex
@@ -30,6 +31,8 @@ GROUPS = {
 
 def _access(m, syndicate_ranks: dict[str, int]) -> str:
     """Why a never-leveled item is or isn't reachable right now."""
+    if m.owned:
+        return "Owned"
     if m.above_your_mr:
         return f"Needs MR {m.mastery_req}"
     acq = m.acquisition
@@ -38,36 +41,43 @@ def _access(m, syndicate_ranks: dict[str, int]) -> str:
     if acq in ("Trade", "Relics (vaulted) + Trade", "Relics (vaulted)"):
         return "Vaulted: trade only"
     srcs = list(m.blueprint_sources) + [s for c in m.components for s in c.sources]
-    synd = [s for s in srcs if s.kind in ("syndicate", "vendor")]
-    if synd and len(synd) == len(srcs):
+    synd = [s for s in srcs if s.kind == "syndicate"]
+    if synd and all(s.kind in ("syndicate", "vendor") for s in srcs):
+        # only syndicates sell it: you need enough standing with one of them. A syndicate you
+        # never pledged to is not in the profile at all, which means no standing, not "fine".
         for s in synd:
-            rank = syndicate_ranks.get(s.where.lower())
-            if rank is not None and rank > 0:
+            rank = _syndicate_rank(s.where, syndicate_ranks)
+            if rank is not None and rank >= max(_required_rank(s.detail), 1):
                 return "Available"
-        if any(s.where.lower() in syndicate_ranks and syndicate_ranks[s.where.lower()] <= 0 for s in synd):
-            return "Needs syndicate standing"
+        return "Needs syndicate standing"
     return "Available"
 
 
-def _final_item(conn, uid: str, depth: int = 0) -> str:
-    """Follow recipes upward: part blueprint -> part -> the item it builds."""
-    if depth > 4:
-        return uid
-    row = conn.execute("SELECT result_item FROM recipe WHERE unique_name = ?", (uid,)).fetchone()
-    if row:
-        uid = row[0]
-    up = conn.execute(
-        "SELECT r.result_item FROM recipe_ingredient ri JOIN recipe r ON r.unique_name = ri.recipe "
-        "WHERE ri.item = ? LIMIT 1",
-        (uid,),
-    ).fetchone()
-    if up and up[0] != uid:
-        return _final_item(conn, up[0], depth + 1)
-    return uid
+_RANK_RE = re.compile(r"\brank (-?\d+)")
+
+
+def _required_rank(detail: str) -> int:
+    m = _RANK_RE.search(detail or "")
+    return int(m.group(1)) if m else 1
+
+
+def _norm_syndicate(name: str) -> str:
+    return re.sub(r"[^a-z ]", "", name.lower().replace("'s ", " ")).strip()
+
+
+def _syndicate_rank(where: str, ranks: dict[str, int]) -> int | None:
+    """Your rank with the syndicate named in a source ("Kahl's Garrison" is "Garrison")."""
+    want = _norm_syndicate(where)
+    for name, rank in ranks.items():
+        have = _norm_syndicate(name)
+        if have and (have == want or have in want or want in have):
+            return rank
+    return None
 
 
 def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = None) -> dict:
     conn = codex.conn
+    graph = codex.graph
     have_inv = inventory is not None
     syndicate_ranks = {s.name.lower(): s.rank for s in report.syndicates}
 
@@ -119,7 +129,10 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             it["state"] = "Mastered, not owned" if it["mastery"] == "Mastered" else "Not owned"
 
     item_names = dict(conn.execute("SELECT unique_name, name FROM item"))
-    needed_items = {it["id"] for it in items if it["mastery"] != "Mastered"}
+    if have_inv:  # what you neither mastered nor own
+        needed_items = {it["id"] for it in items if it["mastery"] != "Mastered"}
+    else:  # without an inventory, only what you never leveled (the farm planner agrees)
+        needed_items = {m.unique_name for m in report.missing}
 
     # -- relics ----------------------------------------------------------------------
     farmable = {
@@ -135,7 +148,6 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
         "SELECT relic, item, rarity, chance_intact, chance_radiant FROM relic_reward"
     ):
         rewards[relic].append((item, rarity, intact, radiant))
-    final_cache: dict[str, str] = {}
     # a part is vaulted when no relic that drops it can be farmed right now
     part_relics: dict[str, set[str]] = defaultdict(set)
     for relic, rows_ in rewards.items():
@@ -146,12 +158,18 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
         conn.execute("SELECT unique_name, slug FROM market_item WHERE unique_name LIKE '%/Projections/%'")
     )
 
-    def final(uid: str) -> str:
-        if uid not in final_cache:
-            final_cache[uid] = _final_item(conn, uid)
-        return final_cache[uid]
+    final = graph.final_item
 
-    owned_parts = (inventory.misc | inventory.recipes) if have_inv else {}
+    def held(uid: str) -> int:
+        """Copies of a part you hold, counting a part blueprint as the part it makes."""
+        if not have_inv:
+            return 0
+        n = inventory.count(uid)
+        made = graph.result.get(uid)
+        if made and made != graph.final_item(uid):  # a part blueprint: built parts count too
+            n += inventory.count(made)
+        return n
+
     relics: list[dict] = []
     for uid, name, tier in conn.execute("SELECT unique_name, name, tier FROM relic ORDER BY tier, name"):
         counts = inventory.relics.get(uid, {}) if have_inv else {}
@@ -161,7 +179,7 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             target = final(item)
             for_name = item_names.get(target, target.rsplit("/", 1)[-1])
             needed = target in needed_items and (
-                not have_inv or (owned_parts.get(item, 0) == 0 and not inventory.owns(target))
+                not have_inv or (held(item) < graph.needed_count(item, target) and not inventory.owns(target))
             )
             need += needed
             vaulted_drop = vaulted_part.get(item, False)
@@ -207,18 +225,13 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             result, price, seconds = row
             parts = []
             ready = True
-            for ing, cnt in conn.execute(
-                "SELECT item, count FROM recipe_ingredient WHERE recipe = ?", (rid,)
-            ).fetchall():
+            for ing, cnt in graph.ingredients(rid).items():
                 have = inventory.count(ing)
                 short = max(0, cnt - have)
                 ready = ready and short == 0
                 drops = []
                 if short:
-                    bp = conn.execute(
-                        "SELECT unique_name FROM recipe WHERE result_item = ?", (ing,)
-                    ).fetchone()
-                    keys = [ing] + ([bp[0]] if bp else [])
+                    keys = [ing] + graph.blueprints_for(ing)[:1]
                     for k in keys:
                         for (relic,) in conn.execute("SELECT relic FROM relic_reward WHERE item = ?", (k,)):
                             rname = conn.execute(
@@ -247,7 +260,10 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
                     "name": item_names.get(result, result.rsplit("/", 1)[-1]),
                     "blueprints": n,
                     "ready": ready,
-                    "mastered": result in mastered_ids,
+                    # part and consumable blueprints: mastery is about what they end up building
+                    "mastered": (final(result) in mastered_ids)
+                    if final(result) in graph.masterable
+                    else None,
                     "credits": price,
                     "hours": round((seconds or 0) / 3600, 1),
                     "parts": parts,
@@ -261,16 +277,22 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
         from .extras import build_foundry, build_mods, build_resources, build_sell
 
         def best_source(uid: str) -> str | None:
-            for s in codex.sources_for(uid):
-                if s.kind != "market":
-                    return f"{s.where}: {s.detail}"
-            return None
+            """The likeliest place to farm a resource: best drop chance first, no PvP."""
+            options = [
+                s
+                for s in codex.sources_for(uid)
+                if s.kind != "market" and "conclave" not in f"{s.where} {s.detail}".lower()
+            ]
+            if not options:
+                return None
+            best = max(options, key=lambda s: (s.chance is not None, s.chance or 0))
+            return f"{best.where}: {best.detail}"
 
         extra = {
             "foundry": build_foundry(conn, inventory),
-            "resources": build_resources(conn, inventory, best_source),
+            "resources": build_resources(conn, inventory, best_source, graph, mastered_ids),
             "mods": build_mods(conn, inventory),
-            "sell": build_sell(conn, inventory, final, mastered_ids, item_names),
+            "sell": build_sell(conn, inventory, graph, mastered_ids, item_names),
         }
 
     farm = build_farm(report, codex, inventory, relics)
@@ -325,7 +347,7 @@ def build_farm(report: Report, codex: Codex, inventory: Inventory | None, relics
     except FileNotFoundError:
         kb_root = None
     conn = codex.conn
-    need = needed_parts(conn, report, inventory, set())
+    need = needed_parts(conn, report, inventory, set(), codex.graph)
     relic_needs = relics_with_needs(conn, need)
     missions = rank_missions(conn, need, relic_needs, load_popular(kb_root))
     crack = sorted(
@@ -336,7 +358,7 @@ def build_farm(report: Report, codex: Codex, inventory: Inventory | None, relics
         "needed_parts": len(need),
         "needed_relics": len(relic_needs),
         "missions": missions,
-        "finish": finish_cards(conn, report, inventory),
+        "finish": finish_cards(conn, report, inventory, codex.graph),
         "crack": [
             {
                 "id": r["id"],

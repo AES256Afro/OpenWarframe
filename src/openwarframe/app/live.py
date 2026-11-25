@@ -10,6 +10,7 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
+from ..codex.names import mission_label
 from ..http import CachedClient
 
 WORLDSTATE_URL = "https://api.warframe.com/cdn/worldState.php"
@@ -30,7 +31,7 @@ RELAYS = {
     "ErisHUB": "Kuiper Relay (Eris)",
     "PlutoHUB": "Orcus Relay (Pluto)",
 }
-FAST = {"Capture", "Exterminate", "Sabotage", "Rescue", "Spy", "Mobile Defense", "Hijack"}
+FAST = {"Capture", "Exterminate", "Sabotage", "Rescue", "Spy", "Mobile Defense", "Hijack", "Void Flood"}
 ALWAYS_VALUABLE = ("Orokin Catalyst", "Orokin Reactor", "Forma", "Exilus", "Riven")
 
 
@@ -42,15 +43,7 @@ def _ms(v) -> int | None:
 
 
 def _pretty_mission(mt: str | None) -> str:
-    if not mt:
-        return ""
-    words = mt.removeprefix("MT_").replace("_", " ").title()
-    return {
-        "Extermination": "Exterminate",
-        "Territory": "Interception",
-        "Retrieval": "Hijack",
-        "Intel": "Spy",
-    }.get(words, words)
+    return mission_label(mt)
 
 
 def _store_to_item(path: str) -> str:
@@ -119,7 +112,8 @@ def build_live(
         return {"node": node_id, "where": label, "level": n.get("level", ""), "faction": n.get("faction", "")}
 
     def relic_match(tier: str) -> dict:
-        pool = by_tier.get(tier, [])
+        # an Omnia fissure takes a relic of any tier
+        pool = [r for rs in by_tier.values() for r in rs] if tier == "Omnia" else by_tier.get(tier, [])
         useful = [r for r in pool if r["needed"] or r["vaulted_parts"]]
         useful.sort(key=lambda r: (-r["needed"], -r["vaulted_parts"], -(r.get("count") or 0)))
         best = useful[0] if useful else None

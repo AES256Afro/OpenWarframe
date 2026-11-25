@@ -168,7 +168,7 @@ def _get_next(report: Report, limit: int) -> list[MissingItem]:
         )
         return (order, m.category != "Warframe", m.name)
 
-    pool = [m for m in report.missing if not m.above_your_mr]
+    pool = [m for m in report.missing if not m.above_your_mr and not m.owned]  # owned: nothing to get
     pool = [m for m in pool if score(m)[0] < 9]
     return sorted(pool, key=score)[:limit]
 
@@ -360,7 +360,7 @@ def render_dashboard_html(
         '<div class="syn">'
     )
     for s in shown:
-        top = 30 if s.name.startswith("Nightwave") else 5
+        top = max(1, s.max_rank)
         if s.rank >= 0:
             bar = f'<i class="m" style="width:{_pct(min(s.rank, top), top)}%"></i>'
         else:

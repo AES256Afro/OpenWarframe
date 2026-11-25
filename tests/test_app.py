@@ -144,10 +144,14 @@ def test_extras_foundry_resources_and_sell(codex_path: Path):  # noqa: F811
     foundry = build_foundry(cx.conn, inv)
     assert foundry[0]["ready"] and foundry[0]["name"] == "Rhino Prime Chassis"
 
-    res = {r["name"]: r for r in build_resources(cx.conn, inv, lambda uid: None)}
+    # Rhino Prime is already built, so its blueprint needs no resources any more
+    res = {r["name"]: r for r in build_resources(cx.conn, inv, lambda uid: None, cx.graph, set())}
+    assert "Orokin Cell" not in res
+    not_built = parse_inventory({**data, "Suits": []})
+    res = {r["name"]: r for r in build_resources(cx.conn, not_built, lambda uid: None, cx.graph, set())}
     assert res["Orokin Cell"]["need"] == 3 and res["Orokin Cell"]["short"] == 2
 
-    sell = {r["id"]: r for r in build_sell(cx.conn, inv, lambda u: RHINO, set(), {})}
+    sell = {r["id"]: r for r in build_sell(cx.conn, inv, cx.graph, set(), {})}
     # Rhino Prime is already built in INVENTORY, so its one blueprint is spare
     assert sell[RHINO_BP]["spare"] == 1 and sell[RHINO_BP]["ducats_total"] == 45
 

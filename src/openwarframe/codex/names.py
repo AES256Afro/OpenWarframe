@@ -194,3 +194,50 @@ class NameResolver:
         count, _ = self.unresolved.get(raw, (0, source))
         self.unresolved[raw] = (count + 1, source)
         return None
+
+
+# World-state mission codes -> the names the game shows (WFCD warframe-worldstate-data).
+MISSION_TYPES = {
+    "MT_ASSASSINATION": "Assassination",
+    "MT_EXTERMINATION": "Exterminate",
+    "MT_SURVIVAL": "Survival",
+    "MT_RESCUE": "Rescue",
+    "MT_SABOTAGE": "Sabotage",
+    "MT_CAPTURE": "Capture",
+    "MT_INTEL": "Spy",
+    "MT_DEFENSE": "Defense",
+    "MT_MOBILE_DEFENSE": "Mobile Defense",
+    "MT_TERRITORY": "Interception",
+    "MT_RETRIEVAL": "Hijack",
+    "MT_HIVE": "Hive",
+    "MT_EXCAVATE": "Excavation",
+    "MT_SALVAGE": "Infested Salvage",
+    "MT_ARENA": "Rathuum",
+    "MT_PURSUIT": "Pursuit",
+    "MT_RACE": "Rush",
+    "MT_SECTOR": "Dark Sector",
+    "MT_EVACUATION": "Defection",
+    "MT_ASSAULT": "Assault",
+    "MT_ARTIFACT": "Disruption",
+    "MT_LANDSCAPE": "Free Roam",
+    "MT_JUNCTION": "Junction",
+    "MT_CORRUPTION": "Void Flood",
+    "MT_VOID_CASCADE": "Void Cascade",
+    "MT_ARMAGEDDON": "Void Armageddon",
+    "MT_ALCHEMY": "Alchemy",
+    "MT_ASCENSION": "Ascension",
+    "MT_DEFAULT": "",
+}
+
+
+def mission_label(value: str | None) -> str:
+    """One spelling for a mission type, whatever the source.
+
+    The world state uses codes (MT_ARTIFACT is Disruption, MT_CORRUPTION is Void Flood),
+    the node list uses capitals (MOBILE DEFENSE) and the drop tables use title case.
+    """
+    if not value:
+        return ""
+    if value.startswith("MT_"):
+        return MISSION_TYPES.get(value, value.removeprefix("MT_").replace("_", " ").title())
+    return value.title() if value.isupper() else value

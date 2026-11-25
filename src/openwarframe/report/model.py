@@ -22,7 +22,7 @@ class MasteryEstimate(BaseModel):
     profile does not report node mastery, so ``estimated_total`` is an approximation."""
 
     rank: int
-    rank_threshold: int  # total mastery XP the current rank requires (2500 * r^2)
+    rank_threshold: int  # total mastery the current rank requires (2,500 x r² to 30, then +147,500 a rank)
     next_rank_threshold: int
     from_items: int
     from_intrinsics: int
@@ -30,6 +30,8 @@ class MasteryEstimate(BaseModel):
     from_starchart: int = 0  # estimate: completed nodes x average node mastery
     from_steel_path: int = 0  # estimate: same, for Steel Path completions
     from_junctions: int = 0  # 1000 per junction, normal and Steel Path
+    junctions_done: int = 0  # junctions cleared on the normal star chart
+    steel_path_junctions_done: int = 0  # junctions cleared on the Steel Path
     estimated_total: int = 0  # visible_total + star chart + Steel Path + junctions
     note: str
 
@@ -80,6 +82,7 @@ class MissingItem(BaseModel):
     blueprint_sources: list[SourceRow] = Field(default_factory=list)
     components: list[ComponentRow] = Field(default_factory=list)
     wiki_url: str
+    owned: bool | None = None  # from the inventory: you have it but never leveled it (None: unknown)
 
 
 class NodeRow(BaseModel):
@@ -99,6 +102,7 @@ class SyndicateRow(BaseModel):
     name: str
     rank: int
     standing: int
+    max_rank: int = 5  # from the codex: Necraloid tops out at 3, Nightwave seasons use 30
 
 
 class AchievementRow(BaseModel):

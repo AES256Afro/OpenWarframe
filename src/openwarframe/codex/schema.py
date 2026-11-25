@@ -1,6 +1,6 @@
 """SQLite schema for the codex. Rebuilt from sources; safe to delete."""
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3  # 3: ingredient counts summed per recipe; (Caches)/(Extra) drops linked to nodes
 
 SCHEMA = """
 CREATE TABLE source_version (

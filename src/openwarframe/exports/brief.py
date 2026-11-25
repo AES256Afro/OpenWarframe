@@ -32,7 +32,17 @@ def estimate_tokens(text: str) -> int:
 
 def _priority(m: MissingItem) -> tuple:
     a = m.acquisition
-    order = 0 if "farmable now" in a else 1 if "Vendor" in a else 2 if ("drops" in a or "Bount" in a) else 3
+    order = (
+        -1  # owned already: only needs leveling
+        if m.owned
+        else 0
+        if "farmable now" in a
+        else 1
+        if "Vendor" in a
+        else 2
+        if ("drops" in a or "Bount" in a)
+        else 3
+    )
     cat = MASTERY_CATEGORIES.index(m.category) if m.category in MASTERY_CATEGORIES else 99
     return (m.above_your_mr, order, cat, m.name)
 
@@ -144,7 +154,7 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
         out.append("- Every star chart node completed.")
     sp_lines = [f"{p} {d}/{t}" for p, (d, t) in sp_by_planet.items() if d < t]
     if sp_lines:
-        out.append("- Steel Path remaining by planet: " + ", ".join(sp_lines))
+        out.append("- Steel Path progress by planet (done/total): " + ", ".join(sp_lines))
 
     out += ["", "# Syndicates", ""]
     out.append("- " + ", ".join(f"{s.name} rank {s.rank} ({s.standing:,})" for s in report.syndicates))

@@ -129,7 +129,7 @@ def export(
     targets = _cloud_targets(copy_to)
     codex = Codex(s.codex_path)
     with console.status("Building report..."):
-        report = build_report(reparse(snap, codex), codex, anonymize=share)
+        report = build_report(reparse(snap, codex), codex, anonymize=share, inventory=_saved_inventory(s))
     target = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M") / ("share" if share else "full"))
     with console.status("Writing exports..."):
         results = run_exports(
@@ -329,7 +329,21 @@ def _load_report(snapshot: str, share: bool = False):
         console.print("[red]No snapshot yet; run `openwarframe sync` first.[/red]")
         raise typer.Exit(code=1) from None
     codex = Codex(s.codex_path)
-    return s, snap, build_report(reparse(snap, codex), codex, anonymize=share)
+    return s, snap, build_report(reparse(snap, codex), codex, anonymize=share, inventory=_saved_inventory(s))
+
+
+def _saved_inventory(s):
+    """The inventory the app or `inventory grab/import` saved, or None (with a warning if unreadable)."""
+    from .inventory import load_inventory
+
+    path = s.home / "inventory.json"
+    if not path.exists():
+        return None
+    try:
+        return load_inventory(path)
+    except (OSError, ValueError) as exc:
+        console.print(f"Your saved inventory could not be read ({exc}); exporting without it.", markup=False)
+        return None
 
 
 @guide_app.command("mastery")

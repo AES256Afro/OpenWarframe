@@ -145,7 +145,7 @@ class AppState:
                 )
             codex = Codex(s.codex_path)
             try:  # always close, so a failed build never leaves the database file locked
-                report = build_report(reparse(snap, codex), codex)
+                report = build_report(reparse(snap, codex), codex, inventory=inv)
                 data = build_app_data(report, codex, inv)
             finally:
                 codex.close()

@@ -109,10 +109,31 @@ def _syndicate_name(codex: Codex | None, tag: str) -> str:
     return tag.removesuffix("Syndicate")
 
 
+def _dict(v) -> dict:
+    return v if isinstance(v, dict) else {}
+
+
+def _rows(v) -> list[dict]:
+    """The dict entries of a list; anything else (null, a changed type) reads as empty."""
+    return [x for x in v if isinstance(x, dict)] if isinstance(v, list) else []
+
+
+def _int(v, default: int = 0) -> int:
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return default
+
+
 def parse_profile(
     data: dict, *, platform: str = "pc", codex: Codex | None = None, taken_at: datetime | None = None
 ) -> Snapshot:
-    r = data["Results"][0]
+    """Parse the public profile. Missing or null fields read as empty, never as a crash:
+    a game update that changes a field must not stop the app from syncing at all."""
+    results = _rows(_dict(data).get("Results"))
+    if not results:
+        raise ValueError("the profile has no Results")
+    r = results[0]
     now = taken_at or datetime.now(UTC)
 
     # item lookups through the codex (names, categories), with path fallbacks
@@ -126,8 +147,10 @@ def parse_profile(
             node_meta[row[0]] = (row[1], row[2])
 
     items: list[ItemXP] = []
-    for e in r.get("LoadOutInventory", {}).get("XPInfo", []):
-        path, xp = e.get("ItemType", ""), int(e.get("XP", 0))
+    for e in _rows(_dict(r.get("LoadOutInventory")).get("XPInfo")):
+        path, xp = str(e.get("ItemType") or ""), _int(e.get("XP"))
+        if not path:
+            continue
         name, cat = item_meta.get(path, (path.rsplit("/", 1)[-1], category_from_path(path)))
         suit = cat in SUIT_CATEGORIES
         cap = max_rank(name, cat, path)
@@ -147,55 +170,55 @@ def parse_profile(
     items.sort(key=lambda i: (-i.xp, i.name))
 
     nodes = []
-    for m in r.get("Missions", []):
-        tag = m.get("Tag", "")
+    for m in _rows(r.get("Missions")):
+        tag = str(m.get("Tag") or "")
         name, planet = node_meta.get(tag, (tag, "?"))
         nodes.append(
             NodeProgress(
                 node=tag,
                 name=name,
                 planet=planet,
-                completes=int(m.get("Completes", 0)),
+                completes=_int(m.get("Completes")),
                 steel_path=bool(m.get("Tier")),
             )
         )
 
     affiliations = [
         Affiliation(
-            tag=a.get("Tag", ""),
-            name=_syndicate_name(codex, a.get("Tag", "")),
-            standing=int(a.get("Standing", 0)),
-            title=int(a.get("Title", 0)),
+            tag=str(a.get("Tag") or ""),
+            name=_syndicate_name(codex, str(a.get("Tag") or "")),
+            standing=_int(a.get("Standing")),
+            title=_int(a.get("Title")),
         )
-        for a in r.get("Affiliations", [])
+        for a in _rows(r.get("Affiliations"))
     ]
     daily = {
-        k.removeprefix("DailyAffiliation") or "Default": int(v)
+        k.removeprefix("DailyAffiliation") or "Default": _int(v)
         for k, v in r.items()
-        if k.startswith("DailyAffiliation")
+        if k.startswith("DailyAffiliation") and v is not None
     }
     challenges = [
-        Challenge(name=c.get("Name", ""), progress=int(c.get("Progress", 0)))
-        for c in r.get("ChallengeProgress", [])
+        Challenge(name=str(c.get("Name") or ""), progress=_int(c.get("Progress")))
+        for c in _rows(r.get("ChallengeProgress"))
     ]
 
-    loi = r.get("LoadOutInventory", {})
+    loi = _dict(r.get("LoadOutInventory"))
 
     def first_type(key: str) -> str | None:
-        lst = loi.get(key) or []
+        lst = _rows(loi.get(key))
         return lst[0].get("ItemType") if lst else None
 
     loadout = Loadout(
-        focus_school=(r.get("LoadOutPreset") or {}).get("FocusSchool"),
+        focus_school=_dict(r.get("LoadOutPreset")).get("FocusSchool"),
         warframe=first_type("Suits"),
         primary=first_type("LongGuns"),
         secondary=first_type("Pistols"),
         melee=first_type("Melee"),
     )
 
-    stats = dict(data.get("Stats", {}))
+    stats = dict(_dict(data.get("Stats")))
     progression = Progression(
-        mastery_rank=int(r.get("PlayerLevel", 0)),
+        mastery_rank=_int(r.get("PlayerLevel")),
         mastery_xp_from_items=sum(i.mastery_xp for i in items),
         play_time_s=stats.get("TimePlayedSec"),
         missions_completed=stats.get("MissionsCompleted"),
@@ -203,18 +226,19 @@ def parse_profile(
         nodes=nodes,
         affiliations=affiliations,
         daily_affiliations=daily,
-        intrinsics={k: int(v) for k, v in (r.get("PlayerSkills") or {}).items()},
+        intrinsics={k: _int(v) for k, v in _dict(r.get("PlayerSkills")).items() if v is not None},
         challenges=challenges,
         loadout=loadout,
     )
+    raw_id = r.get("AccountId")
+    account_id = _dict(raw_id).get("$oid") if isinstance(raw_id, dict) else raw_id
+    name = r.get("DisplayName")
     identity = Identity(
-        display_name=clean_display_name(r.get("DisplayName")),
-        account_id=(r.get("AccountId") or {}).get("$oid")
-        if isinstance(r.get("AccountId"), dict)
-        else r.get("AccountId"),
+        display_name=clean_display_name(name) if isinstance(name, str) else None,
+        account_id=account_id if isinstance(account_id, str) else None,
         platform=platform,
-        clan=r.get("GuildName"),
-        clan_tier=r.get("GuildTier"),
+        clan=r.get("GuildName") if isinstance(r.get("GuildName"), str) else None,
+        clan_tier=_int(r.get("GuildTier"), None) if r.get("GuildTier") is not None else None,
         created_at=_mongo_date(r.get("Created")),
     )
     return Snapshot(

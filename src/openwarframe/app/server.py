@@ -24,7 +24,9 @@ from ..config import Settings, load_settings
 from ..fsutil import atomic_write_text
 
 log = logging.getLogger(__name__)
-IDLE_SECONDS = 45
+# The browser-window page pings every 10 s, but browsers slow timers in hidden or minimised
+# windows to about once a minute, so the server waits well past that before stopping.
+IDLE_SECONDS = 150
 MAX_BODY = 64 << 20  # an inventory file is a few MB; anything this big is not one of ours
 
 # The page only ever talks to this server. These headers stop other sites from framing it
@@ -48,7 +50,7 @@ class AppState:
         self.cache: dict | None = None
         self.cache_fp: tuple | None = None
         self.status = ""
-        self.last_ping = time.time()
+        self.last_ping = time.monotonic()
         self.prices: dict[str, dict] = {}
         from .rewards import RewardWatcher
 
@@ -60,7 +62,7 @@ class AppState:
 
     @property
     def inventory_path(self) -> Path:
-        return self.settings.home / "inventory.json"
+        return self.settings.inventory_path
 
     def _fingerprint(self) -> tuple:
         """Changes whenever a newer snapshot, inventory or game database lands on disk."""
@@ -179,12 +181,14 @@ class AppState:
                     out[rid] = self.prices[rid]
                     continue
                 url = f"https://api.warframe.market/v2/orders/item/{slug}/top"
-                cached = client.cached(url) is not None
                 try:
                     top = client.get_json(url, max_age=6 * 3600).get("data", {})
                 except Exception as exc:  # noqa: BLE001
                     log.warning("price for %s failed: %s", slug, exc)
                     continue
+                finally:
+                    if client.last_was_network:  # failed or stale, a request still went out
+                        time.sleep(0.34)  # warframe.market asks for at most 3 requests a second
                 sells = sorted(order_prices(top.get("sell")))[:5]
                 buys = sorted(order_prices(top.get("buy")), reverse=True)[:5]
                 price = {
@@ -193,8 +197,6 @@ class AppState:
                     "buy": buys[0] if buys else None,
                 }
                 self.prices[rid] = out[rid] = price
-                if not cached:
-                    time.sleep(0.34)  # warframe.market asks for at most 3 requests a second
         finally:
             client.close()
         for r in rows_:
@@ -223,10 +225,11 @@ class AppState:
             self.settings.extra["session_reader_ok"] = True
             save_settings(self.settings)
         account, data = session.grab_session(self.settings.account_id)
-        self._store_inventory(data)
         if not self.settings.account_id:
+            # set the account first: the inventory is stored in that account's folder
             self.settings.account_id = account
             save_settings(self.settings)
+        self._store_inventory(data)
         if not self._has_snapshot():
             return self.sync()
         return self.build(force=True)
@@ -250,11 +253,16 @@ class AppState:
             raise ValueError(
                 "That is not an account ID. It is 24 characters long, using only digits and the letters a to f."
             ) from None
-        if self.settings.account_id and self.settings.account_id != account and self.inventory_path.exists():
-            self.inventory_path.unlink()  # that inventory belongs to the previous account
+        # fetch the new profile before saving anything: a typo or a network error leaves the
+        # current account as it was. Each account keeps its own snapshots and inventory.
+        from dataclasses import replace
+
+        from ..account.sync import sync_profile
+
+        sync_profile(replace(self.settings, account_id=account, platform=platform))
         self.settings.account_id, self.settings.platform = account, platform
         save_settings(self.settings)
-        return self.sync()
+        return self.build(force=True)
 
     def live(self) -> dict:
         """World state matched against the account (cached about a minute)."""
@@ -366,7 +374,7 @@ def make_handler(state: AppState):
         def do_GET(self):  # noqa: N802
             if not self._host_ok():
                 return
-            state.last_ping = time.time()
+            state.last_ping = time.monotonic()
             if self.path in ("/", "/index.html"):
                 self._send(200, _page(), "text/html; charset=utf-8")
             elif self.path == "/api/data":
@@ -403,7 +411,7 @@ def make_handler(state: AppState):
         def do_POST(self):  # noqa: N802
             if not self._host_ok():
                 return
-            state.last_ping = time.time()
+            state.last_ping = time.monotonic()
             if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}"):
                 self._json({"error": "forbidden"}, 403)
                 return
@@ -591,8 +599,13 @@ def run_app(
         if open_window:
             _open_window(url, settings)
             # the browser window pings the server; stop a while after it is closed
-            while time.time() - state.last_ping <= IDLE_SECONDS:
+            wall = time.time()
+            while time.monotonic() - state.last_ping <= IDLE_SECONDS:
                 time.sleep(5)
+                now = time.time()
+                if now - wall > 60:  # the computer slept: give the window time to ping again
+                    state.last_ping = time.monotonic()
+                wall = now
         else:
             while True:
                 time.sleep(3600)

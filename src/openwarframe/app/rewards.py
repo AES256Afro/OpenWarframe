@@ -153,7 +153,7 @@ class RewardWatcher:
                 return None
 
         snaps = sorted(s.snapshots_dir.glob("*.json")) if s.snapshots_dir.exists() else []
-        return (mtime(s.codex_path), mtime(s.home / "inventory.json"), snaps[-1].name if snaps else None)
+        return (mtime(s.codex_path), mtime(s.inventory_path), snaps[-1].name if snaps else None)
 
     def _context(self):
         """(reward catalog, account needs). The database is closed before this returns."""

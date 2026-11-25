@@ -30,7 +30,7 @@ dependencies = [
 ]
 
 [project.scripts]
-openwarframe = "openwarframe.cli:app"
+openwarframe = "openwarframe.cli:main"
 
 [project.gui-scripts]
 openwarframe-app = "openwarframe.app:main"

@@ -306,6 +306,14 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             "estimate": m.estimated_total,
             "next": m.next_rank_threshold,
             "snapshot": report.snapshot_taken_at.isoformat(),
+            # Steel Path opens once the whole star chart is done; until then, don't suggest it
+            "steel_path_unlocked": bool(
+                report.headline.steel_path_done
+                or (
+                    report.headline.starchart_total
+                    and report.headline.starchart_done >= report.headline.starchart_total
+                )
+            ),
             "inventory": None
             if not have_inv
             else {

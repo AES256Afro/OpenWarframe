@@ -22,25 +22,56 @@ ol .w{color:var(--muted)}
 .need{color:var(--ok)}
 .vault{color:var(--violet)}
 .empty{color:var(--muted)}
+.age{font-size:12px; color:var(--muted)}
+.stale .pick{border-color:var(--line); opacity:.6}
+:root.hc{--muted:#c9d3e6; --line:#5a6a8c}
+@media (prefers-reduced-motion:no-preference){ .pick{transition:opacity .2s} }
 </style>
 </head>
 <body>
 <div class="state" id="state">Connecting…</div>
-<div id="out" class="empty">Waiting for a fissure reward screen.</div>
+<div id="out" class="empty" role="status" aria-live="polite">Waiting for a fissure reward screen.</div>
+<div class="age" id="age"></div>
 <script>
 (function(){
   var esc=function(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
-  var shown="";
+  var shown="", last=null, state="";
+  function ago(iso){
+    var s=Math.max(0, Math.round((Date.now()-new Date(iso).getTime())/1000));
+    return s<60?s+" s ago":s<3600?Math.round(s/60)+" min ago":Math.round(s/3600)+" h ago";
+  }
+  // an old pick must never look current: show how old it is, and dim it while a new screen
+  // is being read or once it is more than two minutes old
+  function freshness(){
+    var out=document.getElementById("out"), age=document.getElementById("age");
+    if(!last){ age.textContent=""; return; }
+    var old=(Date.now()-new Date(last.time).getTime())>120000;
+    out.classList.toggle("stale", state==="reading"||old||state==="off");
+    age.textContent=(state==="reading"?"Reading the new screen… · ":"")+"This pick was read "+ago(last.time)+".";
+  }
   function draw(d){
     var st=document.getElementById("state");
-    st.innerHTML=d.state==="watching"||d.state==="reading"?'<b>Watching</b> · '+esc(d.message):esc(d.state==="off"?"Not watching. Start it in the Rewards tab.":d.message);
-    var r=d.last; if(!r){ return; }
-    var key=r.time+r.source; if(key===shown) return; shown=key;
+    state=d.state||"";
+    st.innerHTML=d.state==="watching"||d.state==="reading"?'<b>Watching</b> · '+esc(d.message):esc(d.state==="off"?"Not watching. Start it in the Reward helper view.":d.message);
+    var r=d.last; if(!r){ freshness(); return; }
+    last=r;
+    // prices arrive a moment after the pick: redraw when the ranking changes, not only the time
+    var key=r.time+r.source+JSON.stringify(r.ranked); if(key===shown){ freshness(); return; } shown=key;
     var p=r.pick, h='';
     if(p) h+='<div class="pick"><div class="k">PICK'+(r.source==="sample"?' (sample screen)':'')+'</div><div class="n">'+esc(p.name)+'</div><div class="w">'+esc(p.why)+'</div></div>';
     h+='<ol start="2">'+r.ranked.slice(1).map(function(x){ var cls=x.why.indexOf("needed")>=0?"need":(x.why.indexOf("vaulted")>=0?"vault":""); return '<li class="'+cls+'">'+esc(x.name)+' <span class="w">· '+esc(x.why)+'</span></li>'; }).join('')+'</ol>';
     document.getElementById("out").className=""; document.getElementById("out").innerHTML=h;
+    freshness();
   }
+  // the main window's comfort settings (text size, contrast) apply here too
+  function comfort(){
+    fetch("/api/prefs").then(function(r){return r.json()}).then(function(p){
+      var s=(p&&p.settings)||{};
+      document.body.style.zoom=s.zoom||1;
+      document.documentElement.classList.toggle("hc", !!s.contrast);
+    }).catch(function(){});
+  }
+  comfort(); setInterval(comfort, 15000);
   function poll(){ fetch("/api/reward").then(function(r){return r.json()}).then(draw).catch(function(){ document.getElementById("state").textContent="OpenWarframe is not running."; }); }
   poll(); setInterval(poll, 1000);
 })();

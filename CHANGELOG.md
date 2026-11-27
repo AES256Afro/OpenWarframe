@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.16.0
 
 - **Builds count shields.** Builds are now scored by the time to kill one reference enemy:
   shields first, then health. Toxin skips shields, Magnetic raises shield damage (up to x4.25),

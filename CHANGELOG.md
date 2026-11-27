@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.10.0
 
 - **Update from inside the app.** When a new version is out, the sidebar shows **Update to x.y.z
   now**. One click downloads it, checks it against the release's SHA-256 list, installs it and

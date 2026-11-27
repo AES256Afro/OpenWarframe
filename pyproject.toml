@@ -1,6 +1,6 @@
 [project]
 name = "openwarframe"
-version = "0.6.1"
+dynamic = ["version"]  # single source: __version__ in src/openwarframe/__init__.py
 description = "Export, explain and plan your Warframe account: Excel, PDF, JSON, SQLite and LLM briefs."
 readme = "README.md"
 license = "MIT"
@@ -39,12 +39,16 @@ openwarframe-app = "openwarframe.app:main"
 dev = [
   "pyinstaller>=6.22.3",
   "pytest>=8.2",
+  "pytest-cov>=7.1.0",
   "ruff>=0.5",
 ]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[tool.hatch.version]
+path = "src/openwarframe/__init__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/openwarframe"]
@@ -67,3 +71,13 @@ pythonpath = ["tests"]
 markers = [
   "host: needs something from the machine itself (a Chromium browser, Windows OCR or Apple Vision); skip with -m \"not host\"",
 ]
+
+[tool.coverage.run]
+source = ["openwarframe"]
+
+[tool.coverage.report]
+# 81% on macOS today; Linux CI skips the Windows- and Mac-only paths, so the floor sits lower
+fail_under = 75
+skip_covered = true
+show_missing = true
+

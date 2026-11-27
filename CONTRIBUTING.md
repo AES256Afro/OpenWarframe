@@ -9,6 +9,7 @@ the same license.
 uv sync --all-groups
 uv run openwarframe --help
 uv run pytest -q              # add -m "not host" to skip tests that need Chrome or an OCR engine
+uv run pytest -q --cov        # with coverage; CI fails below the floor in pyproject.toml
 uv run ruff check . && uv run ruff format .
 ```
 
@@ -31,9 +32,9 @@ uv run python packaging/smoke_test.py dist/OpenWarframe/openwarframe-cli.exe   #
 uv run python packaging/smoke_test.py dist/OpenWarframe.app/Contents/MacOS/openwarframe-cli   # macOS
 ```
 
-CI builds and smoke-tests both platforms on every pull request. To release, bump the
-version in `pyproject.toml` and `src/openwarframe/__init__.py`, run `uv lock`, merge, then
-push a `v<version>` tag. `.github/workflows/release.yml` builds both zips with a read-only
+CI builds and smoke-tests both platforms on every pull request. To release, set
+`__version__` in `src/openwarframe/__init__.py` (the only place the version lives), add the
+release to CHANGELOG.md, merge, then push a `v<version>` tag. `.github/workflows/release.yml` builds both zips with a read-only
 token and a final job publishes the release only once both are attached, together with
 `constraints.txt`, `install.ps1` and the checksums. GitHub Actions are pinned to commit
 SHAs; Dependabot proposes updates.

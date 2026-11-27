@@ -60,7 +60,7 @@ def summarize(snapshot: Snapshot, codex: Codex | None = None) -> Summary:
             MASTERY_CATEGORIES,
         ):
             totals[row[0]] = row[1]
-        nodes_total = codex.conn.execute("SELECT COUNT(*) FROM node").fetchone()[0]
+        nodes_total = codex.conn.execute("SELECT COUNT(*) FROM node WHERE planet <> 'Railjack'").fetchone()[0]
     known = [n for n in p.nodes if n.planet != "?"] if codex else list(p.nodes)
     cats = []
     for c in MASTERY_CATEGORIES:

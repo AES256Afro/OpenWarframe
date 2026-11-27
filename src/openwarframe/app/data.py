@@ -10,6 +10,7 @@ import re
 from collections import defaultdict
 
 from ..codex import Codex
+from ..codex.queries import farmable_relics
 from ..inventory import Inventory
 from ..report.model import Report
 
@@ -35,10 +36,10 @@ def _access(m, syndicate_ranks: dict[str, int]) -> str:
         return "Owned"
     if m.above_your_mr:
         return f"Needs MR {m.mastery_req}"
-    acq = m.acquisition
-    if acq.startswith("Not in drop data"):
+    ways = set(m.kinds())
+    if ways == {"unknown"}:
         return "Event or unavailable"
-    if acq in ("Trade", "Relics (vaulted) + Trade", "Relics (vaulted)"):
+    if ways and ways <= {"trade", "relic_vaulted"}:
         return "Vaulted: trade only"
     srcs = list(m.blueprint_sources) + [s for c in m.components for s in c.sources]
     synd = [s for s in srcs if s.kind == "syndicate"]
@@ -135,14 +136,7 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
         needed_items = {m.unique_name for m in report.missing}
 
     # -- relics ----------------------------------------------------------------------
-    farmable = {
-        r[0]
-        for r in conn.execute(
-            """SELECT item FROM node_reward WHERE item LIKE '%/Projections/%'
-               UNION SELECT item FROM transient_reward WHERE item LIKE '%/Projections/%'
-               UNION SELECT item FROM bounty_reward WHERE item LIKE '%/Projections/%'"""
-        )
-    }
+    farmable = farmable_relics(conn)
     rewards = defaultdict(list)
     for relic, item, rarity, intact, radiant in conn.execute(
         "SELECT relic, item, rarity, chance_intact, chance_radiant FROM relic_reward"

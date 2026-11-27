@@ -126,3 +126,15 @@ that folder.
   in the native Mac client's folders and in CrossOver, Whisky and Wine bottles, and uses the one
   the game wrote to last. If it picks the wrong one, start the app with
   `OPENWARFRAME_WARFRAME_DIR=/path/to/folder/with/EE.log`.
+
+## Troubleshooting
+
+- **The log.** OpenWarframe writes what it does to `logs/openwarframe.log` in your data folder
+  (`%LOCALAPPDATA%\OpenWarframe\logs` on Windows, `~/Library/Application Support/OpenWarframe/logs`
+  on macOS), errors included. The game session key is masked in it. Attach it to a bug report,
+  after looking it over.
+- **Check the install.** `openwarframe selfcheck` confirms the files that ship with the app
+  are present.
+- **Back up before reinstalling.** `openwarframe backup` writes your goals, settings, profile
+  history and inventory to one zip in `backups/`. To restore, close OpenWarframe and unzip it
+  into the data folder. The game data downloads again by itself.

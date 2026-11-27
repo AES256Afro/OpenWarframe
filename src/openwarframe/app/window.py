@@ -261,7 +261,10 @@ class NativeWindows:
                 return
             except Exception:  # noqa: BLE001 - it was closed; make a new one
                 self.popout = None
-        g = self._popout_geometry()
+        screens = []
+        with contextlib.suppress(Exception):
+            screens = [(s.x, s.y, s.width, s.height) for s in webview.screens]
+        g = self._popout_geometry(screens)
         self.popout = webview.create_window(
             POPOUT_TITLE,
             self.base_url + "mini",
@@ -283,19 +286,30 @@ class NativeWindows:
     def _geometry_path(self) -> Path:
         return self.storage.parent / "popout-window.json"
 
-    def _popout_geometry(self) -> dict:
-        g = {"width": 440, "height": 300, "x": 40, "y": 40}
+    def _popout_geometry(self, screens: list[tuple[int, int, int, int]] | None = None) -> dict:
+        """Saved size and position, back on the main screen if that spot is on no screen now
+        (a monitor was unplugged)."""
+        default = {"width": 440, "height": 300, "x": 40, "y": 40}
+        g = dict(default)
         try:
             saved = json.loads(self._geometry_path.read_text(encoding="utf-8"))
             g.update({k: int(v) for k, v in saved.items() if k in g and isinstance(v, int | float)})
         except (OSError, ValueError):
             pass
         g["width"], g["height"] = max(300, g["width"]), max(200, g["height"])
+        if screens:
+            # the title bar's middle must be on some screen, or the window can't be reached
+            px, py = g["x"] + g["width"] // 2, g["y"] + 15
+            if not any(sx <= px < sx + sw and sy <= py < sy + sh for sx, sy, sw, sh in screens):
+                g["x"], g["y"] = default["x"], default["y"]
         return g
 
     def _save_popout(self, **changes) -> None:
         from ..fsutil import atomic_write_text
 
+        # Windows reports a minimised window at (-32000, -32000): never remember that
+        if any(changes.get(k) is not None and changes[k] <= -10000 for k in ("x", "y")):
+            return
         g = self._popout_geometry()
         g.update({k: int(v) for k, v in changes.items() if v is not None})
         with contextlib.suppress(OSError):

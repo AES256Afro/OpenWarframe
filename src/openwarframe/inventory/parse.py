@@ -148,12 +148,14 @@ def _amount(v) -> int | None:
     return None
 
 
+def unwrap(data):
+    """The inventory itself. Some tools wrap it as {"InventoryJson": <object or JSON text>}."""
+    if isinstance(data, dict) and "InventoryJson" in data:
+        raw = data["InventoryJson"]
+        return json.loads(raw) if isinstance(raw, str) else raw
+    return data
+
+
 def load_inventory(path: Path) -> Inventory:
-    data = json.loads(Path(path).read_text(encoding="utf-8-sig"))
-    if isinstance(data, dict) and "InventoryJson" in data:  # some tools wrap it
-        data = (
-            json.loads(data["InventoryJson"])
-            if isinstance(data["InventoryJson"], str)
-            else data["InventoryJson"]
-        )
+    data = unwrap(json.loads(Path(path).read_text(encoding="utf-8-sig")))
     return parse_inventory(data, source=str(path))

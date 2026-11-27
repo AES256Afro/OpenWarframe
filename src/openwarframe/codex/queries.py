@@ -9,6 +9,18 @@ from pathlib import Path
 
 from .names import mission_label, normalize
 
+FARMABLE_RELICS_SQL = """SELECT item FROM node_reward WHERE item LIKE '%/Projections/%'
+    UNION SELECT item FROM transient_reward WHERE item LIKE '%/Projections/%'
+    UNION SELECT item FROM bounty_reward WHERE item LIKE '%/Projections/%'"""
+
+
+def farmable_relics(conn: sqlite3.Connection) -> set[str]:
+    """Relics that drop somewhere right now (a mission, bounty or special reward table).
+
+    A Prime part is "vaulted" when none of the relics that hold it is in this set.
+    """
+    return {r[0] for r in conn.execute(FARMABLE_RELICS_SQL)}
+
 
 @dataclass
 class Source:
@@ -39,6 +51,21 @@ class Codex:
 
     def close(self) -> None:
         self.conn.close()
+
+    def __enter__(self) -> Codex:
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
+
+    def __del__(self) -> None:
+        # the CLI's short commands rely on this: never leave a database file open behind us
+        conn = getattr(self, "conn", None)
+        if conn is not None:
+            try:  # noqa: SIM105 - plain try: at shutdown even `contextlib` may already be gone
+                conn.close()
+            except Exception:  # noqa: BLE001
+                pass
 
     # -- meta --------------------------------------------------------------------------
     def versions(self) -> list[sqlite3.Row]:

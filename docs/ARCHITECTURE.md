@@ -1,176 +1,96 @@
 # Architecture
 
-## Pipeline
+How OpenWarframe is put together, as of 0.6. Paths are under `src/openwarframe/`.
+
+## The flow
 
 ```
-          STATIC                      ACCOUNT                        LIVE
- ┌──────────────────────┐   ┌────────────────────────┐   ┌──────────────────────────┐
- │ Public Export (DE)   │   │ Public profile (Tier 1)│   │ worldState.php (official)│
- │ public-export-plus   │   │ Inventory JSON (Tier 2)│   │ EE.log tail (optional)   │
- │ WFCD drop data       │   │ [AlecaFrame hand-off]  │   │ browse.wf oracle (opt.)  │
- │ warframe.market v2   │   │ [login adapter, DG1]   │   └─────────────┬────────────┘
- └──────────┬───────────┘   └───────────┬────────────┘                 │
-            ▼                           ▼                              ▼
-     codex.sqlite                snapshots/<ts>.json              live state (cached)
-   (items, recipes,            (raw + normalized,                 (raw + normalized)
-    relics, nodes, drops,       append-only)
-    vendors, prices)                    │                              │
-            └──────────────┬────────────┴──────────────────────────────┘
-                           ▼
-                    analysis/
-          gaps · crafting trees · source ranking · affinity plan
-          planner (events × gaps) · goals · knowledge-base rules
-                           │
-                           ▼
-                      exports/
-   json · sqlite · csv · xlsx · html dashboard · pdf · docx · llm brief
+   GAME DATA (codex/)                 YOUR ACCOUNT                     LIVE
+ Public Export (DE)             public profile (sources/account/    world state (app/live.py)
+ public-export-plus (pinned)      profile.py) -> account/            EE.log (live/eelog.py)
+ WFCD drop tables                 snapshots, one folder per account  screen + OCR (live/ocr.py)
+ warframe.market item list      inventory JSON (inventory/)
+        |                          from the game session (Windows,
+        v                          opt-in) or a file
+   codex.sqlite                          |                               |
+        \_______________________________ | ______________________________/
+                                         v
+                          report/  (one Report: what you have, what is missing,
+                                    how to get it, mastery estimate)
+                         /            |                \
+                   app/            exports/            guide/
+           local server + page   json, sqlite, csv,   mastery plan to MR 30
+           (the desktop app)     xlsx, dashboard,     (html, pdf, docx)
+                                 LLM brief
 ```
 
-Three principles:
+Principles the code keeps to:
 
-1. **Keep the raw.** Every fetched payload is stored verbatim next to its normalized
-   form, so parsers can be improved and re-run without re-fetching.
-2. **Join on `uniqueName`.** Public Export, drop data (after a name map), the profile,
-   the inventory and warframe.market (`gameRef`) all speak it.
-3. **Degrade gracefully.** The tool works with a profile alone; every feature states
-   which sections it needs and hides itself, with a reason, when they are missing.
+1. **Keep the raw.** Snapshots store the profile payload verbatim (`reparse` re-reads it with
+   the current codex). A profile that can't be parsed is kept on disk, not lost.
+2. **Join on `uniqueName`.** The Public Export, drop data (via `codex/names.py`), the
+   profile, the inventory and warframe.market (`gameRef`) all speak it.
+3. **One answer per question.** Recipe logic lives in `codex/recipes.py` (`RecipeGraph`):
+   ingredient counts, each item's usual recipe, what a part ends up building, how many a
+   build needs. "Which relics drop now" is `codex.queries.farmable_relics`. How an item is
+   obtained is a list of codes (`MissingItem.ways`, see `report/model.py`), not text matching.
+4. **Degrade gracefully.** A profile alone is enough; inventory-only views say what they
+   need. Offline, the app keeps the game data it has. Failures become a message, not a crash.
 
-## Modules
+## Packages
 
-| Module | Responsibility |
+| Package | What it does |
 | --- | --- |
-| `sources/static/` | `public_export.py` (index decode, manifest fetch, cleaning), `pe_plus.py`, `wfcd_drops.py`, `market.py`. Each returns typed records and a `SourceVersion`. |
-| `sources/account/` | `profile.py` (Tier 1), `inventory_file.py`, optional adapters. All implement `InventorySource`. |
-| `sources/live/` | `worldstate.py`, `eelog.py` (tail, line classifiers), `oracle.py`. |
-| `codex/` | SQLite schema, loaders, `queries.py` ("sources for item", "crafting tree", "what needs X"). |
-| `account/` | `Snapshot` model (pydantic), merge of profile + inventory, `coverage`, `diff`. |
-| `analysis/` | `gaps.py`, `tree.py`, `ranking.py`, `affinity.py`, `planner.py`, `goals.py`, `stage.py`. |
-| `kb/` | YAML loader, `applies_if` rule evaluation (a small safe expression language over the snapshot), rendering helpers. |
-| `exports/` | One module per format sharing a `ReportModel` (the dashboard's view model) so every format shows the same numbers. |
-| `cli.py` | Typer app: `sync`, `codex update`, `export`, `plan`, `guide`, `diff`, `share`. |
+| `config.py` | `Settings` and the on-disk layout (below); a TOML writer that escapes values; moves pre-0.5 data into per-account folders. |
+| `http.py` | `CachedClient`: on-disk cache with ETag/max-age, atomic writes, retries, 429 handling, stale copies when offline. |
+| `fsutil.py`, `logsafe.py`, `logs.py` | Atomic writes; masking the session key in logs; the rotating log file and crash capture. |
+| `sources/static/` | Public Export (LZMA index), export-plus (fetched at a pinned commit), WFCD drops, warframe.market items and prices. |
+| `sources/account/` | `profile.py` (public profile per platform), `session.py` (Windows-only, opt-in read of the game session to download the inventory). |
+| `codex/` | `schema.py`, `build.py` (loaders, name resolution, drift warning), `queries.py` (`Codex`: sources, trees), `recipes.py` (`RecipeGraph`), `names.py`. |
+| `account/` | `Snapshot` model, null-tolerant `parse.py`, `store.py` (skips damaged files), `sync.py`, `summary.py`. |
+| `inventory/` | `parse.py`: the game's inventory JSON (wallet values must be numbers), `unwrap` for tool wrappers. |
+| `report/` | `build.py` turns a snapshot (+ inventory) into a `Report`; `model.py` is its pydantic schema, published as `docs/schema/account.schema.json`. |
+| `exports/` | One module per format, all rendering the same `Report`; `run.py` runs them and reports per-format failures. |
+| `guide/` | The mastery planner (`mastery.py`) over the curated knowledge base in `kb/` (`kb.py`, with staleness checks), and its HTML/PDF/Word output. |
+| `app/` | `server.py` (local HTTP server, 127.0.0.1 only, Host/Origin checks, CSP), `data.py` (everything the page shows), `farm.py`, `extras.py`, `live.py`, `rewards.py` (reward watcher thread), `window.py` (WebView2/WKWebView window and pop-out), `static/` (the page). |
+| `live/` | Reward helper pieces: `eelog.py` (log events), `ocr.py` (window lookup, capture, OCR), `match.py` (fuzzy names, squad size, ranking), `reward.py`, `synthetic.py` (drawn test screens), `cli.py`. |
+| `cli.py` | The Typer CLI; `main()` turns known failures into a one-line message. |
 
-## Data model (SQLite)
-
-Codex (rebuilt from sources, safe to delete):
-
-```
-item(unique_name PK, name, category, type, mastery_req, tradable, image, vaulted, introduced)
-recipe(unique_name PK, result_item, build_price, build_time_s, rush_price, num)
-recipe_ingredient(recipe, item, count)
-relic(unique_name PK, name, tier, vaulted)          relic_reward(relic, item, rarity, chance_intact..radiant)
-node(id PK, name, planet, mission_type, faction, level_min, level_max, mastery_req, steel_path)
-node_reward(node, rotation, item, chance, game_mode)
-enemy_drop(enemy, item, chance, mod_drop_chance)    vendor_offer(vendor, item, currency, cost, standing_rank)
-bounty_reward(bounty, stage, item, chance)          challenge(unique_name PK, name, description, hidden)
-market_item(unique_name, slug, name)                source_version(source, version, fetched_at)
-```
-
-Account (one row set per snapshot, never rewritten):
+## On disk
 
 ```
-snapshot(id PK, taken_at, sources_json, coverage_json)
-progression(snapshot, mastery_rank, mastery_xp, created_at, clan, ...)
-item_xp(snapshot, item, xp, mastered)               node_progress(snapshot, node, completes, steel_path)
-affiliation(snapshot, syndicate, standing, title)   achievement(snapshot, challenge, progress, completed_at)
-owned_item(snapshot, item, count, kind)             -- resources, blueprints, relics(+refinement), mods(+rank)
-equipment(snapshot, item, xp, polarities_json, slots_json)
-foundry(snapshot, recipe, started_at, ready_at)     quest(snapshot, key, completed, stage)
-currency(snapshot, credits, platinum, endo, aya, regal_aya)
+<data folder>/                     OPENWARFRAME_HOME, or the OS app-data folder
+  config.toml                      platform, account id, a few settings
+  app-prefs.json                   goals, ticks, comfort settings, remembered filters, session plan
+  codex.sqlite                     the game database (rebuilt from sources; safe to delete)
+  accounts/<account id>/
+    snapshots/<UTC time>.json      profile snapshots (raw + parsed)
+    inventory.json                 the loaded inventory
+    profile-checked                touched on every profile fetch
+  cache/                           HTTP cache
+  exports/                         exports and guides
+  logs/openwarframe.log            rotating log (session key masked)
+  live/recordings/                 saved reward screens, only when turned on (newest 30)
+  backups/                         `openwarframe backup` zips
 ```
 
-## Snapshot model and merging
+## The app
 
-`Snapshot = Progression + Possessions + Stats + Meta`. The profile fills
-`Progression` and `Stats` entirely and `Possessions.equipment` partially (what has XP).
-The inventory fills `Possessions` entirely. When both exist the inventory wins for
-possessions and the profile wins for stats; conflicts are logged.
+`openwarframe gui` (or `OpenWarframe.exe` / `OpenWarframe.app`) starts `app/server.py` on a
+free 127.0.0.1 port and opens the page in its own window, or in a Chrome/Edge app window.
+The page (`app/static/index.html`) is plain JavaScript that calls the server's JSON API:
 
-## Analysis
+| Endpoint | Purpose |
+| --- | --- |
+| `GET /api/data` | Everything the page shows (built by `app/data.py`), with `meta.caps` (what works here) and freshness. |
+| `GET /api/live`, `/api/reward`, `/api/update` | World state, reward helper status, new-version check. |
+| `POST /api/sync`, `/api/account`, `/api/inventory`, `/api/inventory/grab` | Refresh the profile, set or change the account, load an inventory. |
+| `POST /api/prefs` | Save goals, ticks and settings (server-owned settings are kept). |
+| `POST /api/export`, `/api/open-folder` | Exports from the app. |
 
-- **Gaps.** For each item in the codex that the account could care about (filter by
-  category and mastery), classify: mastered, owned-unmastered, built-not-owned (sold),
-  blueprint-only, partial components, nothing. Produce the crafting tree with net
-  requirements.
-- **Source ranking.** Each source gets an estimated minutes-to-obtain:
-  relic: (1 / chance at your refinement) × average fissure time, discounted if you own the relic;
-  node reward: (1 / chance) × rotation length; enemy drop: (1 / (spawn × drop)) × mission time;
-  vendor: 0 if standing is available, else standing-per-day math; market: price vs a
-  configurable platinum-per-minute. All constants live in `config.toml` and are shown
-  in the UI.
-- **Planner.** `recommendation = gap × live_event × source`, scored by
-  `value × urgency × feasibility`, with a human-readable `because` string.
-- **Affinity plan.** Unleveled gear grouped into loadouts (frame + primary + secondary
-  + melee + companion) and matched with affinity-friendly nodes and active boosters.
-- **Goals and stage.** Goals are YAML with prerequisites and steps; each step has a
-  `done_if` rule over the snapshot. Stage is derived from quests, MR and systems.
+## Tests and builds
 
-## Exports
-
-A single `ReportModel` (view model) is built once and rendered by every exporter:
-
-- `json`: `account.json` (schema-versioned) + `account-brief.json`.
-- `sqlite` / `csv`: the account tables above.
-- `xlsx`: openpyxl, one sheet per section, styles from a shared palette.
-- `html`: Jinja2 template, inline CSS, inline SVG charts, optional base64 icons.
-- `pdf`: Playwright prints the HTML with a print stylesheet (DG2: WeasyPrint alternative).
-- `docx`: python-docx, same sections, tables and rendered chart images.
-- `llm`: Markdown brief with YAML front matter; compact and full budgets.
-
-### LLM brief format
-
-```markdown
----
-schema: openwarframe.brief/1
-generated: 2026-10-16T13:40:00Z
-budget: compact
-sources: {profile: 2026-10-16T13:35Z, inventory: none, worldstate: 2026-10-16T13:38Z, codex: pe-2026-10-07}
----
-# Account
-MR 23 (412,300 / 436,000 XP to 24). Playing since 2019-03. Clan: <stripped>.
-Stage: late game. Steel Path star chart 61%. Helminth: unlocked, 29/50 subsumed.
-
-# Gaps (top 20 by closeness)
-- Rhino Prime: have Neuroptics, Systems; missing Chassis (Lith R2 relic, you own 3 Radiant) and Blueprint.
-...
-
-# Right now (expires)
-- Lith fissure, Tessera (Venus), Defense, 38 min left. Run with Lith R2 for Rhino Prime Chassis.
-...
-
-# Open goals
-- Reach MR 24: 23,700 XP. Fastest: level Zymos (owned, rank 0) + Cedo (owned, rank 12).
-...
-```
-
-## Configuration and storage
-
-```
-%LOCALAPPDATA%\OpenWarframe\
-  config.toml      # platform, account id, adapters enabled, ranking constants, share mode
-  cache/           # HTTP cache (ETag / max-age)
-  codex.sqlite
-  snapshots/2026-10-16T133500Z.json
-  exports/
-```
-
-Nothing leaves the machine except the requests listed in `docs/DATA_SOURCES.md`.
-
-## Technology choices
-
-| Choice | Why | Alternative considered |
-| --- | --- | --- |
-| Python 3.12 + uv | Fast to iterate, best libraries for xlsx/docx/pdf, easy for contributors | TypeScript (closer to WFCD packages; weaker Excel/Word story) |
-| SQLite | Zero setup, single file, fits "feed into a DB" | DuckDB (nice for analytics, heavier) |
-| pydantic v2 | Typed models for undocumented JSON, good error messages | dataclasses + manual validation |
-| openpyxl | Mature, styling, conditional formatting | xlsxwriter (write-only; faster) |
-| python-docx | Standard | docx templates via docxtpl |
-| Playwright PDF | Dashboard and PDF share one design | WeasyPrint (no browser, weaker CSS) |
-| Typer CLI | Minimal boilerplate | argparse |
-| Jinja2 + inline SVG | Offline, single-file dashboard | React app (overkill for v1; possible for M9) |
-
-## Testing
-
-- Fixture accounts in `tests/fixtures/` (synthetic, three stages).
-- Recorded source payloads (small, redacted) for parsers.
-- Golden-file tests for every export format.
-- Property tests on the crafting-tree math (totals never negative, every leaf is a resource).
+- `pytest` runs offline on small synthetic databases; tests marked `host` need Chrome or an
+  OCR engine. Coverage is measured in CI with a floor (`[tool.coverage.report]`).
+- CI builds the frozen app on Windows and macOS for every pull request and smoke-tests it
+  (`packaging/smoke_test.py`); releases come from `.github/workflows/release.yml`.

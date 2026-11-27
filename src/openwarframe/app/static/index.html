@@ -628,7 +628,7 @@ function renderFreshness(){
   if(!DATA||!(VIEW==="focus"||VIEW==="overview")) return;
   var m=DATA.meta, days=function(iso){ return iso?Math.floor((Date.now()-Date.parse(iso))/86400000):null; };
   var msg=null, btn=null, act=null;
-  var gd=days(m.game_data), pd=days(m.snapshot);
+  var gd=days(m.game_data), pd=days(m.profile_checked||m.snapshot);  // an unchanged profile is still fresh
   if(m.codex_warning){ msg=m.codex_warning; btn="Try again"; act=updateGameData; }
   else if(m.unknown_blueprints>0){ msg=m.unknown_blueprints+" of your blueprints are newer than the game data, so they are left out."; btn="Update game data"; act=updateGameData; }
   else if(gd!=null&&gd>14){ msg="The game data is "+gd+" days old, so recent items and drop changes may be missing."; btn="Update game data"; act=updateGameData; }
@@ -816,8 +816,8 @@ function renderRewards(){
   h+='<div class="box"><h2>Recent screens <span class="muted">'+(d.history||[]).length+'</span></h2>'+((d.history||[]).length?(d.history||[]).map(function(r){return '<div class="goal"><b>'+esc(r.pick?r.pick.name:'(unreadable)')+'</b><span class="muted">'+new Date(r.time).toLocaleTimeString()+' · '+esc(r.source)+' · '+r.ranked.map(function(x){return esc(x.name)}).join(', ')+'</span></div>'}).join(''):'<p class="muted">Nothing yet.</p>')+'</div></div>';
   h+='</div>';
   $("view").innerHTML=h;
-  $("rw-toggle").onclick=function(){ api("/api/reward/watch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:!on})}).then(function(x){ REWARD=x; renderAll(); toast(on?"Stopped watching.":"Watching. Load into a fissure and the pick appears here and in the pop-out."); }).catch(unreachable); };
-  $("rw-save").onchange=function(){ var on=this.checked; api("/api/reward/recordings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:on})}).then(function(x){ REWARD=x; renderAll(); toast(on?"Reward screens will be saved (newest 30 kept).":"Reward screens will not be saved."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
+  $("rw-toggle").onclick=function(){ api("/api/reward/watch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:!on})}).then(function(x){ REWARD=x; PREFS.settings=PREFS.settings||{}; PREFS.settings.reward_watch=!on; renderAll(); toast(on?"Stopped watching.":"Watching. Load into a fissure and the pick appears here and in the pop-out."); }).catch(unreachable); };
+  $("rw-save").onchange=function(){ var on=this.checked; api("/api/reward/recordings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:on})}).then(function(x){ REWARD=x; PREFS.settings=PREFS.settings||{}; PREFS.settings.save_recordings=on; renderAll(); toast(on?"Reward screens will be saved (newest 30 kept).":"Reward screens will not be saved."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
   $("rw-pop").onclick=function(){ api("/api/reward/popout",{method:"POST"}).then(function(){ toast("Pop-out window opening. It stays on top of the game."); }).catch(unreachable); };
   $("rw-demo").onclick=function(){ toast("Drawing a sample reward screen and reading it…",20000); api("/api/reward/demo",{method:"POST"}).then(function(x){ if(x.error){ toast(x.error,8000); return; } api("/api/reward").then(function(dd){ REWARD=dd; renderAll(); toast("Sample read. Compare the names."); }); }).catch(unreachable); };
   return [];

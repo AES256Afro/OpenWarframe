@@ -20,7 +20,7 @@ from pydantic import BaseModel, Field
 from ..account.model import SUIT_CATEGORIES
 from ..account.parse import MAX_RANK, max_rank
 from ..report.build import STARCHART_MASTERY_NODES, STARCHART_MASTERY_TOTAL, rank_threshold
-from ..report.model import Report
+from ..report.model import DROPS, Report
 from .kb import MasteryKB
 
 TARGET_RANK = 30
@@ -264,7 +264,6 @@ def classify_missing(report: Report) -> list[Unit]:
     ranks = _owned_syndicate_ranks(report)
     units: list[Unit] = []
     for m in report.missing:
-        acq = m.acquisition
         value = item_value(m.name, m.category)
         sources = list(m.blueprint_sources) + [s for c in m.components for s in c.sources]
         vendor_ranks = [
@@ -281,17 +280,17 @@ def classify_missing(report: Report) -> list[Unit]:
             route = "partial"  # already in your arsenal: it only needs leveling
         elif max_rank(m.name, m.category) > MAX_RANK:
             route = "extended"
-        elif "Vendor / standing" in acq and any(r >= 1 for r in vendor_ranks):
+        elif m.has("vendor") and any(r >= 1 for r in vendor_ranks):
             route = "standing_owned"
-        elif "Relics (farmable now)" in acq:
+        elif m.has("relic_farmable"):
             route = "relics_farmable"
-        elif any(k in acq for k in ("Mission drops", "Enemy drops", "Bounties")):
+        elif m.has(*DROPS):
             route = "drops"
-        elif acq.startswith("Market"):
+        elif m.kinds()[:1] == ["market_dojo_quest"]:
             route = "market"
-        elif "Vendor / standing" in acq:
+        elif m.has("vendor"):
             route = "standing_other"
-        elif "Trade" in acq or "Relics (vaulted)" in acq:
+        elif m.has("trade", "relic_vaulted"):
             route = "trade"
         else:
             route = "other"

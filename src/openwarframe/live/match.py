@@ -81,14 +81,9 @@ class RewardCatalog:
         item_rows = {u: (n, d) for u, n, d in conn.execute("SELECT unique_name, name, data FROM item")}
         market = {u: (s, n) for u, s, n in conn.execute("SELECT unique_name, slug, name FROM market_item")}
         relic_names = dict(conn.execute("SELECT unique_name, name FROM relic"))
-        farmable = {
-            r[0]
-            for r in conn.execute(
-                """SELECT item FROM node_reward WHERE item LIKE '%/Projections/%'
-                   UNION SELECT item FROM transient_reward WHERE item LIKE '%/Projections/%'
-                   UNION SELECT item FROM bounty_reward WHERE item LIKE '%/Projections/%'"""
-            )
-        }
+        from ..codex.queries import farmable_relics
+
+        farmable = farmable_relics(conn)
         relics_of: dict[str, set[str]] = defaultdict(set)
         for relic, item in conn.execute("SELECT relic, item FROM relic_reward"):
             relics_of[item].add(relic)

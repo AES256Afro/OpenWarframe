@@ -5,7 +5,7 @@ name: Release
 #   OpenWarframe-<tag>-windows.zip, SHA256SUMS.txt
 #   OpenWarframe-<tag>-macos.zip,   SHA256SUMS-macos.txt
 #   constraints.txt   exact dependency versions, used by install.ps1
-#   install.ps1       the installer, pinned to this release's files
+#   install.ps1       the installer as of this release (it installs the latest release)
 # Each zip carries LICENSE, INSTALL.md and THIRD_PARTY_LICENSES.txt.
 #
 # The build jobs only get a read-only token. The release is created as a draft by the last

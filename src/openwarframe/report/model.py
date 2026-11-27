@@ -70,6 +70,27 @@ class ComponentRow(BaseModel):
     sources: list[SourceRow] = Field(default_factory=list)
 
 
+# How a missing item can be obtained, as fixed codes. The display text ("acquisition") is built
+# from these codes, and every decision (routing, priorities, access) reads the codes, so
+# rewording a label can never change behaviour.
+WAYS = {
+    "vendor": "Vendor / standing",
+    "relic_farmable": "Relics (farmable now)",
+    "relic_vaulted": "Relics (vaulted)",
+    "mission": "Mission drops",
+    "bounty": "Bounties",
+    "enemy": "Enemy drops",
+    "trade": "Trade",
+    "market_dojo_quest": "Market / dojo / quest (no drop data)",
+    "unknown": "Not in drop data",
+}
+DROPS = ("mission", "bounty", "enemy")
+
+
+def ways_label(ways: list[str]) -> str:
+    return " + ".join(WAYS[w] for w in ways if w in WAYS)
+
+
 class MissingItem(BaseModel):
     unique_name: str
     name: str
@@ -83,6 +104,30 @@ class MissingItem(BaseModel):
     components: list[ComponentRow] = Field(default_factory=list)
     wiki_url: str
     owned: bool | None = None  # from the inventory: you have it but never leveled it (None: unknown)
+    ways: list[str] = Field(default_factory=list)  # codes from WAYS; see kinds()
+
+    def kinds(self) -> list[str]:
+        """The acquisition codes. Reports from before the codes existed (or items built by
+        hand) only have the text, so the codes are read back from it."""
+        if self.ways:
+            return list(self.ways)
+        text = self.acquisition.split(": level it (", 1)[-1].rstrip(")")
+        return [code for code, label in WAYS.items() if label in text]
+
+    def has(self, *codes: str) -> bool:
+        return any(c in self.kinds() for c in codes)
+
+    def priority(self) -> int:
+        """Cheapest way first: 0 farmable relics, 1 vendors, 2 drops, 3 anything else."""
+        return 0 if self.has("relic_farmable") else 1 if self.has("vendor") else 2 if self.has(*DROPS) else 3
+
+    def hard_to_get(self) -> bool:
+        """Vaulted, trade-only, or with no drop source at all."""
+        return self.has("relic_vaulted") or self.kinds()[:1] in (
+            ["trade"],
+            ["market_dojo_quest"],
+            ["unknown"],
+        )
 
 
 class NodeRow(BaseModel):

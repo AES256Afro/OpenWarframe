@@ -27,7 +27,7 @@ jobs:
       - run: uv sync --locked --all-groups
       - run: uv run ruff check .
       - run: uv run ruff format --check .
-      - run: uv run pytest -q
+      - run: uv run pytest -q --cov --cov-report=term
 
   # Build the standalone app the same way the release does, so a broken spec, missing data
   # file or retired runner shows up on the pull request instead of after a tag is pushed.

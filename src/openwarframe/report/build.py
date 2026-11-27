@@ -27,6 +27,7 @@ from .model import (
     SourceStamp,
     SyndicateRow,
     UsageRow,
+    ways_label,
 )
 
 INTRINSIC_NAMES = {
@@ -132,10 +133,9 @@ def _syndicate_max_ranks(codex: Codex) -> dict[str, int]:
 
 
 def _farmable_relics(codex: Codex) -> set[str]:
-    q = """SELECT item FROM node_reward WHERE item LIKE '%/Projections/%'
-           UNION SELECT item FROM transient_reward WHERE item LIKE '%/Projections/%'
-           UNION SELECT item FROM bounty_reward WHERE item LIKE '%/Projections/%'"""
-    return {r[0] for r in codex.conn.execute(q)}
+    from ..codex.queries import farmable_relics
+
+    return farmable_relics(codex.conn)
 
 
 def _source_rows(codex: Codex, unique_name: str, farmable: set[str], limit: int = 6) -> list[SourceRow]:
@@ -154,25 +154,30 @@ def _source_rows(codex: Codex, unique_name: str, farmable: set[str], limit: int 
     return rows[:limit]
 
 
-def _acquisition(bp: list[SourceRow], comps: list[ComponentRow], tradeable: bool, has_recipe: bool) -> str:
-    kinds = [s for s in bp] + [s for c in comps for s in c.sources]
-    labels: list[str] = []
-    if any(s.kind in ("vendor", "syndicate") for s in kinds):
-        labels.append("Vendor / standing")
-    relics = [s for s in kinds if s.kind == "relic"]
+def _ways(bp: list[SourceRow], comps: list[ComponentRow], tradeable: bool, has_recipe: bool) -> list[str]:
+    """How an item can be obtained, as codes from report.model.WAYS (in display order)."""
+    srcs = [s for s in bp] + [s for c in comps for s in c.sources]
+    ways: list[str] = []
+    if any(s.kind in ("vendor", "syndicate") for s in srcs):
+        ways.append("vendor")
+    relics = [s for s in srcs if s.kind == "relic"]
     if relics:
-        labels.append("Relics (farmable now)" if any(s.farmable for s in relics) else "Relics (vaulted)")
-    if any(s.kind in ("node", "transient") for s in kinds):
-        labels.append("Mission drops")
-    if any(s.kind == "bounty" for s in kinds):
-        labels.append("Bounties")
-    if any(s.kind == "enemy" for s in kinds):
-        labels.append("Enemy drops")
-    if tradeable and (not labels or labels == ["Relics (vaulted)"]):
-        labels.append("Trade")
-    if not labels:
-        labels.append("Market / dojo / quest (no drop data)" if has_recipe else "Not in drop data")
-    return " + ".join(labels)
+        ways.append("relic_farmable" if any(s.farmable for s in relics) else "relic_vaulted")
+    if any(s.kind in ("node", "transient") for s in srcs):
+        ways.append("mission")
+    if any(s.kind == "bounty" for s in srcs):
+        ways.append("bounty")
+    if any(s.kind == "enemy" for s in srcs):
+        ways.append("enemy")
+    if tradeable and (not ways or ways == ["relic_vaulted"]):
+        ways.append("trade")
+    if not ways:
+        ways.append("market_dojo_quest" if has_recipe else "unknown")
+    return ways
+
+
+def _acquisition(bp: list[SourceRow], comps: list[ComponentRow], tradeable: bool, has_recipe: bool) -> str:
+    return ways_label(_ways(bp, comps, tradeable, has_recipe))
 
 
 def build_report(
@@ -234,7 +239,8 @@ def build_report(
                 )
         bp = _source_rows(codex, uid, farmable)
         in_arsenal = inventory.owns(uid) if inventory is not None else None
-        acquisition = _acquisition(bp, comps, bool(market), bool(recipes))
+        ways = _ways(bp, comps, bool(market), bool(recipes))
+        acquisition = ways_label(ways)
         if in_arsenal:
             acquisition = f"Owned: level it ({acquisition})"
         missing.append(
@@ -251,6 +257,7 @@ def build_report(
                 components=comps,
                 wiki_url=wiki_url(name),
                 owned=in_arsenal,
+                ways=ways,
             )
         )
     missing.sort(key=lambda m: (MASTERY_CATEGORIES.index(m.category), m.above_your_mr, m.name))
@@ -281,7 +288,9 @@ def build_report(
     done = {n.node: n for n in p.nodes}
     nodes = []
     for r in codex.conn.execute(
-        "SELECT id, name, planet, mission_type, faction, level_min, level_max FROM node ORDER BY system_index, name"
+        # Railjack nodes are only in the table to name void storms: not part of the star chart
+        "SELECT id, name, planet, mission_type, faction, level_min, level_max FROM node "
+        "WHERE planet <> 'Railjack' ORDER BY system_index, name"
     ):
         n = done.get(r["id"])
         lvl = f"{r['level_min']}-{r['level_max']}" if r["level_min"] is not None else None

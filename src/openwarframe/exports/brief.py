@@ -31,18 +31,7 @@ def estimate_tokens(text: str) -> int:
 
 
 def _priority(m: MissingItem) -> tuple:
-    a = m.acquisition
-    order = (
-        -1  # owned already: only needs leveling
-        if m.owned
-        else 0
-        if "farmable now" in a
-        else 1
-        if "Vendor" in a
-        else 2
-        if ("drops" in a or "Bount" in a)
-        else 3
-    )
+    order = -1 if m.owned else m.priority()  # owned already: only needs leveling
     cat = MASTERY_CATEGORIES.index(m.category) if m.category in MASTERY_CATEGORIES else 99
     return (m.above_your_mr, order, cat, m.name)
 
@@ -121,20 +110,14 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
         src = best_sources(m, limit=2)
         if src:
             line += f" - {src}"
-        if budget == "compact" and (
-            "vaulted" in m.acquisition or m.acquisition.startswith(("Trade", "Market", "Not in"))
-        ):
+        if budget == "compact" and m.hard_to_get():
             continue
         out.append(line)
         shown += 1
         if estimate_tokens("\n".join(out)) > limit * 0.75:
             out.append(f"- ... {len(missing) - shown} more not shown (budget {budget}); see account.json")
             break
-    rest = [
-        m
-        for m in missing
-        if "vaulted" in m.acquisition or m.acquisition.startswith(("Trade", "Market", "Not in"))
-    ]
+    rest = [m for m in missing if m.hard_to_get()]
     out += ["", "## Vaulted, trade-only or outside the drop tables", ""]
     if budget == "compact":
         by_cat = Counter(m.category for m in rest)

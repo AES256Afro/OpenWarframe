@@ -26,14 +26,32 @@ def _settings():
     return load_settings()
 
 
+def _game_lang(s) -> str:
+    """The game language chosen in the app's Reward helper (English if none)."""
+    try:
+        prefs = json.loads((s.home / "app-prefs.json").read_text(encoding="utf-8"))
+        return str(prefs.get("settings", {}).get("game_language") or "en")
+    except (OSError, ValueError, AttributeError):
+        return "en"
+
+
+def _ocr_lang(s, language: str | None) -> tuple[str, bool]:
+    """(OCR language tag, CJK line height): --lang wins, else the app's game language."""
+    from ..codex.languages import CJK, ocr_tag
+
+    lang = _game_lang(s)
+    return (language or ocr_tag(lang)), lang in CJK
+
+
 def _catalog(s):
     from ..codex import Codex
+    from ..codex.languages import load_names
     from .match import RewardCatalog
 
     if not s.codex_path.exists():
         console.print("[red]No codex yet; run `openwarframe codex update` first.[/red]")
         raise typer.Exit(code=1)
-    return RewardCatalog.from_codex(Codex(s.codex_path).conn)
+    return RewardCatalog.from_codex(Codex(s.codex_path).conn, load_names(s.home, _game_lang(s)))
 
 
 def _prices(path: Path | None) -> dict | None:
@@ -122,7 +140,8 @@ def _grab_and_save(s, catalog, needs, prices, *, event=None, log_tail=None, ui_s
     scale = ui_scale or ocr.read_ui_scale()
     analysis, error = None, None
     try:
-        analysis = analyze(image, catalog, ui_scale=scale, language=language, needs=needs, prices=prices)
+        tag, cjk = _ocr_lang(s, language)
+        analysis = analyze(image, catalog, ui_scale=scale, language=tag, needs=needs, prices=prices, cjk=cjk)
     except Exception as exc:  # keep the screenshot even when OCR fails
         error = f"{type(exc).__name__}: {exc}"
     d = save_recording(s.home, image, analysis, event=event, log_tail=log_tail, error=error)
@@ -244,18 +263,20 @@ def ocr_cmd(
     s = _settings()
     catalog = _catalog(s)
     img = Image.open(image).convert("RGB")
+    tag, cjk = _ocr_lang(s, language)
     a = analyze(
         img,
         catalog,
         players=players,
         ui_scale=ui_scale,
-        language=language,
+        language=tag,
+        cjk=cjk,
         needs=account_needs(s),
         prices=_prices(prices),
     )
     if crops:
         crops.mkdir(parents=True, exist_ok=True)
-        for i, b in enumerate(ocr.slot_boxes(img.width, img.height, a.players, ui_scale)):
+        for i, b in enumerate(ocr.slot_boxes(img.width, img.height, a.players, ui_scale, cjk=cjk)):
             ocr.prepare(img.crop(b.as_tuple())).save(crops / f"slot{i + 1}.png")
     if as_json:
         print(json.dumps(a.to_dict(), indent=2))

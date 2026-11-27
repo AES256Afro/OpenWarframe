@@ -3,6 +3,15 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Reward helper in every game language.** Pick your game client's language in the Reward helper
+  view (15 languages). OpenWarframe downloads DE's item names for it once (about 1.4 MB, saved in
+  the data folder) and reads reward screens in that language; the pick still shows the English
+  name. Matching now keeps letters of every script and ignores accents OCR tends to drop. Japanese,
+  Korean and Chinese use the taller name box. The live CLI follows the same setting. See
+  [docs/I18N.md](docs/I18N.md).
+
 ## 0.11.0
 
 - **Docs and app text.** No em or en dashes anywhere (a test keeps them out); a few app strings

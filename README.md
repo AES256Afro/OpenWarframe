@@ -124,7 +124,7 @@ When the relic reward screen opens, the app reads the reward names from your scr
 Windows' built-in text recognition. It then ranks them: parts you need first, then vaulted parts,
 then market price, then ducats. A small window can stay on top of the game to show the pick.
 If a screen is missed, press Ctrl+Alt+F9 (Windows, configurable) or click **Read the screen now**
-to read it on demand.
+to read it on demand. If your game isn't in English, set **Game language** in the Reward helper view.
 
 ![Reward helper](docs/screenshots/rewards.png)
 
@@ -271,5 +271,5 @@ credited in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). OpenWarframe is a fan 
 made by or affiliated with Digital Extremes; Warframe is a trademark of Digital Extremes Ltd.
 [docs/LEGAL.md](docs/LEGAL.md) lists what we owe to each source and library.
 [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) says what works for keyboard, screen-reader and
-low-vision users and what doesn't yet. Only English game clients are supported for now;
-[docs/I18N.md](docs/I18N.md) is the plan for other languages.
+low-vision users and what doesn't yet. The reward helper reads all 15 game languages; the app's own text is
+English ([docs/I18N.md](docs/I18N.md)).

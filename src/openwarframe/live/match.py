@@ -18,6 +18,7 @@ import json
 import logging
 import re
 import sqlite3
+import unicodedata
 from collections import defaultdict
 from dataclasses import dataclass, field
 from difflib import SequenceMatcher
@@ -28,10 +29,22 @@ NEAR_TIE = 0.08  # a runner-up this close means the read could be either item
 EXACT_READ = 0.85  # a whole name read with at most small OCR slips
 
 
+def _fold(text: str) -> str:
+    """Drop accents from Latin, Greek and Cyrillic letters (OCR often misses them: SCHÉMA,
+    ЧЕРТЁЖ), but keep the marks that tell kana and other scripts apart."""
+    out: list[str] = []
+    for ch in unicodedata.normalize("NFKD", text):
+        if unicodedata.combining(ch) and out and ord(out[-1]) < 0x530:
+            continue
+        out.append(ch)
+    return unicodedata.normalize("NFC", "".join(out))
+
+
 def normalize(text: str) -> str:
-    t = text.upper()
+    """Upper case, common OCR digit slips fixed, letters of any script kept, rest spaces."""
+    t = _fold(unicodedata.normalize("NFKC", text)).upper()
     t = t.replace("0", "O").replace("1", "I").replace("|", "I").replace("5", "S")
-    t = re.sub(r"[^A-Z ]+", " ", t)
+    t = re.sub(r"[\W\d_]+", " ", t)
     return re.sub(r"\s+", " ", t).strip()
 
 
@@ -48,6 +61,7 @@ class RewardEntry:
     key: str = ""  # normalized name
     need: int = 1  # how many the build takes (two barrels for Akstiletto Prime)
     makes: str | None = None  # for a part blueprint: the part it builds
+    read_name: str = ""  # the name the reward screen prints, in the game's language (else name)
 
 
 @dataclass
@@ -73,11 +87,14 @@ class RewardCatalog:
     def __init__(self, entries: list[RewardEntry]):
         self.entries = entries
         for e in entries:
-            e.key = normalize(e.name)
+            e.key = normalize(e.read_name or e.name)
         self._by_key = {e.key: e for e in entries}
 
     @classmethod
-    def from_codex(cls, conn: sqlite3.Connection) -> RewardCatalog:
+    def from_codex(cls, conn: sqlite3.Connection, names: dict[str, str] | None = None) -> RewardCatalog:
+        """Every relic reward. ``names``: {uniqueName: name} in the game's language (see
+        ``codex.languages``); rewards are matched on those and shown with their English name."""
+        names = names or {}
         item_rows = {u: (n, d) for u, n, d in conn.execute("SELECT unique_name, name, data FROM item")}
         market = {u: (s, n) for u, s, n in conn.execute("SELECT unique_name, slug, name FROM market_item")}
         relic_names = dict(conn.execute("SELECT unique_name, name FROM relic"))
@@ -137,6 +154,7 @@ class RewardCatalog:
                     relics=sorted(relic_names.get(r, r) for r in relics),
                     need=graph.needed_count(uid, final),
                     makes=made if made and made != final else None,
+                    read_name=names.get(uid, ""),
                 )
             )
         entries.sort(key=lambda e: e.name)

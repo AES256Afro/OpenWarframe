@@ -44,6 +44,7 @@ SERVER_SETTINGS = (
     "reward_watch",
     "save_recordings",
     "capture_hotkey",
+    "game_language",
 )  # changed by their own endpoints, not the page  # an inventory file is a few MB; anything this big is not one of ours
 
 # The page only ever talks to this server. These headers stop other sites from framing it
@@ -75,8 +76,11 @@ class AppState:
         self.updating = False
         from .rewards import RewardWatcher
 
+        prefs = self.get_prefs().get("settings", {})
         self.rewards = RewardWatcher(
-            settings, save_recordings=bool(self.get_prefs().get("settings", {}).get("save_recordings"))
+            settings,
+            save_recordings=bool(prefs.get("save_recordings")),
+            language=str(prefs.get("game_language") or "en"),
         )
         from .hotkey import GlobalHotkey
 
@@ -348,8 +352,50 @@ class AppState:
             spec = None
         return self.hotkey.start(spec, lambda: self.rewards.capture_now("hotkey"))
 
+    def set_game_language(self, lang: str) -> dict:
+        """The game client's language: reward names are read in it. Downloads its names once."""
+        from ..codex.languages import LANGUAGES, load_names
+        from ..http import CachedClient
+
+        if lang not in LANGUAGES:
+            return {**self.reward_status(), "error": f"Unknown language {lang!r}."}
+        if lang != "en":
+            client = CachedClient(self.settings.cache_dir)
+            try:
+                names = load_names(self.settings.home, lang, client)
+            finally:
+                client.close()
+            if not names:
+                return {
+                    **self.reward_status(),
+                    "error": f"Could not download the {LANGUAGES[lang][0]} item names. Check your connection.",
+                }
+        self.save_prefs(json.dumps({"settings": {"game_language": lang}}).encode())
+        self.rewards.language = lang
+        return self.reward_status()
+
+    def refresh_names(self) -> None:
+        """After a game-data update: the chosen language's names, newly built if DE's changed."""
+        from ..codex.languages import load_names
+        from ..http import CachedClient
+
+        lang = self.rewards.language
+        if lang == "en":
+            return
+        client = CachedClient(self.settings.cache_dir)
+        try:
+            load_names(self.settings.home, lang, client, refresh=True)
+        finally:
+            client.close()
+
     def reward_status(self) -> dict:
-        return {**self.rewards.status(), "hotkey": self.hotkey.describe()}
+        from ..codex.languages import LANGUAGES
+
+        return {
+            **self.rewards.status(),
+            "hotkey": self.hotkey.describe(),
+            "languages": [[code, label] for code, (label, _) in LANGUAGES.items()],
+        }
 
     # -- freshness -------------------------------------------------------------------
     def profile_age_hours(self) -> float | None:
@@ -875,6 +921,9 @@ def make_handler(state: AppState):
                 elif self.path == "/api/reward/capture":
                     state.rewards.capture_now("button")
                     self._json(state.reward_status())
+                elif self.path == "/api/reward/language":
+                    req = json.loads(body.decode("utf-8") or "{}")
+                    self._json(state.set_game_language(str(req.get("lang") or "en")))
                 elif self.path == "/api/reward/hotkey":
                     req = json.loads(body.decode("utf-8") or "{}")
                     key = req.get("key")
@@ -900,6 +949,8 @@ def make_handler(state: AppState):
 
                     with state.lock:
                         update_codex(state.settings)
+                    with contextlib.suppress(Exception):  # names are a bonus: never fail the update
+                        state.refresh_names()
                     self._json(state.build(force=True))
                 elif self.path == "/api/update/install":
                     self._json(state.install_update())

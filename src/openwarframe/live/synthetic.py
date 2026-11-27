@@ -10,9 +10,44 @@ from PIL import Image, ImageDraw, ImageFont
 
 from .ocr import screen_scaling, slot_boxes
 
+# system fonts that cover each script (Windows names first, then macOS); Arial covers Latin and Cyrillic
+SCRIPT_FONTS = {
+    "ja": (
+        "meiryo.ttc",
+        "YuGothM.ttc",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc",
+    ),
+    "ko": ("malgun.ttf", "/System/Library/Fonts/AppleSDGothicNeo.ttc"),
+    "zh": (
+        "msyh.ttc",
+        "simsun.ttc",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+    ),
+    "tc": (
+        "msjh.ttc",
+        "mingliu.ttc",
+        "/System/Library/Fonts/STHeiti Medium.ttc",
+        "/System/Library/Fonts/Hiragino Sans GB.ttc",
+    ),
+    "th": (
+        "tahoma.ttf",
+        "leelawad.ttf",
+        "/System/Library/Fonts/Supplemental/Tahoma.ttf",
+        "/System/Library/Fonts/Thonburi.ttc",
+    ),
+}
 
-def _font(px: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
-    for name in ("arial.ttf", "segoeui.ttf", "DejaVuSans.ttf"):
+
+def _font(px: int, lang: str = "en") -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    for name in (
+        *SCRIPT_FONTS.get(lang, ()),
+        "arial.ttf",
+        "segoeui.ttf",
+        "/Library/Fonts/Arial Unicode.ttf",
+        "DejaVuSans.ttf",
+    ):
         try:
             return ImageFont.truetype(name, px)
         except OSError:
@@ -36,13 +71,13 @@ def _wrap(draw: ImageDraw.ImageDraw, text: str, font, max_w: int) -> list[str]:
 
 
 def reward_screen(
-    names: list[str], size: tuple[int, int] = (1920, 1080), ui_scale: float = 1.0
+    names: list[str], size: tuple[int, int] = (1920, 1080), ui_scale: float = 1.0, lang: str = "en"
 ) -> Image.Image:
     w, h = size
     img = Image.new("RGB", size, (14, 16, 24))
     draw = ImageDraw.Draw(img)
     s = screen_scaling(w, h) * ui_scale
-    font = _font(max(8, round(19 * s)))
+    font = _font(max(8, round(19 * s)), lang)
     line_h = round(24 * s)
     for box, name in zip(slot_boxes(w, h, len(names), ui_scale), names, strict=True):
         # a dim card behind each reward, like the game's reward tiles

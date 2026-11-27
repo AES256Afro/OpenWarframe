@@ -3,6 +3,14 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Warframe builds fill the Aura and Exilus slots.** The Exilus slot takes one exilus-capable mod
+  (the Drift mods and the like). The aura is picked for what it does for your own frame (Physique,
+  Stand United) or else for the capacity it adds (double its drain with a matching polarity), and
+  the build now fits that extra capacity.
+- **Fix:** Umbral Fiber and Steel Fiber are no longer suggested together (variants of one mod).
+
 ## 0.17.0
 
 - **Warframe builds.** Open a Warframe and click **Suggest a build**: the app balances Ability

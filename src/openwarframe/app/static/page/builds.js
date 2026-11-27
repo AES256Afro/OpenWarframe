@@ -76,7 +76,8 @@ function frameBuildPanel(r){
 function frameBuildHtml(b){
   if(b.error) return '<p class="muted">'+esc(b.error)+'</p>';
   var s=b.stats, h='';
-  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li><b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
+  if(b.aura) h+='<p><span class="muted">Aura:</span> <b>'+esc(b.aura.name)+'</b> <span class="muted">rank '+b.aura.rank+'/'+b.aura.max_rank+' · +'+b.aura.capacity+' capacity with a matching polarity'+(b.aura.counts?' · '+esc(b.aura.why):'')+'</span></p>';
+  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li>'+(m.exilus?'<span class="pill p-violet">Exilus</span> ':'')+'<b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
   h+='<div class="buildstats"><span>Strength <b>'+pct(s.strength)+'</b></span><span>Duration <b>'+pct(s.duration)+'</b></span><span>Range <b>'+pct(s.range)+'</b></span><span>Efficiency <b>'+pct(s.efficiency)+'</b></span></div>';
   h+='<div class="buildstats"><span>Health <b>'+num(s.health)+'</b></span><span>Shields <b>'+num(s.shields)+'</b></span><span>Armor <b>'+num(s.armor)+'</b> ('+pct(s.damage_reduction)+' less damage)</span><span>Effective health <b>'+num(s.effective_health)+'</b></span><span>Energy <b>'+num(s.energy)+'</b></span></div>';
   h+='<p class="muted">Uses: '+b.abilities.filter(function(a){return a.used}).map(function(a){ var u=[]; if(a.strength) u.push("Strength"); if(a.duration) u.push("Duration"); if(a.range) u.push("Range"); return esc(a.name)+' ('+(u.join(", ")||"no scaling")+(a.channeled?", channeled":"")+')'; }).join(' · ')+'</p>';

@@ -137,6 +137,11 @@ also shows the mastery rank required, how to get the item, and whether you can g
 
 ![Warframes](docs/screenshots/warframes.png)
 
+Open a primary or secondary gun to get a **suggested build**: the 8 mods with the most damage
+against the enemy you pick, calculated from the game data and the current damage formulas, using
+only your mods if you like. [docs/BUILDS.md](docs/BUILDS.md) explains what it counts and what it
+doesn't yet.
+
 ### Relics
 
 Every relic, with how many you own at each refinement, the parts you still need, how many of its

@@ -288,6 +288,32 @@ def load_plus_items(
     return len(rows)
 
 
+def load_weapon_classes(conn: sqlite3.Connection, plus: PlusExport) -> int:
+    """Holster category and parent class per weapon, for mod compatibility in builds."""
+    rows = [
+        (
+            uid,
+            rec.get("holsterCategory"),
+            rec.get("parentName"),
+            json.dumps(rec.get("compatibilityTags") or []),
+        )
+        for uid, rec in (plus.files.get("ExportWeapons") or {}).items()
+        if isinstance(rec, dict)
+    ]
+    conn.executemany("INSERT OR REPLACE INTO weapon_class VALUES (?,?,?,?)", rows)
+    tags = [
+        (
+            uid,
+            json.dumps(rec.get("compatibilityTags") or []),
+            json.dumps(rec.get("incompatibilityTags") or []),
+        )
+        for uid, rec in (plus.files.get("ExportUpgrades") or {}).items()
+        if isinstance(rec, dict) and (rec.get("compatibilityTags") or rec.get("incompatibilityTags"))
+    ]
+    conn.executemany("INSERT OR REPLACE INTO mod_compat VALUES (?,?,?)", tags)
+    return len(rows)
+
+
 def load_recipes(conn: sqlite3.Connection, pe: PublicExport, resolver: NameResolver) -> int:
     recipes = pe.get("ExportRecipes").get("ExportRecipes", [])
     names = {r[0]: r[1] for r in conn.execute("SELECT unique_name, name FROM item")}
@@ -721,6 +747,7 @@ def build_codex(conn: sqlite3.Connection, payloads: CodexPayloads) -> BuildRepor
         report.counts["challenge"] = load_challenges(conn, plus)
         report.counts.update(load_drops(conn, drops, resolver))
         report.counts["market_item"] = load_market(conn, payloads.market)
+        report.counts["weapon_class"] = load_weapon_classes(conn, plus)
         write_name_map(conn, resolver)
         now = _now()
         conn.executemany(

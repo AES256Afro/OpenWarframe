@@ -99,3 +99,11 @@ script scope, and tests read the same assembled page.
   OCR engine. Coverage is measured in CI with a floor (`[tool.coverage.report]`).
 - CI builds the frozen app on Windows and macOS for every pull request and smoke-tests it
   (`packaging/smoke_test.py`); releases come from `.github/workflows/release.yml`.
+
+## Builds
+
+`builds/` suggests gun builds: `weapons.py` reads a gun's stats, `mods.py` turns mod text into
+numbers and decides what fits, `damage.py` applies the damage formulas, `search.py` picks the 8
+mods. `GET /api/build?id=&target=&owned=&stacks=` serves it to the item details. See
+[BUILDS.md](BUILDS.md).
+

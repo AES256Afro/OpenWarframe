@@ -42,6 +42,8 @@ FILES = [
     "ExportBundles",
     "ExportBoosterPacks",
     "ExportCreditBundles",
+    # weapon classes (rifle, shotgun, bow...) for which mods fit which weapon (builds)
+    "ExportWeapons",
 ]
 DICT_FILE = "dict.en.json"
 

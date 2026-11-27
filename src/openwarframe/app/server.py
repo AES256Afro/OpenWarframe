@@ -409,6 +409,33 @@ class AppState:
 
         return translator(self.settings.home, conn, self.names_lang)
 
+    def build_for(self, uid: str, *, target: str | None, owned_only: bool, stacks: bool) -> dict:
+        """A suggested mod build for one gun (builds.search)."""
+        from ..builds.search import suggest
+        from ..builds.weapons import NotAGun
+        from ..codex import Codex
+        from ..inventory import load_inventory
+
+        if not uid or not self.settings.codex_path.exists():
+            return {"error": "No game data yet."}
+        owned = None
+        if owned_only and self.inventory_path.exists():
+            with contextlib.suppress(Exception):
+                inv = load_inventory(self.inventory_path)
+                owned = {u: max(m.get("ranks") or [0]) for u, m in inv.mods.items()}
+        with Codex(self.settings.codex_path) as codex:
+            try:
+                b = suggest(codex.conn, uid, target=target, owned=owned, stacks=stacks)
+            except NotAGun as exc:
+                return {"error": str(exc)}
+            tr = self._translator(codex.conn)
+            if tr:  # mod and weapon names in the chosen language
+                for m in b["mods"]:
+                    m["name"] = tr.by_id(m["id"], m["name"])
+                if b.get("upgrade"):
+                    b["upgrade"]["name"] = tr.by_name(b["upgrade"]["name"])
+        return b
+
     def set_names_lang(self, lang: str) -> dict:
         """Show item names in ``lang`` in the app and exports. Downloads its names once."""
         from ..codex.languages import LANGUAGES, load_names
@@ -893,6 +920,23 @@ def make_handler(state: AppState):
                     self._json({"error": f"Could not load the world state: {exc}"})
             elif self.path == "/api/prefs":
                 self._json(state.get_prefs())
+            elif urlsplit(self.path).path == "/api/build":
+                if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}"):
+                    self._json({"error": "forbidden"}, 403)
+                    return
+                q = parse_qs(urlsplit(self.path).query)
+                try:
+                    self._json(
+                        state.build_for(
+                            (q.get("id") or [""])[0],
+                            target=(q.get("target") or ["none"])[0],
+                            owned_only=(q.get("owned") or ["0"])[0] == "1",
+                            stacks=(q.get("stacks") or ["1"])[0] == "1",
+                        )
+                    )
+                except Exception as exc:  # noqa: BLE001 - shown in the item details
+                    log.exception("build failed")
+                    self._json({"error": f"Could not work out a build: {exc}"})
             elif self.path == "/api/reward":
                 self._json(state.reward_status())
             elif self.path == "/mini":

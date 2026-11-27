@@ -123,7 +123,7 @@ def test_text_can_grow_to_200_percent():
 
 def test_rows_tabs_and_dialogs_work_without_a_mouse():
     assert 'tabindex="0" aria-expanded="' in PAGE  # table rows
-    assert "tr.onkeydown" in PAGE and 'e.key==="Enter"' in PAGE
+    assert "function onTableKey" in PAGE and 'e.key==="Enter"' in PAGE  # one delegated handler
     assert "ArrowDown" in PAGE and 'aria-orientation","vertical' in PAGE  # the view list
     assert '<dialog id="consent"' in PAGE and "showModal()" in PAGE
     assert "function keepFocus" in PAGE and "keepFocus(renderAllNow)" in PAGE  # every redraw keeps focus

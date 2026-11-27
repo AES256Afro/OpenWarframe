@@ -3,12 +3,14 @@
     uv run python packaging/render_brand.py
 
 Writes:
-  docs/brand/icon-512.png, icon-128.png    icon on a transparent background
+  docs/brand/icon-1024.png, icon-512.png, icon-128.png
+                                           icon on a transparent background
   docs/brand/logo.png                      icon and name, for the README
   docs/brand/social-preview.png            1280x640, for GitHub's link preview
   src/openwarframe/app/static/icon.ico     Windows icon (exe, desktop shortcut)
 
-Needs Chrome or Edge (headless) and Pillow.
+Needs Chrome or Edge (headless) and Pillow. Works offline: the name uses Cinzel (the
+app's display font) when it is installed on this machine, otherwise Georgia.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-from openwarframe.guide.documents import find_browser
+from openwarframe.printing import find_browser
 
 ROOT = Path(__file__).resolve().parents[1]
 BRAND = ROOT / "docs" / "brand"
@@ -55,7 +57,7 @@ def page(body: str, w: int, h: int, bg: str = "transparent") -> str:
         "<!doctype html><meta charset='utf-8'><style>html,body{margin:0;background:" + bg + "}"
         f"body{{width:{w}px;height:{h}px;overflow:hidden}}"
         ".row{display:flex;align-items:center;height:100%;box-sizing:border-box}.row svg{flex:none}"
-        ".name{font:700 1em Georgia,'Times New Roman',serif;letter-spacing:.12em;color:#d9b35b}"
+        ".name{font:700 1em Cinzel,'Trajan Pro',Georgia,'Times New Roman',serif;letter-spacing:.12em;color:#d9b35b}"
         ".line{font:400 1em 'Segoe UI',system-ui,sans-serif;color:#97a3bc}"
         "</style>" + body
     )
@@ -75,6 +77,7 @@ def icon_pngs() -> Image.Image:
     mask = Image.new("L", (1024, 1024), 0)
     ImageDraw.Draw(mask).rounded_rectangle((16, 16, 1007, 1007), radius=224, fill=255)
     img.putalpha(mask)
+    img.save(BRAND / "icon-1024.png", optimize=True)
     for s in (512, 128):
         img.resize((s, s), Image.LANCZOS).save(BRAND / f"icon-{s}.png", optimize=True)
     return img
@@ -104,7 +107,7 @@ def main() -> None:
         + icon_tag.format(s=260)
         + "<div><div class='name'>OPENWARFRAME</div>"
         "<div class='line' style='font-size:34px;margin-top:14px'>See your Warframe account<br>and what to do next</div>"
-        "<div class='line' style='font-size:24px;margin-top:22px'>Free and open source, for Windows</div>"
+        "<div class='line' style='font-size:24px;margin-top:22px'>Free and open source, for Windows and macOS</div>"
         "</div></div>",
         1280,
         640,

@@ -1,5 +1,10 @@
 # Mockups
 
+> **Early concept mockups, not the app.** These pages were drawn before the features
+> were built. Some things they show are not in OpenWarframe: the "Right now" events
+> panel, the foundry backlog, the planner and the `plan` command. For what the app
+> really makes, see [EXPORTS.md](../EXPORTS.md) and the screenshots in the main README.
+
 Static HTML mockups of the planned outputs. Open any `.html` file in a browser; they
 have no external dependencies. All data is synthetic ("VoidWanderer" is not a real
 account). Screenshots in `png/` are rendered from these files.

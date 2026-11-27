@@ -199,7 +199,7 @@ def test_a_locked_workbook_does_not_stop_the_other_formats(tmp_path: Path, monke
     from openwarframe.exports import run as run_mod
     from test_guide import _report
 
-    def locked(report, tables, path):
+    def locked(report, tables, path, *args, **kwargs):
         raise PermissionError(13, "Permission denied", str(path))
 
     monkeypatch.setattr(run_mod, "write_xlsx", locked)

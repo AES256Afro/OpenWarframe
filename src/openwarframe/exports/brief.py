@@ -13,6 +13,7 @@ from pathlib import Path
 
 from ..account.summary import MASTERY_CATEGORIES
 from ..report.model import MissingItem, Report
+from .extras import ExportExtras, diff_lines, rank_test_line, rank_test_ready
 from .tables import best_sources
 
 BRIEF_SCHEMA = "openwarframe.brief/1"
@@ -36,7 +37,16 @@ def _priority(m: MissingItem) -> tuple:
     return (m.above_your_mr, order, cat, m.name)
 
 
-def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
+def brief_name(budget: str = "compact") -> str:
+    """File stem: ``account-brief`` for compact, ``account-brief-full`` for full."""
+    return "account-brief" if budget == "compact" else f"account-brief-{budget}"
+
+
+def build_brief(
+    report: Report, budget: str = "compact", extras: ExportExtras | None = None
+) -> tuple[str, dict]:
+    extras = extras or ExportExtras()
+    compact = budget == "compact"
     h, ms = report.headline, report.mastery
     limit = BUDGETS[budget]
     who = report.identity.display_name or "the player"
@@ -85,8 +95,26 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
         f"- Estimated total mastery XP (ESTIMATE) about {ms.estimated_total:,}: adds star chart "
         f"{ms.from_starchart:,}, Steel Path {ms.from_steel_path:,} and junctions {ms.from_junctions:,}. {ms.note}"
     )
+    test = rank_test_line(report)
+    if test:
+        out.append(f"- {test}")
+    if extras.standing_left_total is not None:
+        main = extras.standing_left.get("Default")
+        main_text = (
+            f" (main syndicates: {main:,})" if main is not None and len(extras.standing_left) > 1 else ""
+        )
+        out.append(f"- Standing left today: {extras.standing_left_total:,}{main_text}.")
     for n in report.notes:
         out.append(f"- Data note: {n}")
+    if extras.goals:
+        out += ["", "# Your goals", ""]
+        out.append("Items the player marked as goals in the OpenWarframe app. Plan around these first.")
+        out.append("")
+        out += [f"- {g}" for g in extras.goals]
+    changes = diff_lines(extras.diff)
+    if changes:
+        out += ["", "# Since last sync", ""]
+        out += [f"- {line}" for line in changes]
     out += [
         "",
         "# Mastery by category",
@@ -98,28 +126,30 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
         out.append(f"| {c.category} | {c.mastered} | {c.leveling} | {c.missing} | {c.total} |")
 
     out += ["", "# Closest to done: owned, below rank 30", ""]
-    for o in leveling[: (40 if budget == "compact" else 200)]:
+    for o in leveling[: (40 if compact else 200)]:
         out.append(f"- {o.name} ({o.category}) rank {o.rank}, {o.xp_to_30:,} affinity to 30")
 
     out += ["", "# Never leveled: how they can be obtained", ""]
     out.append("Counts by route: " + "; ".join(f"{k}: {v}" for k, v in acq.most_common()))
     out += ["", "## Obtainable now or cheaply (within your MR first)", ""]
     shown = 0
+    shown_items: list[MissingItem] = []
     for m in missing:
         line = f"- {m.name} ({m.category}, MR {m.mastery_req}) - {m.acquisition}"
         src = best_sources(m, limit=2)
         if src:
             line += f" - {src}"
-        if budget == "compact" and m.hard_to_get():
+        if compact and m.hard_to_get():
             continue
         out.append(line)
         shown += 1
+        shown_items.append(m)
         if estimate_tokens("\n".join(out)) > limit * 0.75:
             out.append(f"- ... {len(missing) - shown} more not shown (budget {budget}); see account.json")
             break
     rest = [m for m in missing if m.hard_to_get()]
     out += ["", "## Vaulted, trade-only or outside the drop tables", ""]
-    if budget == "compact":
+    if compact:
         by_cat = Counter(m.category for m in rest)
         out.append("- " + ", ".join(f"{c}: {n}" for c, n in by_cat.most_common()))
         out.append("- Examples: " + ", ".join(m.name for m in rest[:25]))
@@ -148,38 +178,63 @@ def build_brief(report: Report, budget: str = "compact") -> tuple[str, dict]:
         out.append("- " + ", ".join(f"{u.name} {u.kills:,}" for u in top_usage))
     text = "\n".join(out) + "\n"
 
-    data = {
+    def missing_row(m: MissingItem) -> dict:
+        return {
+            "name": m.name,
+            "category": m.category,
+            "mastery_req": m.mastery_req,
+            "acquisition": m.acquisition,
+            "sources": best_sources(m, limit=2),
+        }
+
+    data: dict = {
         "schema": BRIEF_SCHEMA,
         "budget": budget,
         "snapshot": report.snapshot_taken_at.isoformat(),
         "coverage": report.coverage,
         "headline": report.headline.model_dump(),
         "mastery": report.mastery.model_dump(),
+        "rank_test_ready": rank_test_ready(report),
+        "standing_left_today": extras.standing_left_total,
+        "goals": extras.goals,
+        "since_last_sync": changes,
         "categories": [c.model_dump() for c in report.categories],
-        "leveling": [
-            {"name": o.name, "category": o.category, "rank": o.rank, "xp_to_30": o.xp_to_30} for o in leveling
-        ],
-        "missing": [
-            {
-                "name": m.name,
-                "category": m.category,
-                "mastery_req": m.mastery_req,
-                "acquisition": m.acquisition,
-                "sources": best_sources(m, limit=2),
-            }
-            for m in missing
-        ],
-        "starchart_missing": [{"node": n.node, "name": n.name, "planet": n.planet} for n in sc_missing],
-        "syndicates": [{"name": s.name, "rank": s.rank, "standing": s.standing} for s in report.syndicates],
-        "notes": report.notes,
     }
+    if compact:
+        # the same content as the Markdown, so the JSON twin stays about as small
+        data["leveling"] = [
+            {"name": o.name, "category": o.category, "rank": o.rank, "xp_to_30": o.xp_to_30}
+            for o in leveling[:40]
+        ]
+        data["missing"] = [missing_row(m) for m in shown_items]
+        data["missing_not_shown"] = len(missing) - len(shown_items) - len(rest)
+        data["hard_to_get"] = {
+            "by_category": dict(Counter(m.category for m in rest).most_common()),
+            "examples": [m.name for m in rest[:25]],
+        }
+        data["starchart_missing"] = [{"name": n.name, "planet": n.planet} for n in sc_missing]
+        data["usage"] = [{"name": u.name, "kills": u.kills} for u in top_usage]
+    else:
+        data["leveling"] = [
+            {"name": o.name, "category": o.category, "rank": o.rank, "xp_to_30": o.xp_to_30} for o in leveling
+        ]
+        data["missing"] = [missing_row(m) for m in missing]
+        data["starchart_missing"] = [{"node": n.node, "name": n.name, "planet": n.planet} for n in sc_missing]
+        data["usage"] = [{"name": u.name, "kills": u.kills} for u in report.usage]
+    data["syndicates"] = [{"name": s.name, "rank": s.rank, "standing": s.standing} for s in report.syndicates]
+    data["notes"] = report.notes
     return text, data
 
 
-def write_brief(report: Report, directory: Path, budget: str = "compact") -> tuple[Path, Path, int]:
-    text, data = build_brief(report, budget)
-    md = directory / f"account-brief{'' if budget == 'compact' else '-' + budget}.md"
+def write_brief(
+    report: Report, directory: Path, budget: str = "compact", extras: ExportExtras | None = None
+) -> tuple[Path, Path, int]:
+    text, data = build_brief(report, budget, extras)
+    md = directory / f"{brief_name(budget)}.md"
     js = md.with_suffix(".json")
     md.write_text(text, encoding="utf-8")
-    js.write_text(json.dumps(data, indent=1, default=str), encoding="utf-8")
+    if budget == "compact":
+        js.write_text(json.dumps(data, separators=(",", ":"), default=str), encoding="utf-8")
+    else:
+        js.write_text(json.dumps(data, indent=1, default=str), encoding="utf-8")
     return md, js, estimate_tokens(text)

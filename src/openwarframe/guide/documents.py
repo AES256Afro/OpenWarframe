@@ -1,8 +1,7 @@
 """Turn a rendered guide into shareable documents.
 
-* PDF: printed by a Chromium-based browser already on the machine (Chrome, Edge,
-  Chromium, Brave) in headless mode, so the PDF is the HTML page with its print
-  stylesheet. No browser download is needed. Override with OPENWARFRAME_BROWSER.
+* PDF: printed by a Chromium-based browser already on the machine (see
+  ``openwarframe.printing``).
 * Cloud: Google Drive and OneDrive have no upload API we can use without an OAuth
   app, but both have desktop sync clients. When one is installed we copy the files
   into an ``OpenWarframe`` folder inside it and the sync client uploads them.
@@ -12,11 +11,19 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
 import sys
-import tempfile
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from ..printing import (  # noqa: F401 - re-exported for older imports
+    NO_BROWSER_WARNING,
+    NoBrowserError,
+    PrintError,
+    candidate_browsers,
+    find_browser,
+    html_to_pdf,
+    try_print,
+)
 
 CLOUD_LABELS = {"gdrive": "Google Drive", "onedrive": "OneDrive"}
 CLOUD_WEB = {
@@ -27,87 +34,10 @@ CLOUD_SUBDIR = "OpenWarframe"
 
 
 # -- browser / PDF -----------------------------------------------------------------------
+# The printer lives in openwarframe.printing (the dashboard and the brief use it too); these
+# names stay here so older imports keep working.
 
-
-def _candidate_browsers() -> list[Path]:
-    env = os.environ.get("OPENWARFRAME_BROWSER")
-    out: list[Path] = [Path(env)] if env else []
-    if sys.platform == "win32":
-        roots = [os.environ.get(k) for k in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA")]
-        rel = [
-            r"Google\Chrome\Application\chrome.exe",
-            r"Microsoft\Edge\Application\msedge.exe",
-            r"BraveSoftware\Brave-Browser\Application\brave.exe",
-            r"Chromium\Application\chrome.exe",
-        ]
-        out += [Path(r) / p for r in roots if r for p in rel]
-    elif sys.platform == "darwin":
-        out += [
-            Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
-            Path("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"),
-            Path("/Applications/Chromium.app/Contents/MacOS/Chromium"),
-            Path("/Applications/Brave Browser.app/Contents/MacOS/Brave Browser"),
-        ]
-    for name in (
-        "google-chrome",
-        "google-chrome-stable",
-        "chromium",
-        "chromium-browser",
-        "microsoft-edge",
-        "msedge",
-    ):
-        found = shutil.which(name)
-        if found:
-            out.append(Path(found))
-    return out
-
-
-def find_browser() -> Path | None:
-    """First Chromium-based browser found, or None."""
-    for p in _candidate_browsers():
-        if p.is_file():
-            return p
-    return None
-
-
-def html_to_pdf(
-    html_path: Path, pdf_path: Path, *, browser: Path | None = None, timeout: float = 120
-) -> Path:
-    """Print an HTML file to PDF with a headless Chromium browser.
-
-    Raises RuntimeError with a readable message when no browser is found or printing fails.
-    """
-    browser = browser or find_browser()
-    if not browser:
-        raise RuntimeError(
-            "No Chrome, Edge, Chromium or Brave found for PDF output. Install one, or set "
-            "OPENWARFRAME_BROWSER to its executable."
-        )
-    pdf_path.parent.mkdir(parents=True, exist_ok=True)
-    if pdf_path.exists():
-        pdf_path.unlink()
-    with tempfile.TemporaryDirectory(prefix="owf-pdf-") as profile:
-        cmd = [
-            str(browser),
-            "--headless=new",
-            "--disable-gpu",
-            "--no-first-run",
-            "--no-default-browser-check",
-            "--disable-extensions",
-            f"--user-data-dir={profile}",
-            "--no-pdf-header-footer",
-            "--print-to-pdf-no-header",
-            f"--print-to-pdf={pdf_path.resolve()}",
-            html_path.resolve().as_uri(),
-        ]
-        try:
-            proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
-        except subprocess.TimeoutExpired as exc:
-            raise RuntimeError(f"{browser.name} did not finish printing within {timeout:.0f}s") from exc
-    if not pdf_path.exists() or pdf_path.stat().st_size == 0:
-        tail = (proc.stderr or proc.stdout or "").strip().splitlines()[-1:] or ["no output"]
-        raise RuntimeError(f"{browser.name} did not write the PDF ({tail[0][:160]})")
-    return pdf_path
+_candidate_browsers = candidate_browsers
 
 
 # -- cloud sync folders -------------------------------------------------------------------
@@ -256,10 +186,9 @@ def write_guide_bundle(
     write_mastery_html(plan, html_path, files=links)
 
     if pdf:
-        try:
-            bundle.pdf = html_to_pdf(html_path, pdf_path, browser=browser)
-        except RuntimeError as exc:
-            bundle.warnings.append(f"PDF skipped: {exc}")
+        bundle.pdf, warning = try_print(html_path, pdf_path, browser=browser)
+        if warning:
+            bundle.warnings.append(warning)
             links.pdf = None
             write_mastery_html(plan, html_path, files=links)
 

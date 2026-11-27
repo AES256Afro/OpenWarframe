@@ -35,7 +35,44 @@ def _shade(cell, fill: str) -> None:
     tc_pr.append(shd)
 
 
-def _style_document(doc) -> None:
+def _page_number_footer(section) -> None:
+    """ "Page N of M", centred, in the footer."""
+    p = section.footer.paragraphs[0] if section.footer.paragraphs else section.footer.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    def field(code: str) -> None:
+        run = p.add_run()
+        run.font.size = Pt(8.5)
+        run.font.color.rgb = MUTED
+        begin, instr, sep, shown, end = (
+            OxmlElement("w:fldChar"),
+            OxmlElement("w:instrText"),
+            OxmlElement("w:fldChar"),
+            OxmlElement("w:t"),
+            OxmlElement("w:fldChar"),
+        )
+        begin.set(qn("w:fldCharType"), "begin")
+        instr.set(qn("xml:space"), "preserve")
+        instr.text = f" {code} "
+        sep.set(qn("w:fldCharType"), "separate")
+        shown.text = "1"
+        end.set(qn("w:fldCharType"), "end")
+        for el in (begin, instr, sep, shown, end):
+            run._r.append(el)
+
+    def plain(text: str) -> None:
+        r = p.add_run(text)
+        r.font.size = Pt(8.5)
+        r.font.color.rgb = MUTED
+
+    plain("Page ")
+    field("PAGE")
+    plain(" of ")
+    field("NUMPAGES")
+
+
+def style_document(doc, *, title: str | None = None) -> None:
+    """Fonts, colours, A4 pages with page numbers, and the file's author and title."""
     normal = doc.styles["Normal"]
     normal.font.name = BODY
     normal.font.size = Pt(10.5)
@@ -58,25 +95,31 @@ def _style_document(doc) -> None:
     title.font.color.rgb = INK
     title.element.rPr.rFonts.set(qn("w:eastAsia"), DISPLAY)
     for section in doc.sections:
+        section.page_width, section.page_height = Cm(21), Cm(29.7)  # A4, like the PDFs
         section.left_margin = section.right_margin = Cm(2)
         section.top_margin = section.bottom_margin = Cm(1.8)
+        _page_number_footer(section)
+    doc.core_properties.author = "OpenWarframe"
+    doc.core_properties.last_modified_by = "OpenWarframe"
+    if title:
+        doc.core_properties.title = title
 
 
-def _label(paragraph, text: str, color: RGBColor = GOLD) -> None:
+def add_label(paragraph, text: str, color: RGBColor = GOLD) -> None:
     run = paragraph.add_run(text.upper() + "  ")
     run.bold = True
     run.font.size = Pt(8.5)
     run.font.color.rgb = color
 
 
-def _muted(doc, text: str) -> None:
+def muted(doc, text: str) -> None:
     p = doc.add_paragraph()
     r = p.add_run(text)
     r.font.color.rgb = MUTED
     r.italic = True
 
 
-def _table(doc, header: list[str], rows: list[list[str]], *, right: set[int] | None = None, widths=None):
+def add_table(doc, header: list[str], rows: list[list[str]], *, right: set[int] | None = None, widths=None):
     right = right or set()
     t = doc.add_table(rows=1, cols=len(header))
     t.style = "Table Grid"
@@ -107,12 +150,12 @@ def _table(doc, header: list[str], rows: list[list[str]], *, right: set[int] | N
 
 def build_mastery_docx(plan: MasteryPlan):
     doc = Document()
-    _style_document(doc)
+    style_document(doc)
     who = plan.display_name.rstrip("") if plan.display_name else "Your account"
 
     # title block
     eyebrow = doc.add_paragraph()
-    _label(eyebrow, "Mastery plan · built from your profile")
+    add_label(eyebrow, "Mastery plan · built from your profile")
     doc.add_paragraph(f"Road to Mastery {plan.target_rank}", style="Title")
     meta = doc.add_paragraph()
     meta.add_run(
@@ -134,13 +177,13 @@ def build_mastery_docx(plan: MasteryPlan):
         p.add_run(f"≈{plan.ranks[0].to_earn:,}").bold = True
     p.add_run(f"   ·   to MR {plan.target_rank} ")
     p.add_run(f"≈{plan.needed_to_target:,}").bold = True
-    _muted(
+    muted(
         doc,
         "The estimate adds item XP, intrinsics, star chart, junctions and Steel Path nodes, and may be off by a "
         "few thousand. Your in-game Profile shows the exact bar.",
     )
     if plan.ranks:
-        _table(
+        add_table(
             doc,
             ["Rank", "Title", "Total needed", "To earn", "Test to pass"],
             [[str(r.rank), r.title, f"{r.threshold:,}", f"{r.to_earn:,}", r.test] for r in plan.ranks],
@@ -177,15 +220,15 @@ def build_mastery_docx(plan: MasteryPlan):
         need = "already there" if ph.already_there else f"≈{ph.need:,}"
         doc.add_heading(f"{ph.from_rank} → {ph.to_rank}   {ph.title}", level=2)
         head = doc.add_paragraph()
-        _label(head, f"Need {need}", MUTED)
-        _label(head, f"Test: {ph.test}", CYAN)
+        add_label(head, f"Need {need}", MUTED)
+        add_label(head, f"Test: {ph.test}", CYAN)
         if ph.already_there:
             doc.add_paragraph(
                 "Your estimate already covers this rank. Take the test as soon as the previous one unlocks."
             )
         else:
             if ph.blurb:
-                _muted(doc, ph.blurb)
+                muted(doc, ph.blurb)
             for s in ph.steps:
                 para = doc.add_paragraph(style="List Number")
                 para.add_run(s.title).bold = True
@@ -194,7 +237,7 @@ def build_mastery_docx(plan: MasteryPlan):
                 m.font.color.rgb = GOLD
                 para.add_run("\n" + ", ".join(s.items) + ".")
             if ph.planned < ph.need:
-                _muted(
+                muted(
                     doc,
                     f"The sources this plan knows about add {ph.planned:,} of the {ph.need:,} this rank needs. "
                     "Trade or event items can cover the rest.",
@@ -206,16 +249,16 @@ def build_mastery_docx(plan: MasteryPlan):
         ):
             para = doc.add_paragraph()
             para.paragraph_format.left_indent = Cm(0.4)
-            _label(para, label, color)
+            add_label(para, label, color)
             para.add_run(text)
 
     # moods
     doc.add_heading("Pick by mood", level=1)
-    _muted(doc, "Every option earns affinity or mastery.")
+    muted(doc, "Every option earns affinity or mastery.")
     for c in plan.mood_cards:
         doc.add_heading(c.name, level=3)
         tag = doc.add_paragraph()
-        _label(tag, " · ".join(c.mood_labels))
+        add_label(tag, " · ".join(c.mood_labels))
         for label, text in (
             ("Where", c.where),
             ("Levels", c.levels),
@@ -224,17 +267,17 @@ def build_mastery_docx(plan: MasteryPlan):
         ):
             para = doc.add_paragraph()
             para.paragraph_format.left_indent = Cm(0.4)
-            _label(para, label, MUTED)
+            add_label(para, label, MUTED)
             para.add_run(text)
 
     # budget
     doc.add_heading(f"Where {plan.needed_to_target:,} mastery comes from", level=1)
-    _muted(
+    muted(
         doc,
         f"You need about {plan.needed_to_target:,}. Everything except trading adds up to about "
         f"{plan.budget_without_trade:,}.",
     )
-    _table(
+    add_table(
         doc,
         ["Source", "Items", "Mastery"],
         [[b.label + (" (trade)" if b.trade else ""), str(b.count), f"{b.mastery:,}"] for b in plan.budget],
@@ -245,19 +288,19 @@ def build_mastery_docx(plan: MasteryPlan):
     # tests
     if plan.tests:
         doc.add_heading("The tests", level=1)
-        _muted(doc, " ".join(plan.test_rules))
+        muted(doc, " ".join(plan.test_rules))
         for t in plan.tests:
             doc.add_heading(f"MR {t.rank} · {t.title}: {t.name}", level=2)
             doc.add_paragraph(t.objective)
             for tip in t.tips:
                 doc.add_paragraph(tip, style="List Bullet")
             para = doc.add_paragraph()
-            _label(para, "Bring")
+            add_label(para, "Bring")
             para.add_run(t.bring)
 
     # footer
     doc.add_heading("Sources and notes", level=1)
-    _muted(
+    muted(
         doc,
         f"Built by OpenWarframe on {plan.generated_at:%d %b %Y} from the snapshot taken "
         f"{plan.snapshot_taken_at:%d %b %Y %H:%M} UTC.",
@@ -265,9 +308,9 @@ def build_mastery_docx(plan: MasteryPlan):
     for s in plan.sources:
         doc.add_paragraph(f"{s['title']}: {s['url']}", style="List Bullet")
     parts = ", ".join(f"{k.replace('_', ' ')} {v:,}" for k, v in plan.estimate_parts.items())
-    _muted(doc, f"Estimate: {parts}. Total ≈{plan.estimate:,}.")
+    muted(doc, f"Estimate: {parts}. Total ≈{plan.estimate:,}.")
     for n_ in plan.notes:
-        _muted(doc, n_)
+        muted(doc, n_)
     return doc
 
 

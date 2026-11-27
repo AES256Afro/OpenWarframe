@@ -14,6 +14,7 @@ import hashlib
 import json
 import logging
 import re
+import threading
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -27,6 +28,51 @@ log = logging.getLogger(__name__)
 
 DEFAULT_MAX_AGE = 3600.0
 _MAX_AGE_RE = re.compile(r"max-age=(\d+)")
+PRUNE_AFTER_DAYS = 60  # cache entries not fetched or re-validated for this long are deleted
+_pruned: set[str] = set()  # cache folders already pruned by this process
+_prune_lock = threading.Lock()
+
+
+def prune_cache(cache_dir: Path, *, max_age_days: float = PRUNE_AFTER_DAYS, now: float | None = None) -> int:
+    """Delete cache entries untouched for ``max_age_days``; returns how many were removed.
+
+    An entry's metadata file is rewritten each time it is fetched or re-validated, so its
+    modified time says when it was last used. Bodies left without metadata (a crash
+    between the two writes) go once they are as old. Errors are ignored: this is tidying.
+    """
+    cutoff = (now if now is not None else time.time()) - max_age_days * 86400
+    removed = 0
+    try:
+        entries = list(cache_dir.iterdir())
+    except OSError:
+        return 0
+    for p in entries:
+        if p.suffix not in (".json", ".bin") or len(p.stem) != 64:
+            continue  # only our own sha256-named files
+        try:
+            if p.stat().st_mtime >= cutoff:
+                continue
+            if p.suffix == ".bin" and p.with_suffix(".json").exists():
+                continue  # the metadata decides for its body
+            p.unlink()
+            if p.suffix == ".json":
+                p.with_suffix(".bin").unlink(missing_ok=True)
+            removed += 1
+        except OSError:
+            continue
+    if removed:
+        log.info("removed %d old cache entries from %s", removed, cache_dir)
+    return removed
+
+
+def _prune_once(cache_dir: Path) -> None:
+    """Prune a cache folder the first time this process uses it."""
+    key = str(cache_dir)
+    with _prune_lock:
+        if key in _pruned:
+            return
+        _pruned.add(key)
+    prune_cache(cache_dir)
 
 
 @dataclass
@@ -43,6 +89,7 @@ class CachedClient:
     def __init__(self, cache_dir: Path, *, timeout: float = 60.0, retries: int = 3) -> None:
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
+        _prune_once(self.cache_dir)
         self.retries = retries
         self.last_was_network = False  # did the last get() send a request (rate limits care)
         self._client = httpx.Client(

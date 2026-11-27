@@ -21,6 +21,7 @@ from ..sources.static.market import MarketItem, fetch_market_items
 from ..sources.static.pe_plus import PlusExport, fetch_plus
 from ..sources.static.public_export import IMAGE_BASE, PublicExport, fetch_public_export
 from ..sources.static.wfcd_drops import DropData, fetch_drops
+from .display import vendor_display_name
 from .names import CURRENCY_ITEMS, NameResolver, normalize, strip_decorations, strip_store_prefix
 from .schema import SCHEMA, SCHEMA_VERSION
 
@@ -206,7 +207,7 @@ def load_items(conn: sqlite3.Connection, pe: PublicExport, resolver: NameResolve
                         rec.get("masteryReq"),
                         (IMAGE_BASE + img) if img else None,
                         rec.get("description") if isinstance(rec.get("description"), str) else None,
-                        json.dumps(rec, ensure_ascii=False),
+                        _item_json(cat, rec),
                     )
                 )
                 resolver.add_item(clean_name, uid)
@@ -279,7 +280,7 @@ def load_plus_items(
                     None,
                     (IMAGE_BASE + img) if img else None,
                     plus.text(rec.get("description"), "") or None,
-                    json.dumps(rec, ensure_ascii=False),
+                    _item_json(category, rec),
                 )
             )
             known.add(uid)
@@ -593,10 +594,33 @@ def _float(v) -> float | None:
         return None
 
 
+# non-item price keys kept with each vendor offer (read by codex.display.price_parts)
+VENDOR_PRICE_KEYS = (
+    "credits",
+    "platinum",
+    "regularPrice",
+    "premiumPrice",
+    "standing",
+    "syndicate",
+    "focusXpCost",
+)
+
+# Cosmetics are thousands of rows whose raw records nobody reads; only the keys below are
+# ever looked at in the ``data`` column (ducat values, codex visibility), so only they are kept.
+SLIM_CATEGORIES = {"Cosmetic"}
+SLIM_KEYS = ("primeSellingPrice", "excludeFromCodex")
+
+
+def _item_json(category: str, rec: dict) -> str:
+    if category in SLIM_CATEGORIES:
+        rec = {k: rec[k] for k in SLIM_KEYS if k in rec}
+    return json.dumps(rec, ensure_ascii=False)
+
+
 def load_vendors(conn: sqlite3.Connection, plus: PlusExport) -> int:
     rows = []
     for path, vendor in plus.files.get("ExportVendors", {}).items():
-        vendor_name = path.rsplit("/", 1)[-1].removesuffix("Manifest")
+        vendor_name = vendor_display_name(path)
         for it in vendor.get("items", []):
             store = it.get("storeItem")
             if not store:
@@ -605,7 +629,7 @@ def load_vendors(conn: sqlite3.Connection, plus: PlusExport) -> int:
                 {"item": strip_store_prefix(p.get("ItemType", "")), "count": p.get("ItemCount")}
                 for p in it.get("itemPrices", [])
             ]
-            extra = {k: it[k] for k in ("credits", "regularPrice", "premiumPrice", "standing") if k in it}
+            extra = {k: it[k] for k in VENDOR_PRICE_KEYS if k in it}
             rows.append(
                 (
                     path,

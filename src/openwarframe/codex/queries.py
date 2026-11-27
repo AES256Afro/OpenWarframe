@@ -7,6 +7,7 @@ import sqlite3
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .display import display_name_for, price_parts, vendor_display_name
 from .names import mission_label, normalize
 
 FARMABLE_RELICS_SQL = """SELECT item FROM node_reward WHERE item LIKE '%/Projections/%'
@@ -154,6 +155,10 @@ class Codex:
         if row:
             return f"{row[0]} Blueprint"
         return unique_name.rsplit("/", 1)[-1]
+
+    def display_name(self, unique_name: str) -> str:
+        """Like name_of, but vendors and unknown paths come out as words, never a raw path."""
+        return display_name_for(self.conn, unique_name)
 
     def _market(self, unique_name: str) -> dict | None:
         row = self.conn.execute(
@@ -325,18 +330,26 @@ class Codex:
         ):
             rot = f" - rotation {r['rotation']}" if r["rotation"] else ""
             out.append(Source("transient", r["objective"], f"{r['chance']}%{rot}", r["chance"], r["rarity"]))
+        syndicate_names: dict[str, str] | None = None
         for r in self.conn.execute(f"SELECT * FROM vendor_offer WHERE item IN ({q})", targets):
-            prices = json.loads(r["prices"] or "{}")
+            try:
+                prices = json.loads(r["prices"] or "{}")
+            except ValueError:
+                prices = {}
+            if not isinstance(prices, dict):
+                prices = {}
             parts = [
-                f"{p['count']}x {self.name_of(p['item'])}" for p in prices.get("items", []) if p.get("item")
+                f"{p['count']}x {self.name_of(p['item'])}"
+                for p in prices.get("items", [])
+                if isinstance(p, dict) and p.get("item")
             ]
-            for k in ("credits", "standing", "regularPrice", "premiumPrice"):
-                if prices.get(k):
-                    parts.append(f"{prices[k]} {k}")
+            if syndicate_names is None:
+                syndicate_names = dict(self.conn.execute("SELECT tag, name FROM syndicate"))
+            parts += price_parts(prices, syndicate_names)
             out.append(
                 Source(
                     "vendor",
-                    r["vendor_name"],
+                    vendor_display_name(r["vendor"] or r["vendor_name"]),
                     ", ".join(parts) or "price unknown",
                     None,
                     None,

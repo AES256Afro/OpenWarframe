@@ -1,5 +1,7 @@
 """The account dashboard: one self-contained HTML page, plus PDF and Word versions.
 
+The page loads nothing from other sites (fonts fall back to what is installed).
+
 Built only from the Report model, so share mode, numbers and wording match every
 other export. Same visual language as the mastery guide (Orokin gold for mastery,
 Tenno cyan for things to do next, light and dark themes, a white print theme).
@@ -14,6 +16,7 @@ from pathlib import Path
 
 from ..report.build import rank_threshold
 from ..report.model import MissingItem, Report
+from .extras import RANK_TEST_COOLDOWN, ExportExtras, rank_test_ready
 from .tables import best_sources
 
 CSS = """
@@ -155,6 +158,7 @@ class DashboardData:
     mastery_total: int
     rank_progress: float  # 0..1 within the current rank
     xp_to_next: int
+    test_ready: int | None = None  # rank whose test can be taken now
     closest: list = field(default_factory=list)
     get_next: list[MissingItem] = field(default_factory=list)
     planets: list[PlanetRow] = field(default_factory=list)
@@ -192,6 +196,7 @@ def dashboard_data(report: Report, *, closest: int = 12, get_next: int = 12) -> 
         mastery_total=total,
         rank_progress=progress,
         xp_to_next=max(0, hi - total),
+        test_ready=rank_test_ready(report),
         closest=leveling[:closest],
         get_next=_get_next(report, get_next),
         planets=[planets[p] for p in order],
@@ -211,9 +216,26 @@ def _ring(rank: int, progress: float) -> str:
     )
 
 
+def _xp_line(d: DashboardData, report: Report) -> str:
+    ms = report.mastery
+    est = "estimated " if ms.estimated_total else ""
+    head = f'Mastery XP ({est}total) <span class="num">{d.mastery_total:,}</span>'
+    if d.test_ready:
+        return f"{head} &nbsp;&middot;&nbsp; <b>Rank {d.test_ready} test ready</b>. {_e(RANK_TEST_COOLDOWN)}"
+    return (
+        f"{head} &nbsp;&middot;&nbsp; <span class='num'>{d.xp_to_next:,}</span> more to reach rank {ms.rank + 1}"
+        f" &nbsp;&middot;&nbsp; rank {ms.rank + 1} is at <span class='num'>{ms.next_rank_threshold:,}</span>"
+    )
+
+
 def render_dashboard_html(
-    report: Report, *, pdf_name: str | None = None, docx_name: str | None = None
+    report: Report,
+    *,
+    pdf_name: str | None = None,
+    docx_name: str | None = None,
+    extras: ExportExtras | None = None,
 ) -> str:
+    extras = extras or ExportExtras()
     d = dashboard_data(report)
     h, ms, ident = report.headline, report.mastery, report.identity
     out: list[str] = []
@@ -221,10 +243,6 @@ def render_dashboard_html(
     a('<!doctype html><html lang="en"><head><meta charset="utf-8">')
     a('<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">')
     a(f"<title>{_e(d.title)} - Warframe account</title>")
-    a(
-        '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700'
-        '&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">'
-    )
     a(f"<style>{CSS}</style></head><body><main class='wrap'>")
 
     # toolbar
@@ -248,6 +266,8 @@ def render_dashboard_html(
     if h.missions_completed:
         who_bits.append(f"<b>{h.missions_completed:,}</b> missions")
     who_bits.append(f"snapshot <b>{report.snapshot_taken_at:%Y-%m-%d %H:%M}</b> UTC")
+    if extras.standing_left_total is not None:
+        who_bits.append(f"<b>{extras.standing_left_total:,}</b> standing left today")
     kpis = [
         (f"{h.items_mastered}<small> / {h.items_total}</small>", "Items mastered"),
         (f"{h.items_leveling}", "Owned, below 30"),
@@ -257,7 +277,7 @@ def render_dashboard_html(
         (f"{h.syndicates_maxed}", "Syndicates maxed"),
     ]
     a('<section class="card s12"><div class="hero">')
-    a(_ring(h.mastery_rank, d.rank_progress))
+    a(_ring(h.mastery_rank, 1.0 if d.test_ready else d.rank_progress))
     a("<div>")
     a('<div class="eyebrow">OpenWarframe · account dashboard</div>')
     a(f"<h1>{_e(d.title)}</h1>")
@@ -267,12 +287,7 @@ def render_dashboard_html(
         + "".join(f'<div class="kpi"><div class="v">{v}</div><div class="k">{k}</div></div>' for v, k in kpis)
         + "</div>"
     )
-    est = "estimated " if ms.estimated_total else ""
-    a(
-        f'<p class="muted" style="margin:12px 0 0">Mastery XP ({est}total) <span class="num">{d.mastery_total:,}</span>'
-        f" &nbsp;&middot;&nbsp; <span class='num'>{d.xp_to_next:,}</span> more to reach rank {ms.rank + 1}"
-        f" &nbsp;&middot;&nbsp; rank {ms.rank + 1} is at <span class='num'>{ms.next_rank_threshold:,}</span></p>"
-    )
+    a(f'<p class="muted" style="margin:12px 0 0">{_xp_line(d, report)}</p>')
     a("</div></div></section>")
 
     # arsenal
@@ -307,14 +322,15 @@ def render_dashboard_html(
 
     # most used
     top = report.usage[:10]
-    a('<section class="card s7"><h2>Most used<span class="sub">lifetime kills</span></h2><div>')
-    peak = max((u.kills for u in top), default=1) or 1
-    for u in top:
-        a(
-            f'<div class="row"><span>{_e(u.name)}</span><div class="bar"><i class="o" style="width:{_pct(u.kills, peak)}%"></i></div>'
-            f'<span class="c">{u.kills:,}</span></div>'
-        )
-    a("</div></section>")
+    if top:
+        a('<section class="card s7"><h2>Most used<span class="sub">lifetime kills</span></h2><div>')
+        peak = max((u.kills for u in top), default=1) or 1
+        for u in top:
+            a(
+                f'<div class="row"><span>{_e(u.name)}</span><div class="bar"><i class="o" style="width:{_pct(u.kills, peak)}%"></i></div>'
+                f'<span class="c">{u.kills:,}</span></div>'
+            )
+        a("</div></section>")
 
     # get next
     a(
@@ -387,16 +403,21 @@ def render_dashboard_html(
 # -- Word ------------------------------------------------------------------------------------
 
 
-def build_dashboard_docx(report: Report):
+def build_dashboard_docx(report: Report, extras: ExportExtras | None = None):
     from docx import Document
+    from docx.enum.section import WD_ORIENT
     from docx.shared import Pt
 
-    from ..guide.word import _muted, _style_document, _table
+    from ..guide.word import add_table, muted, style_document
 
+    extras = extras or ExportExtras()
     d = dashboard_data(report, closest=20, get_next=25)
     h, ms = report.headline, report.mastery
     doc = Document()
-    _style_document(doc)
+    style_document(doc, title=f"{d.title} - Warframe account")
+    for section in doc.sections:  # tables are wide: landscape, like the PDF
+        section.orientation = WD_ORIENT.LANDSCAPE
+        section.page_width, section.page_height = section.page_height, section.page_width
     doc.add_paragraph(d.title, style="Title")
     sub = [report.identity.platform.upper()]
     if report.identity.created_at:
@@ -404,10 +425,10 @@ def build_dashboard_docx(report: Report):
     if h.play_time_hours:
         sub.append(f"{h.play_time_hours:,.0f} h played")
     sub.append(f"snapshot {report.snapshot_taken_at:%Y-%m-%d %H:%M} UTC")
-    _muted(doc, " · ".join(sub))
+    muted(doc, " · ".join(sub))
 
     doc.add_heading("At a glance", level=1)
-    _table(
+    add_table(
         doc,
         ["Measure", "Value"],
         [
@@ -416,19 +437,28 @@ def build_dashboard_docx(report: Report):
                 "Mastery XP (estimated total)" if ms.estimated_total else "Mastery XP (items + intrinsics)",
                 f"{d.mastery_total:,}",
             ],
-            [f"XP to rank {ms.rank + 1}", f"{d.xp_to_next:,}"],
+            (
+                [f"Rank {d.test_ready} test", "Ready now"]
+                if d.test_ready
+                else [f"XP to rank {ms.rank + 1}", f"{d.xp_to_next:,}"]
+            ),
             ["Items mastered", f"{h.items_mastered} / {h.items_total}"],
             ["Owned, below rank 30", str(h.items_leveling)],
             ["Never leveled", str(h.items_missing)],
             ["Star chart", f"{h.starchart_done} / {h.starchart_total}"],
             ["Steel Path", f"{h.steel_path_done} / {h.starchart_total}"],
             ["Syndicates at max rank", str(h.syndicates_maxed)],
+            *(
+                [["Standing left today", f"{extras.standing_left_total:,}"]]
+                if extras.standing_left_total is not None
+                else []
+            ),
         ],
         right={1},
     )
 
     doc.add_heading("Arsenal", level=1)
-    _table(
+    add_table(
         doc,
         ["Category", "Mastered", "Below 30", "Never leveled", "Total", "%"],
         [
@@ -446,7 +476,7 @@ def build_dashboard_docx(report: Report):
     )
 
     doc.add_heading("Closest to done", level=1)
-    _table(
+    add_table(
         doc,
         ["Item", "Category", "Rank", "Affinity to 30"],
         [[o.name, o.category, str(o.rank), f"{o.xp_to_30:,}"] for o in d.closest],
@@ -454,15 +484,15 @@ def build_dashboard_docx(report: Report):
     )
 
     doc.add_heading("Get next", level=1)
-    _muted(doc, "Never leveled, within your mastery rank, obtainable now.")
-    _table(
+    muted(doc, "Never leveled, within your mastery rank, obtainable now.")
+    add_table(
         doc,
         ["Item", "Category", "How", "Where"],
         [[m.name, m.category, m.acquisition, best_sources(m, limit=2)] for m in d.get_next],
     )
 
     doc.add_heading("Star chart", level=1)
-    _table(
+    add_table(
         doc,
         ["Planet", "Done", "Steel Path", "Nodes"],
         [[p.planet, str(p.done), str(p.steel), str(p.total)] for p in d.planets],
@@ -470,27 +500,31 @@ def build_dashboard_docx(report: Report):
     )
 
     doc.add_heading("Syndicates", level=1)
-    _table(
+    add_table(
         doc,
         ["Syndicate", "Rank", "Standing"],
         [[s.name, str(s.rank), f"{s.standing:,}"] for s in report.syndicates],
         right={1, 2},
     )
 
-    doc.add_heading("Most used", level=1)
-    _table(
-        doc,
-        ["Item", "Kills", "Headshots", "Hours equipped"],
-        [[u.name, f"{u.kills:,}", f"{u.headshots:,}", f"{u.equip_hours:,.1f}"] for u in report.usage[:15]],
-        right={1, 2, 3},
-    )
+    if report.usage:
+        doc.add_heading("Most used", level=1)
+        add_table(
+            doc,
+            ["Item", "Kills", "Headshots", "Hours equipped"],
+            [
+                [u.name, f"{u.kills:,}", f"{u.headshots:,}", f"{u.equip_hours:,.1f}"]
+                for u in report.usage[:15]
+            ],
+            right={1, 2, 3},
+        )
 
     doc.add_heading("What this report can and cannot see", level=1)
     for n in [*report.notes, ms.note]:
         p = doc.add_paragraph(n, style="List Bullet")
         for r in p.runs:
             r.font.size = Pt(10)
-    _muted(doc, "Sources: " + "; ".join(f"{s.source} {s.version}" for s in report.sources))
+    muted(doc, "Sources: " + "; ".join(f"{s.source} {s.version}" for s in report.sources))
     return doc
 
 
@@ -505,8 +539,15 @@ class DashboardFiles:
     warnings: list[str] = field(default_factory=list)
 
 
-def write_dashboard(report: Report, out_dir: Path, *, pdf: bool = True, docx: bool = True) -> DashboardFiles:
-    from ..guide.documents import find_browser, html_to_pdf
+def write_dashboard(
+    report: Report,
+    out_dir: Path,
+    *,
+    pdf: bool = True,
+    docx: bool = True,
+    extras: ExportExtras | None = None,
+) -> DashboardFiles:
+    from ..printing import try_print
 
     out_dir.mkdir(parents=True, exist_ok=True)
     html_path = out_dir / "dashboard.html"
@@ -514,26 +555,23 @@ def write_dashboard(report: Report, out_dir: Path, *, pdf: bool = True, docx: bo
     docx_path = out_dir / "dashboard.docx"
     files = DashboardFiles(html=html_path)
     if docx:
-        build_dashboard_docx(report).save(docx_path)
+        build_dashboard_docx(report, extras).save(docx_path)
         files.docx = docx_path
     # print a version without the toolbar link to itself, then write the final page
     html_path.write_text(
-        render_dashboard_html(report, docx_name=docx_path.name if docx else None), encoding="utf-8"
+        render_dashboard_html(report, docx_name=docx_path.name if docx else None, extras=extras),
+        encoding="utf-8",
     )
     if pdf:
-        browser = find_browser()
-        if not browser:
-            files.warnings.append("No Chrome or Edge found; skipped dashboard.pdf.")
-        else:
-            try:
-                files.pdf = html_to_pdf(html_path, pdf_path, browser=browser)
-            except Exception as exc:
-                files.warnings.append(f"Could not print dashboard.pdf: {exc}")
+        files.pdf, warning = try_print(html_path, pdf_path)
+        if warning:
+            files.warnings.append(warning)
     html_path.write_text(
         render_dashboard_html(
             report,
             pdf_name=files.pdf.name if files.pdf else None,
             docx_name=files.docx.name if files.docx else None,
+            extras=extras,
         ),
         encoding="utf-8",
     )

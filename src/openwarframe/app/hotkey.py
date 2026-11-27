@@ -2,7 +2,7 @@
 
 Used by the reward helper: press the key on a reward screen and the app reads it at once.
 Windows' RegisterHotKey delivers the key to us without reading or changing the game's input;
-the game simply never sees that one key combination. On other systems ``start`` says the key
+the game never sees that one key combination. On other systems ``start`` says the key
 isn't available, and the "Read the screen now" button does the same job.
 """
 

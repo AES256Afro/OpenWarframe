@@ -195,7 +195,7 @@ function renderFocus(){
     var left=sessionLeft();
     h+='<div class="muted">'+SESSION.items.length+' steps, about '+SESSION.used+' min. '+doneN+' done.'+(left!=null?(left>0?' <b>'+left+' min left.</b>':' <b>Time is up.</b>'):'')+'</div>';
     h+=SESSION.items.map(function(x,i){return '<label class="tick"><input type="checkbox" data-st="'+i+'"'+(SESSION_TICKS[i]?' checked':'')+'><span class="t">'+esc(x.what)+'<small>'+esc(x.why)+'</small></span><span class="m">'+x.m+' min</span></label>'}).join('');
-    if(SESSION.items.length && doneN===SESSION.items.length) h+='<p><b>Session complete.</b> That is a good place to stop.</p>';
+    if(SESSION.items.length && doneN===SESSION.items.length) h+='<p><b>Session done.</b></p>';
   } else h+='<p class="muted">How long do you want to play? Pick a time and you get a short list to work through.</p>';
   h+='</div>';
   // goals

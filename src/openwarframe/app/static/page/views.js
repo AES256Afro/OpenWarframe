@@ -6,9 +6,9 @@ function itemRows(){
   if(VIEW==="locked") rows=rows.filter(function(r){return r.access!=="Available"&&r.access!=="Leveled before"});
   return rows;
 }
-// one convention in this table: a blank cell is "none" (never leveled, no MR needed), "—" is unknown
+// one convention in this table: a blank cell is "none" (never leveled, no MR needed), "-" is unknown
 var blank0=function(v){ return v?esc(v):""; };
-var DASH='<span class="muted">—</span>';
+var DASH='<span class="muted">-</span>';
 var ITEM_COLS=[
   {k:"name",l:"Name",cls:"name"},{k:"category",l:"Type"},{k:"state",l:"Status",fmt:pill},
   {k:"rank",l:"Rank",cls:"num",fmt:blank0},{k:"mr",l:"MR req",cls:"num",fmt:blank0},

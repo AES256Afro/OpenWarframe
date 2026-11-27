@@ -74,7 +74,7 @@ def test_price_keys_get_labels():
         {"EntratiLabSyndicate": "Cavia"},
     )
     assert parts == [
-        "5,000–15,000 Credits",
+        "5,000-15,000 Credits",
         "120 Platinum",
         "30,000 Cavia Standing",
         "Cavia rank 5",

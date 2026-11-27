@@ -1,18 +1,18 @@
 // ---- shell ----------------------------------------------------------------------
 function counts(){
-  var c={overview:"", relics:DATA.relics.length, blueprints:DATA.meta.inventory?DATA.blueprints.length:"–", all:DATA.items.length};
+  var c={overview:"", relics:DATA.relics.length, blueprints:DATA.meta.inventory?DATA.blueprints.length:"-", all:DATA.items.length};
   c.Warframes=DATA.items.filter(function(r){return r.group==="Warframes"}).length;
   c.Weapons=DATA.items.filter(function(r){return r.group==="Weapons"}).length;
   c.Companions=DATA.items.filter(function(r){return r.group==="Companions & more"}).length;
   c.farm=((DATA.farm||{}).finish||[]).filter(function(x){return x.missing<=1}).length+' close';
   c.live=LIVE&&LIVE.fissures?(LIVE.fissures.filter(function(f){return f.useful_relics}).length+' for you'):'';
-  c.earn=DATA.meta.inventory?((DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0).toLocaleString()+' d'):'–';
+  c.earn=DATA.meta.inventory?((DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0).toLocaleString()+' d'):'-';
   c.focus=""; c.rewards=REWARD&&(REWARD.state==="watching"||REWARD.state==="reading")?"on":"";
   var inv=!!DATA.meta.inventory;
-  c.foundry=inv?(DATA.foundry||[]).filter(function(f){return f.ready}).length+' ready':'–';
-  c.resources=inv?(DATA.resources||[]).filter(function(r){return r.short}).length:'–';
-  c.sell=inv?(DATA.sell||[]).filter(function(r){return r.spare}).length:'–';
-  c.mods=inv?(DATA.mods||[]).length:'–';
+  c.foundry=inv?(DATA.foundry||[]).filter(function(f){return f.ready}).length+' ready':'-';
+  c.resources=inv?(DATA.resources||[]).filter(function(r){return r.short}).length:'-';
+  c.sell=inv?(DATA.sell||[]).filter(function(r){return r.spare}).length:'-';
+  c.mods=inv?(DATA.mods||[]).length:'-';
   c.locked=DATA.items.filter(function(r){return r.access!=="Available"&&r.access!=="Leveled before"}).length;
   return c;
 }
@@ -125,7 +125,7 @@ function renderFinish(){
   var h=nowCard()+'<div class="cards">';
   rows.slice(0,200).forEach(function(c){
     var left=c.missing===0?'<span class="pill p-owned">Ready to build</span>':'<span class="pill p-warn">'+c.missing+' of '+c.total+' missing</span>';
-    h+='<div class="fcard"><h3>'+esc(c.name)+left+'</h3><button class="btn" type="button" data-goal="'+esc(c.id)+'">'+(isGoal(c.id)?'Goal ✓ (remove)':'Make this my goal')+'</button><span class="muted">'+esc(c.category)+' · '+esc(c.access)+'</span><ul>';
+    h+='<div class="fcard"><h3>'+esc(c.name)+left+'</h3><button class="btn" type="button" data-goal="'+esc(c.id)+'">'+(isGoal(c.id)?'Remove goal':'Make this my goal')+'</button><span class="muted">'+esc(c.category)+' · '+esc(c.access)+'</span><ul>';
     c.pieces.forEach(function(p){
       var done=p.short===0;
       var have=p.have==null?'':' <span class="muted">('+p.have+'/'+p.need+')</span>';

@@ -105,7 +105,7 @@ def _wait(w):
 def test_capture_now_reads_without_the_log(tmp_path: Path, monkeypatch):
     w, seen = _watcher(tmp_path, monkeypatch, window="game")
     st = w.capture_now("hotkey")
-    assert st["message"] == "Reading the screen…"
+    assert st["message"] in ("Reading the screen…", "Read the screen you asked for.")  # it can finish first
     _wait(w)
     assert seen == [("image", "catalog", "hotkey")]
     assert w.status()["last"]["source"] == "hotkey" and "asked for" in w.status()["message"]

@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.15.0
 
 - **Builds count armor and status.** Pick Normal missions or the Steel Path (or no armor, or armor
   already stripped by your squad). Builds now count armor and how Corrosive and Heat strip it,

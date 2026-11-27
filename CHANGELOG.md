@@ -3,8 +3,10 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.11.0
 
+- **Docs and app text.** No em or en dashes anywhere (a test keeps them out); a few app strings
+  are plainer ("Remove goal", "Session done.").
 - **Reward helper: read now.** A system-wide key (Windows, default Ctrl+Alt+F9, changeable or
   off) reads the reward screen on demand, without waiting for the game log. A **Read the screen
   now** button does the same in the Reward helper view and the pop-out, on Windows and macOS.

@@ -15,6 +15,7 @@ from openpyxl import load_workbook
 
 from openwarframe.account.store import SnapshotStore
 from openwarframe.app.data import build_app_data
+from openwarframe.app.server import page_source
 from openwarframe.codex import Codex
 from openwarframe.config import Settings, load_settings, save_settings
 from openwarframe.exports.data import write_csv
@@ -155,7 +156,7 @@ def test_market_prices_must_be_numbers():
 
 
 def test_page_escapes_wallet_and_prices():
-    page = (Path(__file__).parents[1] / "src/openwarframe/app/static/index.html").read_text(encoding="utf-8")
+    page = page_source()
     assert "(m.inventory.credits||0).toLocaleString()" not in page
     assert "(inv.platinum||0)+' p'" not in page
     assert "+' '+p.price+'p'" not in page

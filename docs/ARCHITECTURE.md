@@ -78,7 +78,12 @@ Principles the code keeps to:
 
 `openwarframe gui` (or `OpenWarframe.exe` / `OpenWarframe.app`) starts `app/server.py` on a
 free 127.0.0.1 port and opens the page in its own window, or in a Chrome/Edge app window.
-The page (`app/static/index.html`) is plain JavaScript that calls the server's JSON API:
+The page (`app/static/index.html`) is plain JavaScript that calls the server's JSON API.
+`index.html` holds the markup; its style and script are split by area into `app/static/page/`
+(`style.css`, then `core.js`, `views.js`, `filters.js`, `table.js`, `overview.js`, `shell.js`,
+`rewards.js`, `focus.js`, `render.js`, `events.js`). The server fills each `//@include` line in
+when it serves the page (`server.page_source()`), so the browser still gets one page with one
+script scope, and tests read the same assembled page.
 
 | Endpoint | Purpose |
 | --- | --- |

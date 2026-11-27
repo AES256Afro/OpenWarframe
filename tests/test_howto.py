@@ -12,13 +12,11 @@ from pathlib import Path
 
 import pytest
 
-from openwarframe.app.server import AppState, make_handler
+from openwarframe.app.server import AppState, make_handler, page_source
 from openwarframe.codex import Codex
 from openwarframe.codex.howto import _special_notes, how_to_get
 from openwarframe.config import Settings
 from test_codex_build import CHASSIS, RELIC, RHINO, codex_path  # noqa: F401
-
-INDEX = Path(__file__).parents[1] / "src/openwarframe/app/static/index.html"
 
 
 def test_prime_frame_lists_relics_for_its_parts(codex_path: Path):  # noqa: F811
@@ -93,7 +91,7 @@ def test_howto_endpoint(server):
 
 
 def test_page_asks_for_howto_when_details_open():
-    page = INDEX.read_text(encoding="utf-8")
+    page = page_source()
     assert '"/api/howto?id="+encodeURIComponent(id)' in page
     assert "function howtoHtml(h)" in page
     assert "No drop sources recorded" not in page

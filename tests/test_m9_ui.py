@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from openwarframe.app.data import build_app_data
+from openwarframe.app.server import page_source
 from openwarframe.codex import Codex
 from openwarframe.codex.howto import SPECIAL_LABELS
 from openwarframe.inventory import parse_inventory
@@ -13,7 +14,7 @@ from test_app import INVENTORY
 from test_codex_build import RELIC, codex_path  # noqa: F401
 from test_guide import _report
 
-PAGE = (Path(__file__).parents[1] / "src/openwarframe/app/static/index.html").read_text(encoding="utf-8")
+PAGE = page_source()
 SCRIPT = re.search(r"<script>(.*?)</script>", PAGE, re.S).group(1)
 
 

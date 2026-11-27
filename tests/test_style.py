@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
+EM, EN = chr(0x2014), chr(0x2013)  # built, so this file has neither
 TEXT = {".md", ".py", ".js", ".css", ".html", ".toml", ".yml", ".yaml", ".iss", ".ps1", ".txt", ".spec"}
 
 
@@ -22,6 +23,6 @@ def test_no_long_dashes():
         if p.suffix not in TEXT or not p.is_file():
             continue
         for i, line in enumerate(p.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
-            if "—" in line or "–" in line:
+            if EM in line or EN in line:
                 bad.append(f"{name}:{i}")
     assert not bad, "use a hyphen or a comma instead of a long dash: " + ", ".join(bad[:20])

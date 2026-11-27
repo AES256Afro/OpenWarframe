@@ -15,8 +15,7 @@ What changed in each release, newest first. Releases are on
 - **Docs.** A legal checklist ([docs/LEGAL.md](docs/LEGAL.md)), an accessibility statement and
   checklist ([docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)) and the plan for non-English game
   clients ([docs/I18N.md](docs/I18N.md)). The app footer carries the fan-project notice.
-- **Tests.** Theme colours are checked against WCAG AA contrast in both themes, and every
-  control on the page must have a name.
+- **Tests.** Every button and field on the page must have a name a screen reader can read.
 
 ## 0.8.1
 

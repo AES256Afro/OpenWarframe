@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from pathlib import Path
@@ -52,7 +53,7 @@ def _main(
 def version() -> None:
     """Print the version and data directory."""
     s = load_settings()
-    console.print(f"openwarframe {__version__}  -  data in {s.home}")
+    console.print(f"openwarframe {__version__} · data in {s.home}")
 
 
 @app.command()
@@ -128,6 +129,33 @@ def selfcheck() -> None:
     console.print("bundled files: ok")
 
 
+def _names_translator(s, codex, lang: str | None):
+    """Item names for exports: --names, else the app's Item names setting; downloads once."""
+    from .codex.languages import LANGUAGES, load_names
+    from .codex.translate import Translator
+    from .http import CachedClient
+
+    if lang is None:
+        try:
+            prefs = json.loads((s.home / "app-prefs.json").read_text(encoding="utf-8"))
+            lang = str(prefs.get("settings", {}).get("names_lang") or "en")
+        except (OSError, ValueError, AttributeError):
+            lang = "en"
+    if lang not in LANGUAGES:
+        raise typer.BadParameter(f"unknown language {lang!r}; choose from {', '.join(LANGUAGES)}")
+    if lang == "en":
+        return None
+    client = CachedClient(s.cache_dir)
+    try:
+        table = load_names(s.home, lang, client)
+    finally:
+        client.close()
+    if not table:
+        console.print(f"Could not get {LANGUAGES[lang][0]} item names; exporting in English.", style="yellow")
+        return None
+    return Translator.from_codex(codex.conn, lang, dict(table))
+
+
 def _export_folder(s, snap, share: bool) -> Path:
     from .exports.extras import export_folder
 
@@ -187,6 +215,12 @@ def export(
     remember: bool = typer.Option(
         False, "--remember", help="Save --budget, --pdf/--no-pdf and --copy-to as your defaults."
     ),
+    names: str | None = typer.Option(
+        None,
+        "--names",
+        help="Item names in this language: en, de, es, fr, it, ja, ko, pl, pt, ru, th, tr, uk, zh, tc "
+        "(default: the app's Item names setting, else English).",
+    ),
 ) -> None:
     """Export a snapshot to JSON, SQLite, CSV, Excel, an LLM brief, a dashboard and the mastery guide."""
     from .account.store import SnapshotStore
@@ -229,6 +263,7 @@ def export(
         parsed = reparse(snap, codex)
         report = build_report(parsed, codex, anonymize=share, inventory=_saved_inventory(s))
         extras = _export_extras(s, store, snapshot, parsed, codex)
+        tr = _names_translator(s, codex, names)
     target = out or _export_folder(s, snap, share)
     with console.status("Writing exports..."):
         results = run_exports(
@@ -240,6 +275,7 @@ def export(
             copy_to=targets,
             share=share,
             extras=extras,
+            translator=tr,
         )
     t = Table(title=f"exports -> {_e(str(target))}", show_edge=False)
     t.add_column("format")
@@ -525,7 +561,7 @@ def guide_mastery(
     if show_plan:
         _print_plan(plan)
     console.print(
-        f"[bold]MR {plan.rank}[/bold]  estimated mastery ~{plan.estimate:,}  -  "
+        f"[bold]MR {plan.rank}[/bold]  estimated mastery ~{plan.estimate:,} · "
         f"~{plan.needed_to_target:,} to MR {plan.target_rank}, in {len(plan.phases)} steps"
     )
     if plan.tonight:
@@ -871,7 +907,7 @@ def codex_item(query: str) -> None:
             console.print(f"warframe.market slug: {it['market']['slug']}")
     for r in cx.recipes_for(uid):
         console.print(
-            f"\n[bold]Recipe[/bold] {r['unique_name']}  -  {r['build_price']:,} credits - "
+            f"\n[bold]Recipe[/bold] {r['unique_name']} · {r['build_price']:,} credits - "
             f"{(r['build_time_s'] or 0) // 3600} h - rush {r['rush_price']} p - makes {r['num']}"
         )
         for ing in cx.ingredients(r["unique_name"]):

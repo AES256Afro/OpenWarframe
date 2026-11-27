@@ -82,3 +82,10 @@ K-Drive deck, MOA and Hound model. PvP variant parts are ignored.
   Paracesis and Necramechs; the profile keeps counting affinity past the cap.
 - Relic farmability means the relic appears in the current drop tables. It updates
   when you run `openwarframe codex update`.
+
+## Item names in another language
+
+`openwarframe export --names de` (or the app's Settings > Item names) writes item, part and relic
+names in that language in every format. Column names, categories and the rest of the text stay
+English. See [I18N.md](I18N.md).
+

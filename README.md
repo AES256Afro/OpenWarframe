@@ -61,6 +61,14 @@ running game is Windows only; on a Mac use **Load inventory file**. The reward h
 text recognition and asks for Screen Recording permission. Details in
 [docs/INSTALL.md](docs/INSTALL.md#installing-openwarframe-on-macos).
 
+### Linux
+
+There is no Linux build yet, but the app runs from source (see
+[Building from source](#building-from-source)) with `uv run openwarframe gui`. It finds the game log
+in Steam's Proton prefix (any Steam library, including Flatpak Steam), Lutris and Wine, so Live's
+"you are here" works. Reading the inventory from the running game and the reward helper are not
+available on Linux; load an inventory file instead.
+
 ![macOS](docs/screenshots/macos.png)
 
 ![First start](docs/screenshots/first-run.png)
@@ -100,7 +108,10 @@ not finished leveling, Foundry status, spare Prime parts and your wallet.
 ### Live
 
 Current fissures, void storms, invasions and Baro Ki'Teer, matched to your relics and needs. It
-also shows which mission you are in, read from the game's log file.
+also shows which mission you are in, read from the game's log file. **This week** lists the Archon
+Hunt, the Circuit's Warframe and Incarnon picks (flagged when you own the weapon) and how much
+syndicate standing you can still earn today. **Varzia** shows the Prime Resurgence stock, with the
+Prime gear you haven't mastered and the relics holding parts you need first.
 
 ![Live fissures](docs/screenshots/live.png)
 
@@ -254,4 +265,8 @@ version tag is pushed. The icon and logo come from [docs/brand/icon.svg](docs/br
 
 MIT licensed; see [CONTRIBUTING.md](CONTRIBUTING.md). Game data keeps its own license and is
 credited in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). OpenWarframe is a fan project. It is not
-made by or affiliated with Digital Extremes.
+made by or affiliated with Digital Extremes; Warframe is a trademark of Digital Extremes Ltd.
+[docs/LEGAL.md](docs/LEGAL.md) lists what we owe to each source and library.
+[docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) says what works for keyboard, screen-reader and
+low-vision users and what doesn't yet. Only English game clients are supported for now;
+[docs/I18N.md](docs/I18N.md) is the plan for other languages.

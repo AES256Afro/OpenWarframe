@@ -3,6 +3,24 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Live: This week.** The Archon Hunt (which Archon, its three missions and the shard colour),
+  the Circuit's Warframe and Incarnon Genesis picks (flagged when you own the weapon or its Prime)
+  and how much syndicate standing you can still earn today.
+- **Live: Varzia.** Prime Resurgence stock with Aya and Regal Aya prices; Prime gear you haven't
+  mastered and relics holding parts you need come first. The Live header says how many there are.
+- **Helminth.** With an inventory that has Helminth data, Focus suggests feeding a mastered base
+  Warframe whose ability you haven't subsumed yet (never a Prime or Umbra).
+- **Circuit pick on Focus.** When this week's Steel Path Circuit offers an Incarnon Genesis for a
+  weapon you own, Focus suggests taking it.
+- **Linux.** The app finds the game log in Steam's Proton prefix (every Steam library, Flatpak
+  Steam too), Lutris and Wine, so "you are here" works. The README says what Linux supports.
+- **Docs.** A legal checklist ([docs/LEGAL.md](docs/LEGAL.md)), an accessibility statement and
+  checklist ([docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)) and the plan for non-English game
+  clients ([docs/I18N.md](docs/I18N.md)). The app footer carries the fan-project notice.
+- **Tests.** Every button and field on the page must have a name a screen reader can read.
+
 ## 0.8.1
 
 0.8.0 was tagged but never published: its Windows build failed a test. 0.8.1 is the same

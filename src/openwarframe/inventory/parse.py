@@ -64,6 +64,8 @@ class Inventory:
     endo: int | None = None
     regal_aya: int | None = None
     mods: dict[str, dict] = field(default_factory=dict)  # uniqueName -> {"unranked": n, "ranks": [lvl, ...]}
+    # Warframes fed to the Helminth (InfestedFoundry.ConsumedSuits); None = no Helminth data in the file
+    helminth_fed: list[str] | None = None
 
     def owns(self, unique_name: str) -> bool:
         return self.equipment.get(unique_name, 0) > 0
@@ -124,6 +126,13 @@ def parse_inventory(data: dict, *, source: str = "file") -> Inventory:
         except (ValueError, AttributeError, TypeError):
             lvl = 0
         inv.mods.setdefault(t, {"unranked": 0, "ranks": []})["ranks"].append(lvl)
+    foundry = data.get("InfestedFoundry")
+    if isinstance(foundry, dict):
+        inv.helminth_fed = [
+            c["s"]
+            for c in foundry.get("ConsumedSuits") or []
+            if isinstance(c, dict) and isinstance(c.get("s"), str)
+        ]
     # wallet values end up on screen: only whole numbers get through, whatever the file says
     inv.endo = _amount(data.get("FusionPoints"))
     inv.regal_aya = _amount(data.get("PrimeTokens"))

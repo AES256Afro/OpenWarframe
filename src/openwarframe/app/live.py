@@ -7,6 +7,7 @@ mastered or are short of. "You are here" comes from the game's own log.
 
 from __future__ import annotations
 
+import re
 import time
 from pathlib import Path
 
@@ -48,6 +49,196 @@ def _pretty_mission(mt: str | None) -> str:
 
 def _store_to_item(path: str) -> str:
     return path.replace("/Lotus/StoreItems/", "/Lotus/", 1)
+
+
+ARCHONS = {
+    "SORTIE_BOSS_AMAR": "Archon Amar",
+    "SORTIE_BOSS_NIRA": "Archon Nira",
+    "SORTIE_BOSS_BOREAL": "Archon Boreal",
+}
+ARCHON_SHARDS = {"Archon Amar": "crimson", "Archon Nira": "amber", "Archon Boreal": "azure"}
+# the profile's DailyAffiliation<suffix> keys: how much standing each group can still earn today
+STANDING_NAMES = {
+    "Default": "Main syndicates",
+    "Pvp": "Conclave",
+    "Library": "Cephalon Simaris",
+    "Cetus": "Ostrons",
+    "Quills": "The Quills",
+    "Solaris": "Solaris United",
+    "Ventkids": "Ventkids",
+    "Vox": "Vox Solaris",
+    "Entrati": "Entrati",
+    "Necraloid": "Necraloid",
+    "Zariman": "The Holdfasts",
+    "Kahl": "Kahl's Garrison",
+    "Cavia": "Cavia",
+    "Hex": "The Hex",
+}
+
+
+def _words(name: str) -> str:
+    """'CeramicDagger' -> 'Ceramic Dagger', 'MPVSevagothPrimeSinglePack' -> 'Sevagoth Prime Single Pack'."""
+    name = name.removeprefix("MPV")
+    return re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", name).strip()
+
+
+def _owns(item: dict | None) -> bool:
+    """Owned now (inventory) or, without an inventory, leveled at some point."""
+    if not item:
+        return False
+    if item.get("owned") is not None:
+        return bool(item["owned"])
+    return item.get("mastery") != "Never leveled"
+
+
+def build_weekly(ws: dict, data: dict, place, now_ms: int) -> list[dict]:
+    """Archon Hunt, the Circuit's weekly picks and today's standing, as rows for the Live view."""
+    by_name: dict[str, list[dict]] = {}
+    for it in data.get("items", []):
+        by_name.setdefault(it["name"].lower(), []).append(it)
+    rows: list[dict] = []
+
+    for a in ws.get("LiteSorties") or []:
+        exp = _ms(a.get("Expiry"))
+        if exp and exp < now_ms:
+            continue
+        boss = ARCHONS.get(
+            a.get("Boss", ""), _words(str(a.get("Boss", "")).removeprefix("SORTIE_BOSS_").title())
+        )
+        missions = [
+            f"{_pretty_mission(m.get('missionType'))} on {place(m.get('node', ''))['where']}"
+            for m in a.get("Missions") or []
+        ]
+        shard = ARCHON_SHARDS.get(boss)
+        rows.append(
+            {
+                "id": "archon",
+                "kind": "Archon Hunt",
+                "what": boss,
+                "detail": " → ".join(missions),
+                "for_you": True,
+                "note": f"An {shard} Archon Shard once a week" if shard else "An Archon Shard once a week",
+                "hours_left": round((exp - now_ms) / 3_600_000, 1) if exp else None,
+            }
+        )
+        break
+
+    for sched in ws.get("EndlessXpSchedule") or []:
+        exp = _ms(sched.get("Expiry"))
+        start = _ms(sched.get("Activation"))
+        if (exp and exp < now_ms) or (start and start > now_ms):
+            continue
+        for cat in sched.get("CategoryChoices") or []:
+            hard = cat.get("Category") == "EXC_HARD"
+            for raw in cat.get("Choices") or []:
+                name = _words(raw)
+                if hard:
+                    # an Incarnon Genesis adapter fits the base weapon and its Prime/variants
+                    family = [
+                        it
+                        for key, its in by_name.items()
+                        if key in (name.lower(), name.lower() + " prime") or key.endswith(" " + name.lower())
+                        for it in its
+                    ]
+                    own = [it["name"] for it in family if _owns(it)]
+                    note = (
+                        f"You have {', '.join(sorted(own)[:3])}: worth taking the adapter"
+                        if own
+                        else "You don't own this weapon yet"
+                    )
+                    rows.append(
+                        {
+                            "id": f"circuit-sp|{raw}",
+                            "kind": "Circuit, Steel Path",
+                            "what": f"{name} Incarnon Genesis",
+                            "detail": "Duviri Circuit (Steel Path) reward this week",
+                            "for_you": bool(own),
+                            "note": note,
+                            "hours_left": round((exp - now_ms) / 3_600_000, 1) if exp else None,
+                        }
+                    )
+                else:
+                    frame = (by_name.get(name.lower()) or [None])[0]
+                    need = bool(frame and frame.get("mastery") != "Mastered")
+                    rows.append(
+                        {
+                            "id": f"circuit|{raw}",
+                            "kind": "Circuit",
+                            "what": name,
+                            "detail": "Duviri Circuit (normal) Warframe parts this week",
+                            "for_you": need,
+                            "note": "Not mastered yet" if need else "Already mastered",
+                            "hours_left": round((exp - now_ms) / 3_600_000, 1) if exp else None,
+                        }
+                    )
+        break
+
+    standing = (data.get("meta") or {}).get("standing_left", {})
+    for key, left in sorted(
+        standing.items(), key=lambda kv: (kv[0] != "Default", STANDING_NAMES.get(kv[0], kv[0]))
+    ):
+        if left is None:
+            continue
+        rows.append(
+            {
+                "id": f"standing|{key}",
+                "kind": "Standing today",
+                "what": STANDING_NAMES.get(key, _words(key)),
+                "detail": f"{left:,} standing left today (at your last profile refresh)",
+                "for_you": left > 0,
+                "note": "Resets at 00:00 UTC",
+                "hours_left": None,
+            }
+        )
+    return rows
+
+
+def build_varzia(ws: dict, data: dict, names: dict, now_ms: int) -> dict | None:
+    """Varzia's Prime Resurgence stock, flagged where it gives you something you need."""
+    items = {i["id"]: i for i in data.get("items", [])}
+    relics = {r["id"]: r for r in data.get("relics", [])}
+    for v in ws.get("PrimeVaultTraders") or []:
+        start, end = _ms(v.get("Activation")), _ms(v.get("Expiry"))
+        stock = []
+        for evergreen, it in [(False, x) for x in v.get("Manifest") or []] + [
+            (True, x) for x in v.get("EvergreenManifest") or []
+        ]:
+            uid = _store_to_item(it.get("ItemType", ""))
+            item, relic = items.get(uid), relics.get(uid)
+            if evergreen and not item:
+                continue  # the permanent stock is mostly cosmetics: keep only gear
+            if relic:
+                why = (
+                    f"Holds {relic['needed']} part{'s' if relic['needed'] != 1 else ''} you need"
+                    if relic.get("needed")
+                    else ""
+                )
+            elif item:
+                why = "For mastery" if item["mastery"] != "Mastered" else ""
+            else:
+                why = ""
+            stock.append(
+                {
+                    "name": relic["name"] if relic else names.get(uid) or _words(uid.rsplit("/", 1)[-1]),
+                    # relics cost Aya (earned in game); Prime gear and packs cost Regal Aya
+                    "aya": it.get("RegularPrice"),
+                    "regal_aya": it.get("PrimePrice"),
+                    "kind": "Relic"
+                    if relic or "/Projections/" in uid
+                    else "Gear"
+                    if item
+                    else "Pack or cosmetic",
+                    "for_you": bool(why),
+                    "why": why,
+                }
+            )
+        stock.sort(key=lambda s: (not s["for_you"], s["kind"] != "Gear", s["name"]))
+        return {
+            "here": bool(start and start <= now_ms and (not end or now_ms < end)),
+            "days_left": round((end - now_ms) / 86_400_000, 1) if end else None,
+            "stock": stock,
+        }
+    return None
 
 
 FACTIONS = {
@@ -277,6 +468,9 @@ def build_live(
         )
     invasions.sort(key=lambda i: not i["worth_it"])
 
+    weekly = build_weekly(ws, data, place, now_ms)
+    varzia = build_varzia(ws, data, names, now_ms)
+
     here = you_are_here(log_path)
     if here and here.get("node"):
         here["where"] = place(here["node"])["where"]
@@ -287,6 +481,8 @@ def build_live(
         "storms": storms,
         "baro": baro,
         "invasions": invasions,
+        "weekly": weekly,
+        "varzia": varzia,
         "here": here,
         "inventory": have_inv,
     }

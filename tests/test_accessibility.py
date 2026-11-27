@@ -139,3 +139,19 @@ def test_the_page_no_longer_guesses_the_platform_for_inventory_text():
     assert "With Warframe running, click Get inventory from game." not in PAGE
     assert PAGE.count("invHint(") >= 5
     assert "Rewards tab" not in MINI
+
+
+def test_every_control_has_a_name():
+    # every <button> has text or an aria-label; every <input> has a label (around it or by id)
+    for m in re.finditer(r"<button\b([^>]*)>(.*?)</button>", PAGE, re.S):
+        attrs, inner = m.groups()
+        assert "aria-label" in attrs or re.sub(r"<[^>]+>", "", inner).strip(), m.group(0)[:80]
+    for m in re.finditer(r"<input\b([^>]*)>", PAGE):
+        attrs = m.group(1)
+        if 'type="hidden"' in attrs or 'type="file"' in attrs:
+            continue
+        ident = re.search(r'id="([^"]+)"', attrs)
+        before = PAGE[max(0, m.start() - 300) : m.start()]
+        wrapped = before.rfind("<label") > before.rfind("</label>")  # <label><input> text</label>
+        labelled = wrapped or "aria-label" in attrs or (ident and f'for="{ident.group(1)}"' in PAGE)
+        assert labelled, m.group(0)[:80]

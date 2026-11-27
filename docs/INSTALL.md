@@ -1,17 +1,55 @@
 # Installing OpenWarframe on Windows
 
-There are two ways in. Both are free, need no admin rights and leave Warframe untouched.
+There are three ways in. All are free, need no admin rights and leave Warframe untouched.
 
-| | Installer script (recommended) | Standalone zip |
-| --- | --- | --- |
-| Needs | PowerShell (built into Windows) | Nothing |
-| Gets you | `openwarframe` command, desktop icon, easy updates | `OpenWarframe.exe` and `openwarframe-cli.exe` in a folder |
-| Updating | Run the same command again | Download the new zip |
-| Windows warnings | None | SmartScreen and possibly antivirus (see below) |
+| | Setup (recommended) | PowerShell script | Standalone zip |
+| --- | --- | --- | --- |
+| Download | `OpenWarframe-<version>-windows-setup.exe` | One line in PowerShell | `OpenWarframe-<version>-windows.zip` |
+| Gets you | Start menu entry, optional desktop icon, uninstaller in Settings | `openwarframe` command, desktop icon | `OpenWarframe.exe` and `openwarframe-cli.exe` in a folder |
+| Installs to | `%LOCALAPPDATA%\Programs\OpenWarframe` | uv's tool folder | Wherever you unzip it |
+| Updating | Run the newer setup; it replaces the old version | Run the same line again | Download the new zip |
+| Windows warnings | SmartScreen once, possibly antivirus (see below) | None | SmartScreen once, possibly antivirus |
 
-## Option 1: installer script (recommended)
+Pick one. Using two gives you two copies of the program; they share the same data folder,
+`%LOCALAPPDATA%\OpenWarframe`.
 
-Open PowerShell (Start menu, type `powershell`) and paste:
+## Option 1: Setup (recommended)
+
+1. Go to the [latest release](https://github.com/AES256Afro/OpenWarframe/releases/latest) and
+   download `OpenWarframe-<version>-windows-setup.exe` (and `SHA256SUMS.txt` if you want to
+   [check the download](#checking-the-download)).
+2. Double-click it. Because it is not code-signed yet, Windows SmartScreen may say "Windows
+   protected your PC": click **More info**, then **Run anyway**
+   ([why](#why-the-warnings-and-is-it-safe)).
+3. Click through: tick **Create a desktop shortcut** if you want one, then **Install**. There is no
+   folder to choose and no admin prompt; it installs for your Windows user only, into
+   `%LOCALAPPDATA%\Programs\OpenWarframe`.
+4. OpenWarframe is now in the Start menu. The first start downloads the game database (about a
+   minute), then a welcome screen helps you connect your account. To keep it on your taskbar,
+   right-click its taskbar button and pick **Pin to taskbar**.
+
+**Updating:** download the newer setup and run it. It closes OpenWarframe if it is running and
+replaces the old version in place; your Start menu entry, shortcuts and data stay.
+
+**Uninstalling:** **Settings > Apps > Installed apps**, find **OpenWarframe**, **Uninstall**. This
+removes the program and its shortcuts. Your data (`%LOCALAPPDATA%\OpenWarframe`: goals,
+settings, snapshots, logs) is kept, so a reinstall picks up where you left off; delete that
+folder yourself if you want it gone.
+
+**Command line:** the CLI is installed as
+`%LOCALAPPDATA%\Programs\OpenWarframe\openwarframe-cli.exe` (not on PATH). For example, in
+PowerShell: `& "$env:LOCALAPPDATA\Programs\OpenWarframe\openwarframe-cli.exe" sync`. If you live
+on the command line, option 2 gives you a plain `openwarframe` command instead.
+
+**Silent install** (for scripts): `OpenWarframe-<version>-windows-setup.exe /VERYSILENT` installs
+without questions; add `/TASKS=desktopicon` for the desktop shortcut. Uninstall silently with
+`"%LOCALAPPDATA%\Programs\OpenWarframe\unins000.exe" /VERYSILENT`.
+
+## Option 2: PowerShell script
+
+For people who like the command line. It installs from the published source, so there is no
+prebuilt `.exe` for SmartScreen or antivirus to judge. Open PowerShell (Start menu, type
+`powershell`) and paste:
 
 ```powershell
 irm https://github.com/AES256Afro/OpenWarframe/releases/latest/download/install.ps1 | iex
@@ -46,47 +84,59 @@ works, but follows `main` as it changes.
 To uninstall: `uv tool uninstall openwarframe` and delete the desktop shortcut. Your data lives in
 `%LOCALAPPDATA%\OpenWarframe`; delete that folder too if you want it gone.
 
-## Option 2: standalone zip (no Python, no uv)
+## Option 3: standalone zip (no install)
+
+For a portable copy, for example on a USB stick or in a folder you choose.
 
 1. Go to the [latest release](https://github.com/AES256Afro/OpenWarframe/releases/latest) and download
-   `OpenWarframe-<version>-windows.zip` and `SHA256SUMS.txt`.
-2. **Check the download** (optional but recommended). In PowerShell, in your Downloads folder:
-
-   ```powershell
-   (Get-FileHash .\OpenWarframe-v0.3.0-windows.zip -Algorithm SHA256).Hash
-   ```
-
-   Compare the result with the line in `SHA256SUMS.txt` (case does not matter). If they differ, do
-   not run it: the file is damaged or not the one we published.
-3. Right-click the zip, **Extract All**, and open the `OpenWarframe` folder.
-4. Double-click **OpenWarframe.exe**. Because the app is not code-signed, Windows SmartScreen may say
+   `OpenWarframe-<version>-windows.zip` (and `SHA256SUMS.txt` to
+   [check the download](#checking-the-download)).
+2. Right-click the zip, **Extract All**, and open the `OpenWarframe` folder.
+3. Double-click **OpenWarframe.exe**. Because the app is not code-signed, Windows SmartScreen may say
    "Windows protected your PC". Click **More info**, then **Run anyway**. You only need to do this once.
    The first start downloads the game database (about a minute), then a welcome screen helps you
    connect your account. To keep the app on your taskbar, right-click its taskbar button and pick
    **Pin to taskbar**.
-5. For command-line use, run `openwarframe-cli.exe` from that folder in PowerShell, for example
+4. For command-line use, run `openwarframe-cli.exe` from that folder in PowerShell, for example
    `.\openwarframe-cli.exe codex update` and `.\openwarframe-cli.exe sync`. It is the same program as
-   the `openwarframe` command in option 1. (It has a different name because Windows file names
+   the `openwarframe` command in option 2. (It has a different name because Windows file names
    ignore case, so `openwarframe.exe` would clash with `OpenWarframe.exe`.)
 
 Keep the whole folder together; the `.exe` files need the `_internal` folder next to them. To make a
 desktop icon, right-click `OpenWarframe.exe`, **Send to**, **Desktop (create shortcut)**.
 
-### Why the warnings, and is it safe?
+To uninstall, delete the folder (and `%LOCALAPPDATA%\OpenWarframe` if you want your data gone).
 
-OpenWarframe is open source (MIT) and the zip is built by GitHub Actions from the tagged source, in
-public, by [.github/workflows/release.yml](../.github/workflows/release.yml). It is **not code-signed**:
-a signing certificate costs money every year, and the project does not have one. That is why:
+## Checking the download
+
+Optional but recommended for the setup and the zip. In PowerShell, in your Downloads folder
+(with the name of the file you downloaded):
+
+```powershell
+Get-FileHash .\OpenWarframe-v0.7.0-windows-setup.exe -Algorithm SHA256
+```
+
+Compare the hash with the matching line in `SHA256SUMS.txt` (case does not matter). If they
+differ, do not run it: the file is damaged or not the one we published.
+
+## Why the warnings, and is it safe?
+
+OpenWarframe is open source (MIT) and the setup and the zip are built by GitHub Actions from the
+tagged source, in public, by [.github/workflows/release.yml](../.github/workflows/release.yml).
+They are **not code-signed** yet: a signing certificate costs money every year, and the project
+does not have one. That is why:
 
 - **SmartScreen** warns about any unsigned download it has not seen many times before. "More info,
   Run anyway" is the expected step.
 - **Antivirus false positives** can happen. The app is built with PyInstaller, which many other
   programs (including some malware) also use, so some antivirus engines flag PyInstaller builds in
-  general. OpenWarframe also reads the running Warframe process's memory, read-only, when you click
+  general. (It ships as a folder of files rather than one self-extracting `.exe`, which would
+  start slower and be flagged more often.) OpenWarframe also reads the running Warframe process's memory, read-only, when you click
   **Get inventory from game**, which some engines treat as suspicious. If your antivirus blocks or
   quarantines the app, you can:
-  - verify the checksum as above, then add an exception for the `OpenWarframe` folder, or
-  - use option 1 instead, which runs from the published source with no prebuilt `.exe`, or
+  - [verify the checksum](#checking-the-download), then add an exception for the OpenWarframe
+    program folder (`%LOCALAPPDATA%\Programs\OpenWarframe` for the setup), or
+  - use option 2 instead, which runs from the published source with no prebuilt `.exe`, or
   - report the false positive to your antivirus vendor (Microsoft Defender:
     <https://www.microsoft.com/wdsi/filesubmission>).
 

@@ -2,7 +2,8 @@ name: Release
 
 # On a version tag, build the standalone apps with PyInstaller and publish one GitHub
 # release with:
-#   OpenWarframe-<tag>-windows.zip, SHA256SUMS.txt
+#   OpenWarframe-<tag>-windows-setup.exe  the Windows installer (packaging/openwarframe.iss)
+#   OpenWarframe-<tag>-windows.zip, SHA256SUMS.txt (covers the installer and the zip)
 #   OpenWarframe-<tag>-macos.zip,   SHA256SUMS-macos.txt
 #   constraints.txt   exact dependency versions, used by install.ps1
 #   install.ps1       the installer as of this release (it installs the latest release)
@@ -12,9 +13,10 @@ name: Release
 # job, which runs only after both builds pass, and is published once every file is
 # attached, so a release is never public with one platform missing.
 #
-# The builds are unsigned (the Mac app is ad-hoc signed only); docs/INSTALL.md explains
-# SmartScreen, Gatekeeper and checksum checks. workflow_dispatch re-runs a tag from 0.4.1
-# on; earlier tags predate the scripts this workflow calls.
+# The builds and the installer are unsigned (the Mac app is ad-hoc signed only);
+# docs/INSTALL.md explains SmartScreen, Gatekeeper and checksum checks. workflow_dispatch
+# re-runs a tag from 0.4.1 on; earlier tags predate the scripts this workflow calls, and
+# tags from before the installer (0.6.x) get the zip only.
 
 on:
   push:
@@ -74,20 +76,40 @@ jobs:
       - name: Third-party notices
         run: uv run python packaging/third_party_notices.py dist/THIRD_PARTY_LICENSES.txt
 
+      # before the zip step, which adds LICENSE etc. to dist/OpenWarframe (the installer
+      # adds its own copies); skipped for tags that predate packaging/openwarframe.iss
+      - name: Build the installer (Windows)
+        if: runner.os == 'Windows' && hashFiles('packaging/openwarframe.iss') != ''
+        shell: pwsh
+        run: ./packaging/build_installer.ps1
+
+      - name: Installer smoke test (Windows)
+        if: runner.os == 'Windows' && hashFiles('packaging/openwarframe.iss') != ''
+        shell: pwsh
+        run: ./packaging/installer_smoke_test.ps1 "dist/OpenWarframe-$env:TAG-windows-setup.exe"
+
       - name: Zip and checksum (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           $zip = "OpenWarframe-$env:TAG-windows.zip"
+          $setup = "OpenWarframe-$env:TAG-windows-setup.exe"
           New-Item -ItemType Directory -Force out | Out-Null
+          $files = @($zip)
+          if (Test-Path packaging/openwarframe.iss) {
+            Copy-Item "dist/$setup" out/   # fails the job if the installer is missing
+            $files = @($setup, $zip)
+          }
           Copy-Item LICENSE, docs/INSTALL.md, dist/THIRD_PARTY_LICENSES.txt dist/OpenWarframe/
           Compress-Archive -Path dist/OpenWarframe -DestinationPath "out/$zip" -Force
           Push-Location out
-          $hash = (Get-FileHash $zip -Algorithm SHA256).Hash.ToLower()
-          "$hash  $zip" | Out-File SHA256SUMS.txt -Encoding ascii
+          $sums = foreach ($f in $files) {
+            "$((Get-FileHash $f -Algorithm SHA256).Hash.ToLower())  $f"
+          }
+          $sums | Out-File SHA256SUMS.txt -Encoding ascii
           Get-Content SHA256SUMS.txt
           Pop-Location
-          # installer and pinned dependency list, attached once (from this job)
+          # install script and pinned dependency list, attached once (from this job)
           Copy-Item packaging/install.ps1 out/
           uv export --locked --no-dev --no-emit-project --no-hashes --format requirements-txt -o out/constraints.txt
 

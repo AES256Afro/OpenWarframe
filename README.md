@@ -30,15 +30,18 @@ The screenshots below show a real account (MR 24, PC).
 ## Download
 
 1. Go to the [latest release](https://github.com/AES256Afro/OpenWarframe/releases/latest) and
-   download `OpenWarframe-<version>-windows.zip`.
-2. Unzip it and run `OpenWarframe.exe`. The app is not code-signed, so Windows SmartScreen asks
-   once: click **More info**, then **Run anyway**.
+   download `OpenWarframe-<version>-windows-setup.exe`.
+2. Run it. The installer is not code-signed yet, so Windows SmartScreen asks once: click
+   **More info**, then **Run anyway**. It installs for your user only (no admin prompt) into
+   `%LOCALAPPDATA%\Programs\OpenWarframe`, adds OpenWarframe to the Start menu (and the desktop,
+   if you tick it) and to **Settings > Apps** for uninstalling. To update, run a newer setup.
 3. On first start the app downloads the game's item and drop data (about a minute). Then either
    click **Find my account in the game** with Warframe running, or type your account ID. The
    welcome screen explains how to find it.
 
-Or install with one line in PowerShell. This also adds a desktop icon, and running it again
-updates the app:
+Prefer no installer? The same release has `OpenWarframe-<version>-windows.zip` to unzip and run
+anywhere. Or install from source with one line in PowerShell, which gives you an `openwarframe`
+command and a desktop icon; running it again updates the app:
 
 ```powershell
 irm https://github.com/AES256Afro/OpenWarframe/releases/latest/download/install.ps1 | iex
@@ -211,8 +214,8 @@ More detail: [docs/ACCOUNT_DATA_ACCESS.md](docs/ACCOUNT_DATA_ACCESS.md).
 
 ## Command line
 
-The app covers everyday use. The zip also has `openwarframe-cli.exe` (installed as `openwarframe`
-by the PowerShell line) for exports:
+The app covers everyday use. The setup and the zip also include `openwarframe-cli.exe` (installed
+as `openwarframe` by the PowerShell line) for exports:
 
 | Command | What it does |
 | --- | --- |
@@ -243,7 +246,7 @@ uv run openwarframe gui
 uv run pytest -q
 ```
 
-Release zips (Windows and macOS) are built by [.github/workflows/release.yml](.github/workflows/release.yml) when a
+The Windows installer and the release zips (Windows and macOS) are built by [.github/workflows/release.yml](.github/workflows/release.yml) when a
 version tag is pushed. The icon and logo come from [docs/brand/icon.svg](docs/brand/icon.svg); run
 `uv run python packaging/render_brand.py` after changing it.
 

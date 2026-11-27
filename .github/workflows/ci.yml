@@ -55,10 +55,30 @@ jobs:
         run: uv run python packaging/smoke_test.py ${{ matrix.cli }}
       - name: Third-party notices
         run: uv run python packaging/third_party_notices.py dist/THIRD_PARTY_LICENSES.txt
-      - name: Check install.ps1 parses
+      - name: Check the PowerShell scripts parse
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $errors = $null
-          [System.Management.Automation.Language.Parser]::ParseFile("$PWD/packaging/install.ps1", [ref]$null, [ref]$errors) | Out-Null
-          if ($errors) { $errors | Format-List; throw "install.ps1 has syntax errors" }
+          foreach ($f in Get-ChildItem packaging -Filter *.ps1) {
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$errors) | Out-Null
+            if ($errors) { $errors | Format-List; throw "$($f.Name) has syntax errors" }
+          }
+      - name: Build the installer
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: ./packaging/build_installer.ps1
+      - name: Installer smoke test (install, upgrade, uninstall)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist -Filter 'OpenWarframe-v*-windows-setup.exe' | Select-Object -First 1
+          ./packaging/installer_smoke_test.ps1 $setup.FullName
+      # so the installer from a pull request can be tried on a real PC before release
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: runner.os == 'Windows'
+        with:
+          name: windows-setup
+          path: dist/OpenWarframe-v*-windows-setup.exe
+          if-no-files-found: error
+          retention-days: 7

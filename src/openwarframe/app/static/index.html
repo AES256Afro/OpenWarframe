@@ -388,13 +388,15 @@ function currentSpec(){
   if(VIEW==="blueprints") return {rows:DATA.blueprints, cols:BP_COLS, key:"blueprints"};
   return {rows:itemRows(), cols:ITEM_COLS, key:"items"};
 }
+var CHECKS={};  // checkbox filter key -> test, filled in by renderFilters
 function matches(r){
   if(Q){
     var hay=(r.name+" "+(r.category||"")+" "+(r.how||"")+" "+(r.sources||[]).join(" ")+" "+(r.drops||[]).map(function(d){return d.part+" "+d.for}).join(" ")+" "+(r.parts||[]).map(function(p){return p.name}).join(" ")+" "+(r.pieces||[]).map(function(p){return p.name+" "+p.sources.join(" ")}).join(" ")+" "+(r.place||"")+" "+(r.gives||[]).join(" ")+" "+(r.where||"")+" "+(r.mission||"")+" "+(r.tier||"")).toLowerCase();
     if(hay.indexOf(Q)<0) return false;
   }
   for(var k in F){ var want=F[k]; if(want==null||want===""||k==="sub") continue;
-    if(typeof want==="function"){ if(!want(r)) return false; }
+    if(want===true&&CHECKS[k]){ if(!CHECKS[k](r)) return false; }
+    else if(typeof want==="function"){ if(!want(r)) return false; }
     else if(String(r[k])!==String(want)) return false;
   }
   return true;
@@ -431,6 +433,7 @@ function renderFilters(){
     if(spec.key==="fissures"){
       h+=chipGroup("Tier","tier",["Lith","Meso","Neo","Axi","Requiem","Omnia"],countBy(spec.rows,"tier"));
       h+='<label><input type="checkbox" id="fuse"'+(F._use?" checked":"")+'> Only where my relics help</label>';
+      h+='<label><input type="checkbox" id="fsponly"'+(F._sponly?" checked":"")+'> Steel Path only</label>';
       h+='<label><input type="checkbox" id="fnosp"'+(F._nosp?" checked":"")+'> Hide Steel Path</label>';
       h+='<label><input type="checkbox" id="ffast"'+(F._fast?" checked":"")+'> Only quick missions</label>';
     }
@@ -480,7 +483,12 @@ function renderFilters(){
   }
   el.innerHTML=h;
   el.querySelectorAll(".chip").forEach(function(b){ b.onclick=function(){ F[b.dataset.f]=b.dataset.v||null; renderAll(); }; });
-  var bind=function(id,key,fn){ var x=$(id); if(x) x.onchange=function(){ F[key]=x.type==="checkbox"?(x.checked?fn:null):(x.value||null); renderAll(); }; };
+  // checkbox filters store `true` (a function would be lost when the view is saved and
+  // restored); the test itself is looked up in CHECKS
+  var bind=function(id,key,fn,clears){ if(fn) CHECKS[key]=fn; var x=$(id); if(x) x.onchange=function(){
+    F[key]=x.type==="checkbox"?(x.checked?true:null):(x.value||null);
+    if(x.checked&&clears) F[clears]=null;  // "Steel Path only" and "Hide Steel Path" exclude each other
+    renderAll(); }; };
   bind("fcat","category"); bind("facc","access");
   bind("fneed","_need",function(r){return r.needed>0});
   bind("ffarm","_farm",function(r){return !r.vaulted});
@@ -493,7 +501,8 @@ function renderFilters(){
   bind("fone","_one",function(r){return r.missing<=1});
   bind("fdo","_do",function(r){return r.doable!==false});
   bind("fuse","_use",function(r){return r.useful_relics>0});
-  bind("fnosp","_nosp",function(r){return !r.steel_path});
+  bind("fsponly","_sponly",function(r){return r.steel_path},"_nosp");
+  bind("fnosp","_nosp",function(r){return !r.steel_path},"_sponly");
   bind("ffast","_fast",function(r){return r.fast});
   bind("fworth","_worth",function(r){return r.worth_it});
   var lr=$("liverefresh"); if(lr) lr.onclick=function(){ toast("Refreshing the world state…"); loadLive(true); };
@@ -851,7 +860,12 @@ function hiddenRoutine(id){ return ((PREFS.settings||{}).hide||[]).indexOf(id)>=
 // which quests are done, so until Steel Path is open they wait in "Unlocks later" instead
 // of nagging a new player every day.
 // Steel Path missions only make sense once the star chart is done (the Steel Path is open).
-function spOk(f){ return !f.steel_path || !!(DATA&&DATA.meta.steel_path_unlocked); }
+function spOk(f){
+  if(steelPathOnly()) return !!f.steel_path;  // the player only runs Steel Path
+  return !f.steel_path || !!(DATA&&DATA.meta.steel_path_unlocked);
+}
+// "Steel Path only" on Live also steers the Right now pick and the fissure suggestions
+function steelPathOnly(){ var lf=VIEW==="live"?F:((PREFS.views||{}).live||{}).F; return !!(lf&&lf._sponly===true); }
 function lockedRoutine(x){ return !!x.needs && !(DATA&&DATA.meta.steel_path_unlocked); }
 function savePrefs(){
   // keep only this and last period's ticks

@@ -190,3 +190,10 @@ def test_snapshot_mtime_is_not_used_for_profile_age(tmp_path: Path):
     f = next(s.snapshots_dir.glob("*.json"))
     os.utime(f, (time.time(), time.time()))  # touched today, taken two days ago
     assert AppState(s).profile_age_hours() > 48
+
+
+def test_steel_path_only_filter_is_remembered_and_steers_the_picks():
+    # checkbox filters are saved as `true` (functions were lost on restart), with the test in CHECKS
+    assert 'bind("fsponly","_sponly",function(r){return r.steel_path},"_nosp");' in PAGE
+    assert "if(want===true&&CHECKS[k])" in PAGE
+    assert "if(steelPathOnly()) return !!f.steel_path;" in PAGE  # Right now pick and suggestions

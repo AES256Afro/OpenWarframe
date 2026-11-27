@@ -84,6 +84,8 @@ td.name{font-weight:600}
 tr.detail td{background:var(--panel); cursor:default}
 .drops{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:6px 18px; font-size:13px}
 .drops .need{color:var(--ok); font-weight:600}
+.howto-h{margin:12px 0 6px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted)}
+.howto-part{margin:10px 0 4px}
 .drops .done{color:var(--muted); text-decoration:line-through}
 .empty{padding:40px 18px; color:var(--muted); text-align:center}
 .setup{padding:24px 18px; max-width:760px; display:grid; gap:14px}
@@ -577,10 +579,53 @@ function detailHtml(spec, r){
   if(spec.key==="missions") return '<div class="drops">'+r.gives.map(function(g){return '<div>'+esc(g)+'</div>'}).join('')+'</div>'+(r.popular_why?'<p class="muted">Popular farm: '+esc(r.popular_why)+'</p>':'');
   if(spec.key==="resources") return '<span class="muted">Needed by: '+esc((r.used_by||[]).join(", "))+'</span>';
   if(spec.key!=="items") return '<span class="muted">'+(r.slug?tradeName(r.slug):'Not tradeable')+'</span>';
-  var s=(r.sources||[]);
   var goal=r.mastery==="Mastered"?'':'<p><button class="btn" type="button" data-goal="'+esc(r.id)+'">'+(isGoal(r.id)?'Goal ✓ (remove)':'Add to goals')+'</button></p>';
-  if(r.mastery!=="Never leveled") return '<span class="muted">You leveled this before.'+(r.slug?' '+tradeName(r.slug):'')+'</span>'+goal;
-  return (s.length?'<div class="drops">'+s.map(function(x){return '<div>'+esc(x)+'</div>'}).join("")+'</div>'+(r.slug?'<p class="muted">'+tradeName(r.slug)+'</p>':""):'<span class="muted">No drop sources recorded. Check the Market, your clan Dojo or quests.</span>')+goal;
+  var lead=r.mastery!=="Never leveled"?'<p class="muted">You leveled this before. Here is how to get it again.</p>':'';
+  return lead+'<div class="howto" data-howto="'+esc(r.id)+'">'+(HOWTO[r.id]?howtoHtml(HOWTO[r.id]):'<span class="muted">Looking up how to get this…</span>')+'</div>'+goal;
+}
+// ---- how to get an item: asked when its details open, then kept for the session ----
+var HOWTO={}, HOWTO_ASKED={};
+function loadHowto(id){
+  if(HOWTO[id]||HOWTO_ASKED[id]) return; HOWTO_ASKED[id]=true;
+  api("/api/howto?id="+encodeURIComponent(id)).then(function(h){ HOWTO[id]=h; fillHowto(id); })
+    .catch(function(){ delete HOWTO_ASKED[id]; fillHowto(id, {error:"Could not look that up. Is OpenWarframe still running?"}); });
+}
+function fillHowto(id, h){
+  [].forEach.call(document.querySelectorAll(".howto"), function(el){ if(el.getAttribute("data-howto")===id) el.innerHTML=howtoHtml(h||HOWTO[id]); });
+}
+function howtoSource(x){
+  if(x.kind==="relic"){
+    return '<div class="'+(x.vaulted?"":"need")+'">'+esc(x.where)+' relic <span class="muted">· '+esc(x.rarity)+' · '+esc(x.intact)+'% intact → '+esc(x.radiant)+'% radiant</span>'
+      +(x.vaulted?' <span class="pill p-violet">vaulted</span>':' <span class="pill p-owned">farmable</span>')
+      +(x.owned?' <span class="pill p-owned">you have '+esc(x.owned)+'</span>':'')+'</div>';
+  }
+  var label={node:"Mission",bounty:"Bounty",transient:"Reward",enemy:"Enemy",vendor:"Vendor",syndicate:"Syndicate"}[x.kind]||"";
+  return '<div>'+(label?'<span class="muted">'+label+':</span> ':'')+esc(x.where)+' <span class="muted">· '+esc(x.detail)+'</span></div>';
+}
+function howtoList(list, more){
+  return '<div class="drops">'+list.map(howtoSource).join("")+(more?'<div class="muted">and '+esc(more)+' more</div>':'')+'</div>';
+}
+function howtoHtml(h){
+  if(!h) return '';
+  if(h.error) return '<span class="muted">'+esc(h.error)+'</span>';
+  var out='';
+  (h.notes||[]).forEach(function(n){ out+='<p>'+esc(n)+'</p>'; });
+  if((h.sources||[]).length) out+='<h4 class="howto-h">Get it or its blueprint from</h4>'+howtoList(h.sources, h.more);
+  var parts=(h.parts||[]).filter(function(p){return p.component});
+  var res=(h.parts||[]).filter(function(p){return !p.component});
+  if(parts.length){
+    out+='<h4 class="howto-h">Parts</h4>';
+    parts.forEach(function(p){
+      out+='<p class="howto-part"><b>'+esc(p.name)+(p.count>1?' ×'+esc(p.count):'')+'</b></p>'
+        +(p.sources.length?howtoList(p.sources, p.more):'<p class="muted">Not in any drop table: build or buy it first.</p>');
+    });
+  }
+  if(res.length) out+='<p class="muted">Also needs: '+res.map(function(p){
+    var top=p.sources[0]; return esc(p.name)+' ×'+esc(p.count)+(top?' (e.g. '+esc(top.where)+')':'');
+  }).join(", ")+'</p>';
+  if(!out) out='<span class="muted">No way to get this is recorded in the game data.</span>';
+  if(h.slug) out+='<p class="muted">Or trade for it: '+marketLink(h.slug)+'</p>';
+  return out;
 }
 function renderTable(){
   var spec=currentSpec(), rows=sorted(filtered()), s=SORT[VIEW]||{};
@@ -592,6 +637,7 @@ function renderTable(){
     var r=rows[i];
     h+='<tr data-i="'+esc(r.id)+'" tabindex="0" aria-expanded="'+(!!OPEN[r.id])+'">'+spec.cols.map(function(c){ var v=r[c.k]; return '<td class="'+(c.cls||"")+'">'+(c.fmt?c.fmt(v,r):esc(v==null?"":v))+'</td>'; }).join("")+'</tr>';
     if(OPEN[r.id]) h+='<tr class="detail"><td colspan="'+spec.cols.length+'">'+detailHtml(spec,r)+'</td></tr>';
+    if(OPEN[r.id]&&spec.key==="items") setTimeout(loadHowto.bind(null, r.id), 0);
   }
   h+='</tbody></table>';
   // a long list is cut for speed: say so, so nothing looks missing

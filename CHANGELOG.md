@@ -15,6 +15,12 @@ What changed in each release, newest first. Releases are on
 - **Getting around.** Overview cards open their view, Back and Forward move between views,
   `/` searches and `?` lists the shortcuts. "Show me" opens the item's Finish card. A narrow
   sidebar for small windows.
+- **How to get anything.** Open any item (Warframes, Weapons, All items...) to see where it
+  comes from: the relics for its blueprint and each part with Intact and Radiant chances,
+  which relics are vaulted or farmable and which you already have, missions, bounties,
+  vendors and syndicates, plus what resources it needs. Items no drop table records get a
+  plain answer: Kuva Lich, Sister of Parvos, Technocyte Coda, Clan Dojo research, or the
+  Market. This works for items you have already leveled too.
 - **Goals.** Add a goal from any item's details, reorder them, and mark them done.
 - **Exports.** Readable workbook headers, Yes/No instead of TRUE/FALSE, no red for "not yet",
   print-ready pages, A4 everywhere with page numbers in Word files, one look across the PDFs,

@@ -288,6 +288,23 @@ class AppState:
         finally:
             codex.close()
 
+    def how_to_get(self, uid: str) -> dict:
+        """Every known way to get one item, its blueprint and parts (for the item details)."""
+        from ..codex import Codex
+        from ..codex.howto import how_to_get
+        from ..inventory import load_inventory
+
+        if not uid or not self.settings.codex_path.exists():
+            return {"error": "No game data yet."}
+        owned: dict[str, int] = {}
+        if self.inventory_path.exists():
+            with contextlib.suppress(Exception):  # a damaged inventory only loses the "you have" marks
+                owned = {r: sum(c.values()) for r, c in load_inventory(self.inventory_path).relics.items()}
+        with Codex(self.settings.codex_path) as codex:
+            if codex.item(uid) is None:
+                return {"error": "That item isn't in the game data."}
+            return how_to_get(codex, uid, owned)
+
     def capabilities(self) -> dict:
         """What this computer and account can do, so the page never offers the impossible.
 
@@ -690,6 +707,17 @@ def make_handler(state: AppState):
                 self._json({"version": repr(state._fingerprint())})
             elif self.path == "/api/ping":
                 self._json({"ok": True})
+            elif urlsplit(self.path).path == "/api/howto":
+                # ?id=<uniqueName, URL-encoded> -> how to get it (sources, parts, notes)
+                if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}"):
+                    self._json({"error": "forbidden"}, 403)
+                    return
+                uid = (parse_qs(urlsplit(self.path).query).get("id") or [""])[0]
+                try:
+                    self._json(state.how_to_get(uid))
+                except Exception as exc:  # noqa: BLE001
+                    log.exception("how to get %s failed", uid)
+                    self._json({"error": f"Could not look that up: {exc}"})
             elif urlsplit(self.path).path == "/api/names":
                 # ?ids=a,b,c (each id URL-encoded) -> {id: display name}
                 if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}"):

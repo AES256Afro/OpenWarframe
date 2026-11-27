@@ -7,6 +7,7 @@ from pathlib import Path
 
 from openwarframe.app.data import build_app_data
 from openwarframe.codex import Codex
+from openwarframe.codex.howto import SPECIAL_LABELS
 from openwarframe.inventory import parse_inventory
 from test_app import INVENTORY
 from test_codex_build import RELIC, codex_path  # noqa: F401
@@ -32,8 +33,8 @@ def test_item_rows_use_one_convention_for_blank_and_unknown(codex_path: Path):  
     owned = [i for i in d["items"] if i["access"] == "Leveled before"]
     missing = [i for i in d["items"] if i["mastery"] == "Never leveled"]
     assert owned and missing
-    # owned: no "How to get" text (shown as a dash), MR from the game data or None, never 0
-    assert all(i["how"] is None for i in owned)
+    # owned: no "How to get" text (a dash) unless a Lich/Dojo rule names it, MR from the game data or None, never 0
+    assert all(i["how"] is None or i["how"] in {label for _, label in SPECIAL_LABELS} for i in owned)
     assert all(i["mr"] is None or i["mr"] > 0 for i in owned)
     # never leveled: no rank 0 in the Rank column, MR 0 is blank
     assert all(i["rank"] is None for i in missing)

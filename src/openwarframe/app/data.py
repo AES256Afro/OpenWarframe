@@ -10,6 +10,7 @@ import re
 from collections import defaultdict
 
 from ..codex import Codex
+from ..codex.howto import special_label
 from ..codex.queries import farmable_relics
 from ..inventory import Inventory
 from ..report.model import Report
@@ -100,7 +101,7 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
                 "rank": o.rank,
                 "owned": inventory.owns(o.unique_name) if have_inv else None,
                 "mr": mastery_req.get(o.unique_name) or None,  # 0 or unknown: shown blank
-                "how": None,  # you had it: the page shows "—"
+                "how": special_label(o.unique_name, o.name, o.category, graph.recipe_for(o.unique_name)),
                 "access": "Leveled before",
                 "slug": None,
             }
@@ -116,7 +117,9 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
                 "rank": None,  # never leveled: a blank cell, not a 0
                 "owned": inventory.owns(m.unique_name) if have_inv else None,
                 "mr": m.mastery_req or None,
-                "how": m.acquisition or None,
+                "how": special_label(m.unique_name, m.name, m.category, graph.recipe_for(m.unique_name))
+                or m.acquisition
+                or None,
                 "access": _access(m, syndicate_ranks),
                 "slug": m.market_slug,
                 "sources": [f"{s.where}: {s.detail}" for s in m.blueprint_sources][:4]

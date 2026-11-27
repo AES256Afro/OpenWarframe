@@ -114,6 +114,13 @@ def selfcheck() -> None:
     for name in ("index.html", "mini.html", "icon.ico"):
         if not static.joinpath(name).is_file():
             problems.append(f"missing app file: static/{name}")
+    try:  # the page is assembled from static/page/: every part must be bundled
+        from .app.server import INCLUDE_RE, page_source
+
+        if INCLUDE_RE.search(page_source()):
+            problems.append("app page: a part was not filled in")
+    except OSError as exc:
+        problems.append(f"app page: {exc}")
     if problems:
         for p in problems:
             console.print(p, markup=False, style="red")

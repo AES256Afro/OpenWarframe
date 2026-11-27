@@ -9,6 +9,7 @@ closed. Otherwise, or with OPENWARFRAME_BROWSER_WINDOW set, it opens in a Chrome
 from __future__ import annotations
 
 import contextlib
+import functools
 import gzip
 import json
 import logging
@@ -626,8 +627,28 @@ def _version_tuple(v: str) -> tuple[int, ...]:
     return tuple(int(p) for p in parts[:3]) if parts else ()
 
 
+INCLUDE_RE = re.compile(r"^(?:/\*@include (\S+)\*/|//@include (\S+))$", re.M)
+
+
+@functools.cache
+def page_source(name: str = "static/index.html") -> str:
+    """The page with its parts filled in.
+
+    ``index.html`` is a shell: its style and script live in ``static/page/`` (one file per area),
+    and each ``/*@include page/x.css*/`` or ``//@include page/x.js`` line is replaced by that
+    file. The result is one self-contained page with a single script scope, as before the split.
+    """
+    base = resources.files("openwarframe.app").joinpath(name)
+    folder = resources.files("openwarframe.app").joinpath(name.rsplit("/", 1)[0])
+
+    def part(m: re.Match) -> str:
+        return folder.joinpath(m.group(1) or m.group(2)).read_text(encoding="utf-8").removesuffix("\n")
+
+    return INCLUDE_RE.sub(part, base.read_text(encoding="utf-8"))
+
+
 def _page(name: str = "static/index.html") -> bytes:
-    return resources.files("openwarframe.app").joinpath(name).read_bytes()
+    return page_source(name).encode("utf-8")
 
 
 def make_handler(state: AppState):

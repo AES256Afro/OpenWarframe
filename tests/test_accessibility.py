@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from openwarframe.app.data import build_app_data
-from openwarframe.app.server import AppState
+from openwarframe.app.server import AppState, page_source
 from openwarframe.codex import Codex
 from openwarframe.config import Settings
 from test_app import server  # noqa: F401
@@ -18,7 +18,7 @@ from test_codex_build import codex_path  # noqa: F401
 from test_guide import _report
 
 STATIC = Path(__file__).parents[1] / "src/openwarframe/app/static"
-PAGE = (STATIC / "index.html").read_text(encoding="utf-8")
+PAGE = page_source()
 MINI = (STATIC / "mini.html").read_text(encoding="utf-8")
 
 

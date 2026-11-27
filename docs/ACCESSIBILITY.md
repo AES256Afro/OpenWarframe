@@ -30,7 +30,7 @@ today, what doesn't yet, and how we keep it from slipping.
 
 ## Checklist for changes to the page
 
-Before opening a pull request that changes `index.html` or `mini.html`:
+Before opening a pull request that changes the page (`index.html`, `static/page/`) or `mini.html`:
 
 1. Every new control is a `<button>`, `<a>` or form field (no clickable `<div>`), with visible
    text or an `aria-label`.

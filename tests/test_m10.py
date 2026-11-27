@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from openwarframe.app.live import _words, build_varzia, build_weekly
+from openwarframe.app.server import page_source
 from openwarframe.live import paths
 
 NOW = 1_795_800_000_000
@@ -136,7 +137,7 @@ def test_trust_docs_exist_and_are_linked():
     readme = (DOCS.parent / "README.md").read_text(encoding="utf-8")
     for name in ("docs/LEGAL.md", "docs/ACCESSIBILITY.md", "docs/I18N.md", "Linux"):
         assert name in readme
-    page = (DOCS.parent / "src/openwarframe/app/static/index.html").read_text(encoding="utf-8")
+    page = page_source()
     assert "not affiliated with Digital Extremes" in page
 
 
@@ -178,6 +179,20 @@ def test_helminth_candidates_are_mastered_base_frames_not_yet_fed():
 
 
 def test_focus_suggests_helminth_and_circuit_picks():
-    page = (DOCS.parent / "src/openwarframe/app/static/index.html").read_text(encoding="utf-8")
+    page = page_source()
     assert '"Feed "+hm.candidates[0]+" to the Helminth"' in page
     assert 'r.kind==="Circuit, Steel Path" && r.for_you' in page
+
+
+def test_page_is_assembled_from_its_parts():
+    from openwarframe.app.server import INCLUDE_RE, _page
+
+    static = Path(__file__).parents[1] / "src/openwarframe/app/static"
+    shell = (static / "index.html").read_text(encoding="utf-8")
+    parts = sorted(p.name for p in (static / "page").iterdir())
+    included = sorted(m.group(1) or m.group(2) for m in INCLUDE_RE.finditer(shell))
+    assert included == [f"page/{n}" for n in parts]  # every part is used, none is missing
+    page = page_source()
+    assert not INCLUDE_RE.search(page) and page.count("<script>") == 1
+    assert page.index("function api(") > page.index("function renderAllNow(")  # parts keep their order
+    assert _page() == page.encode("utf-8")

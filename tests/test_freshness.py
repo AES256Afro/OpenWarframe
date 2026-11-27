@@ -14,7 +14,7 @@ import pytest
 from openwarframe.account import SnapshotStore, parse_profile
 from openwarframe.app import server as server_mod
 from openwarframe.app.data import build_app_data
-from openwarframe.app.server import AppState, _version_tuple
+from openwarframe.app.server import AppState, _version_tuple, page_source
 from openwarframe.codex import Codex
 from openwarframe.config import Settings
 from openwarframe.inventory import parse_inventory
@@ -23,7 +23,7 @@ from test_app import INVENTORY
 from test_codex_build import codex_path  # noqa: F401
 from test_guide import _report
 
-PAGE = (Path(__file__).parents[1] / "src/openwarframe/app/static/index.html").read_text(encoding="utf-8")
+PAGE = page_source()
 
 
 def _snapshot_at(settings: Settings, hours_ago: float) -> None:

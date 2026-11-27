@@ -3,6 +3,11 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Internal.** The app page's style and script are split by area into `app/static/page/`; the
+  server stitches them back into one page, so nothing changes for players.
+
 ## 0.9.0
 
 - **Live: This week.** The Archon Hunt (which Archon, its three missions and the shard colour),

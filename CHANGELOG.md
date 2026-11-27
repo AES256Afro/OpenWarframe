@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.8.0
 
 - **Trading.** The Sell list has a Best column (Baro or market) and links each part to its
   warframe.market page. Mods and arcanes are priced unranked and relics as Intact, and the

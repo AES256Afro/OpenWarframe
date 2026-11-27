@@ -19,6 +19,11 @@ What changed in each release, newest first. Releases are on
 - **For contributors:** the version lives only in `src/openwarframe/__init__.py`; coverage is
   measured in CI; ARCHITECTURE.md describes the code as it is.
 
+## 0.6.1
+
+- **Steel Path only** on Live → Fissures: shows only Steel Path fissures, and the Right now
+  pick and fissure suggestions follow it. Tick-box filters are now remembered across restarts.
+
 ## 0.6.0
 
 - The profile is fetched again on open when it is more than a day old.

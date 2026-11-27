@@ -3,6 +3,17 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Builds count armor and status.** Pick Normal missions or the Steel Path (or no armor, or armor
+  already stripped by your squad). Builds now count armor and how Corrosive and Heat strip it,
+  Viral's extra health damage, Cold's crit bonus and the damage over time from Slash, Heat, Toxin,
+  Electricity and Gas, using the wiki's current formulas. Against armored Steel Path enemies this
+  picks Viral and Heat builds, as players do. The build shows direct and status damage per second
+  and what the enemy ends up with (armor left, Viral and Corrosive stacks).
+- **Better search:** builds can now pick two elemental mods at once (Viral needs Cold and Toxin
+  together), so combined elements are no longer missed.
+
 ## 0.14.0
 
 - **Suggested weapon builds.** Open a primary or secondary gun and click **Suggest a build**: the

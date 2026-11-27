@@ -209,7 +209,7 @@ def test_suggest_end_to_end(tmp_path: Path):
     b = search.suggest(con, "/G", target="Grineer", owned={"/M/Serration": 1, "/M/Bane": 0})
     assert {m["name"] for m in b["mods"]} == {"Serration", "Primed Bane of Grineer"}
     assert b["upgrade"]["name"] == "Split Chamber" and b["upgrade"]["gain"] == "+90%"
-    assert any("not counted" in n for n in b["notes"])
+    assert any("not counted" in n.lower() for n in b["notes"])
 
 
 def test_not_a_gun(tmp_path: Path):
@@ -237,3 +237,90 @@ def test_endpoint_and_page(tmp_path: Path, monkeypatch):
     assert "error" in state.build_for("/M/Serration", target=None, owned_only=False, stacks=True)
     page = page_source()
     assert "function buildPanel(r)" in page and '"/api/build?id="' in page
+
+
+# -- armor and status (wiki Armor, Enemy_Level_Scaling, Damage/<Type>_Damage) ---------------
+
+
+def test_armor_scaling_and_reduction():
+    from openwarframe.builds.enemy import armor_reduction, enemy_for, scale_armor
+
+    assert scale_armor(500, 8, 8) == 500
+    # q = 27: f1 = 1 + 0.005 x 27^1.75; below the 70-80 blend
+    assert scale_armor(500, 8, 35) == pytest.approx(500 * (1 + 0.005 * 27**1.75))
+    assert scale_armor(500, 8, 135) == 2700  # capped
+    assert scale_armor(10, 1, 1) == 200  # floor
+    assert armor_reduction(2700) == pytest.approx(0.9) and armor_reduction(300) == pytest.approx(0.3)
+    assert armor_reduction(0) == 0
+    assert enemy_for("Grineer", "sp").armor == 2700 and enemy_for("Corpus", "sp").armor == 0
+    assert enemy_for("Grineer", "none").armor == 0 and enemy_for("Grineer", "sp", stripped=True).stripped
+
+
+def test_armor_cuts_direct_damage_and_slash_bleeds_through():
+    from openwarframe.builds.enemy import Enemy
+
+    g = gun(damage={"slash": 100.0}, crit_chance=0.0, status_chance=0.0)
+    t = damage.add_up([], stacks=False)
+    plain = damage.evaluate(g, t, None)
+    armored = damage.evaluate(g, t, None, enemy=Enemy(None, 2700.0))
+    assert armored.direct_dps == pytest.approx(plain.sustained_dps * 0.1)  # 90% stopped
+    assert armored.status_dps == 0  # no status chance, no procs
+    # 100% status, all slash: 1 proc per shot, 10 shots/s x uptime 30/50 = 6 procs/s
+    g.status_chance = 1.0
+    r = damage.evaluate(g, t, None, enemy=Enemy(None, 2700.0))
+    # each bleed: 6 ticks x 0.35 x 100 base, no armor -> 210 per proc
+    assert r.status_dps == pytest.approx(6 * 210)
+    # stripped armor: direct hits land in full
+    assert damage.evaluate(g, t, None, enemy=Enemy(None, 2700.0, stripped=True)).direct_dps == pytest.approx(
+        plain.sustained_dps
+    )
+
+
+def test_corrosive_and_viral_stacks():
+    from openwarframe.builds.enemy import Enemy
+
+    g = gun(damage={"corrosive": 100.0}, crit_chance=0.0, status_chance=1.0)
+    r = damage.evaluate(g, damage.add_up([], stacks=False), None, enemy=Enemy(None, 1000.0))
+    # 6 procs/s x 8 s -> 10 stacks (capped): armor x 0.2
+    assert r.corrosive_stacks == 10 and r.armor == pytest.approx(200)
+    g = gun(damage={"viral": 100.0}, crit_chance=0.0, status_chance=1.0)
+    r = damage.evaluate(g, damage.add_up([], stacks=False), None, enemy=Enemy(None, 0.0))
+    plain = damage.evaluate(g, damage.add_up([], stacks=False), None)
+    assert r.viral_stacks == 10 and r.direct_dps == pytest.approx(plain.sustained_dps * 4.25)  # +325%
+
+
+def test_dot_uses_bane_twice_and_the_element_bonus():
+    from openwarframe.builds.enemy import Enemy
+
+    g = gun(damage={"impact": 100.0}, crit_chance=0.0, status_chance=1.0)
+    t = damage.add_up([eff(heat=1.0), eff(**{"bane:Grineer": 0.3})], stacks=False)
+    r = damage.evaluate(g, t, "Grineer", enemy=Enemy("Grineer", 0.0))
+    # heat is half the damage (100 of 200): 3 heat procs/s; tick = 0.5 x 100 x 1.3 x (1 + 1.0) x 1.3
+    tick = 0.5 * 100 * 1.3 * 2.0 * 1.3
+    assert r.status_dps == pytest.approx(3 * 6 * tick)
+
+
+def test_status_build_against_steel_path_grineer():
+    """A status weapon against armored Steel Path Grineer: the search finds the best build (the
+    same as trying every combination), and it is Viral plus Heat, the usual Steel Path pick."""
+    from openwarframe.builds.enemy import enemy_for
+
+    g = gun(damage={"impact": 30.0, "puncture": 30.0, "slash": 40.0}, crit_chance=0.05, status_chance=0.6)
+    pool_mods = {
+        "Serration": eff(damage=1.65), "Split Chamber": eff(multishot=0.9), "Hellfire": eff(heat=0.9),
+        "Cryo Rounds": eff(cold=0.9), "Infected Clip": eff(toxin=0.9), "Stormbringer": eff(electricity=0.9),
+        "Rifle Aptitude": eff(status_chance=0.9), "Speed Trigger": eff(fire_rate=0.6), "Vital Sense": eff(crit_damage=1.2),
+    }  # fmt: skip
+    pool = [
+        search.Pick(
+            mods.GunMod("/" + n, n, "Rifle", "PRIMARY", None, 4, 10, "RARE", [[]], exclusive=n), 10, e, None
+        )
+        for n, e in pool_mods.items()
+    ]
+    enemy = enemy_for("Grineer", "sp")
+    found = search.search(g, pool, "Grineer", False, enemy)
+    score, result, _ = search._score(g, found, "Grineer", False, enemy)
+    best = max(search._score(g, list(c), "Grineer", False, enemy)[0] for c in combinations(pool, 8))
+    assert score == pytest.approx(best)
+    assert "viral" in result.by_type and "heat" in result.by_type
+    assert result.viral_stacks > 5 and result.heat_uptime > 0.9 and result.status_dps > 0

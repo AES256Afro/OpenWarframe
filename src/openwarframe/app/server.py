@@ -409,7 +409,16 @@ class AppState:
 
         return translator(self.settings.home, conn, self.names_lang)
 
-    def build_for(self, uid: str, *, target: str | None, owned_only: bool, stacks: bool) -> dict:
+    def build_for(
+        self,
+        uid: str,
+        *,
+        target: str | None,
+        owned_only: bool,
+        stacks: bool,
+        level: str = "sp",
+        stripped: bool = False,
+    ) -> dict:
         """A suggested mod build for one gun (builds.search)."""
         from ..builds.search import suggest
         from ..builds.weapons import NotAGun
@@ -425,7 +434,9 @@ class AppState:
                 owned = {u: max(m.get("ranks") or [0]) for u, m in inv.mods.items()}
         with Codex(self.settings.codex_path) as codex:
             try:
-                b = suggest(codex.conn, uid, target=target, owned=owned, stacks=stacks)
+                b = suggest(
+                    codex.conn, uid, target=target, owned=owned, stacks=stacks, level=level, stripped=stripped
+                )
             except NotAGun as exc:
                 return {"error": str(exc)}
             tr = self._translator(codex.conn)
@@ -932,6 +943,8 @@ def make_handler(state: AppState):
                             target=(q.get("target") or ["none"])[0],
                             owned_only=(q.get("owned") or ["0"])[0] == "1",
                             stacks=(q.get("stacks") or ["1"])[0] == "1",
+                            level=(q.get("level") or ["sp"])[0],
+                            stripped=(q.get("stripped") or ["0"])[0] == "1",
                         )
                     )
                 except Exception as exc:  # noqa: BLE001 - shown in the item details

@@ -70,6 +70,8 @@ class AppState:
         self.prices: dict[str, dict] = {}  # id -> price, with "_at" (time.time()) for expiry
         self.codex_warning: str | None = None
         self.update_info: dict | None = None
+        self.release: dict | None = None  # the newest GitHub release, for the in-app update
+        self.updating = False
         from .rewards import RewardWatcher
 
         self.rewards = RewardWatcher(
@@ -387,15 +389,66 @@ class AppState:
             return {"current": __version__, "error": True}
         finally:
             client.close()
+        from .updater import install_kind, pick_asset
+
         tag = str(rel.get("tag_name") or "")
+        kind = install_kind()
         info = {
             "current": __version__,
             "latest": tag.lstrip("v"),
             "newer": _version_tuple(tag) > _version_tuple(__version__),
             "url": rel.get("html_url") or "https://github.com/AES256Afro/OpenWarframe/releases/latest",
+            "kind": kind,
+            # the app can download and install this release itself
+            "can_install": bool(pick_asset(rel, kind)),
         }
+        self.release = rel
         self.update_info = info
         return info
+
+    def install_update(self) -> dict:
+        """Download the newer release for this install, start installing it, then quit.
+
+        The installer (or the swap script) starts the new version when it is done.
+        """
+        from .updater import UpdateError, download, launch
+
+        info = self.check_for_update()
+        if not info.get("newer"):
+            return {"error": "You already have the newest version."}
+        rel = self.release
+        if not rel or not info.get("can_install"):
+            from .updater import SOURCE_HINT
+
+            return {
+                "error": SOURCE_HINT
+                if info.get("kind") == "source"
+                else "Download it from the release page.",
+                "url": info.get("url"),
+            }
+        with self.lock:
+            if self.updating:
+                return {"error": "An update is already being installed."}
+            self.updating = True
+        try:
+            file = download(rel, info["kind"], self.settings.home / "updates")
+            launch(info["kind"], file)
+        except (UpdateError, OSError) as exc:
+            self.updating = False
+            log.warning("update failed: %s", exc)
+            return {"error": str(exc), "url": info.get("url")}
+        threading.Timer(1.5, self._quit_for_update).start()
+        return {"ok": True, "latest": info["latest"]}
+
+    def _quit_for_update(self) -> None:
+        """Quit at once so the installer can replace our files (the lock file goes too)."""
+        lock = self.settings.home / "app.lock"
+        try:
+            if json.loads(lock.read_text(encoding="utf-8")).get("pid") == os.getpid():
+                lock.unlink()
+        except (OSError, ValueError):
+            pass
+        os._exit(0)
 
     def export(self, body: bytes) -> dict:
         """Write the account exports (Excel, dashboard, guide...) like `openwarframe export`."""
@@ -818,6 +871,8 @@ def make_handler(state: AppState):
                     with state.lock:
                         update_codex(state.settings)
                     self._json(state.build(force=True))
+                elif self.path == "/api/update/install":
+                    self._json(state.install_update())
                 elif self.path == "/api/export":
                     self._json(state.export(body))
                 elif self.path == "/api/open-folder":

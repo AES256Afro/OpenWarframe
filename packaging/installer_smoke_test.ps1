@@ -3,7 +3,8 @@
 #   pwsh packaging/installer_smoke_test.ps1 dist/OpenWarframe-v1.2.3-windows-setup.exe
 #
 # Installs silently, checks the files, shortcuts and uninstall entry, runs the CLI, installs
-# again over itself (the upgrade path), then uninstalls and checks that the user's data
+# again over itself (the upgrade path), runs the in-app update's silent /RELAUNCH=1 install and
+# checks the app starts again, then uninstalls and checks that the user's data
 # folder was left alone. It changes the current user's profile, so run it on a CI runner or
 # a throwaway VM, not on a machine with a real OpenWarframe install.
 
@@ -63,6 +64,19 @@ Install 'upgrade'
 Check (-not (Test-Path $stale)) 'old _internal files are cleared'
 Check (Test-Path (Join-Path $app 'OpenWarframe.exe')) 'app still installed'
 Check (-not (Test-Path (Join-Path $app 'unins001.exe'))) 'one uninstaller, not a second install'
+
+Step 'Self-update path: silent install with /RELAUNCH=1 starts the app again'
+Get-Process OpenWarframe -ErrorAction SilentlyContinue | Stop-Process -Force
+$log = Join-Path $logDir 'relaunch.log'
+$p = Start-Process -FilePath $Setup -Wait -PassThru -ArgumentList @(
+    '/SILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS', '/RELAUNCH=1', "/LOG=`"$log`"")
+Check ($p.ExitCode -eq 0) "setup /RELAUNCH=1 exited $($p.ExitCode)"
+$deadline = (Get-Date).AddSeconds(30)
+while (-not (Get-Process OpenWarframe -ErrorAction SilentlyContinue) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 1 }
+$running = Get-Process OpenWarframe -ErrorAction SilentlyContinue
+Check ($null -ne $running) 'the app was started again after the update'
+$running | Stop-Process -Force
+Start-Sleep -Seconds 2
 
 Step 'Uninstall'
 Start-Process -FilePath (Join-Path $app 'unins000.exe') -Wait -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART'

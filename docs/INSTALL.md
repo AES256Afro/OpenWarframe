@@ -107,6 +107,24 @@ desktop icon, right-click `OpenWarframe.exe`, **Send to**, **Desktop (create sho
 
 To uninstall, delete the folder (and `%LOCALAPPDATA%\OpenWarframe` if you want your data gone).
 
+## Updating
+
+From version 0.10.0, the app updates itself. When a new version is out, the sidebar shows
+**Update to x.y.z now**. Click it and OpenWarframe:
+
+1. downloads the same kind of file you installed from (the Setup .exe, the Windows zip or the
+   macOS zip) into its data folder's `updates` folder;
+2. checks it against the release's `SHA256SUMS` list and stops if it doesn't match;
+3. closes, installs it and opens the new version:
+   - **Setup:** the new setup runs on its own with a progress window. It installs per user, so
+     there is no admin prompt, and your Start menu entry stays the same.
+   - **Zip:** a small PowerShell window swaps the files in the folder you unpacked the zip to.
+   - **macOS:** the app bundle is replaced where it is (usually Applications).
+
+Your data folder (goals, settings, snapshots) is never touched. The PowerShell-script install
+(Option 2) runs from source, so it isn't updated from the app: run the install command again.
+Turn off the daily check in Settings if you'd rather not be told about new versions.
+
 ## Checking the download
 
 Optional but recommended for the setup and the zip. In PowerShell, in your Downloads folder

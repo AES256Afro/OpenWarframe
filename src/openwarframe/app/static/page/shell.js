@@ -71,9 +71,27 @@ function exportAccount(){
 }
 function checkUpdate(){
   api("/api/update").then(function(u){
-    var a=$("newversion");
-    if(u&&u.newer){ a.href=u.url; a.textContent="Version "+u.latest+" is out: see what's new"; a.hidden=false; } else a.hidden=true;
+    var a=$("newversion"), b=$("updatenow");
+    if(u&&u.newer){
+      a.href=u.url; a.hidden=false;
+      a.textContent=u.can_install?"What's new in "+u.latest:"Version "+u.latest+" is out: see what's new";
+      b.hidden=!u.can_install; b.disabled=false; b.textContent="Update to "+u.latest+" now";
+      b.onclick=function(){ installUpdate(u); };
+    } else { a.hidden=true; b.hidden=true; }
   }).catch(function(){});
+}
+// Download, check and install the new version; the app closes and the new one opens by itself.
+function installUpdate(u){
+  var b=$("updatenow"); b.disabled=true; b.textContent="Downloading "+u.latest+"…";
+  api("/api/update/install",{method:"POST"}).then(function(r){
+    if(r&&r.ok){
+      $("view").innerHTML='<div class="empty" role="status"><p><b>Installing OpenWarframe '+esc(r.latest)+'.</b></p><p>'
+        +(u.kind==="installer"?'The installer window shows its progress. ':'')+'OpenWarframe closes now and opens again by itself when the update is done.</p></div>';
+      return;
+    }
+    b.disabled=false; b.textContent="Update to "+u.latest+" now";
+    toast((r&&r.error)||"The update failed.", 9000);
+  }).catch(function(){ b.disabled=false; b.textContent="Update to "+u.latest+" now"; unreachable(); });
 }
 function renderNotice(){
   var old=document.querySelector(".notice"); if(old) old.remove();

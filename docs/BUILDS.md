@@ -124,10 +124,22 @@ this doesn't calculate kills. It balances the stats the abilities you use scale 
   reduction = armor / (armor + 300)). Survivability: not needed, some (default) or a lot.
 - **Search:** like guns, plus swaps of two mods at once, because a mod with a cost (Blind Rage,
   Overextended) often only pays off next to the mod that covers it. A slot stays empty when
-  every remaining mod would make the build worse. Builds fit 60 capacity (Orokin Reactor).
+  every remaining mod would make the build worse. Builds fit 60 capacity (Orokin Reactor)
+  plus what the aura adds.
+- **Exilus slot:** a 9th slot that only takes exilus-capable mods (`isUtility` in the game data,
+  such as the Drift mods); those can also go in the 8 general slots.
+- **Aura slot:** an aura adds capacity, double its drain in a slot of matching polarity (wiki
+  Aura, edited 2026-11-04): +14 for most auras at rank 5, +18 for Steel Charge and Power
+  Donation. The aura that helps your own stats most is picked (Physique: +20% health; Stand
+  United: +25% armor; Power Donation costs you 30% Strength); otherwise the one with the most
+  capacity. Most auras help the squad in ways this doesn't count (Corrosive Projection, Energy
+  Siphon), so any max-rank aura with a matching polarity adds the same capacity.
+- **Variants** can't be equipped together: Primed, Umbral, Archon and Amalgam versions with their
+  base mod (Umbral Fiber with Steel Fiber).
 
 The limit: the data says that an ability uses a stat, not how much it gains from it, so a
 damage ability and a buff count the same. Picking the abilities you actually cast is how to
-steer it. Not filled yet: the Aura and Exilus slots, augment mods, Archon Shards, arcanes and
-set bonuses (Umbral); conditional effects aren't counted.
+steer it. Not counted yet: augment mods, Archon Shards, arcanes and set bonuses (Umbral);
+conditional effects aren't counted. Aura health and armor bonuses are added to the mods' bonuses;
+the wiki doesn't say whether they stack that way or multiply.
 

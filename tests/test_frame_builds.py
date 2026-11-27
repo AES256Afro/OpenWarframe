@@ -165,3 +165,66 @@ def test_suggest_and_endpoint(tmp_path: Path):
         and "function fChosen(id)" in page
     )
     assert not math.isnan(b["stats"]["effective_health"])
+
+
+def aura(name, line, base=-2, max_rank=5):
+    return frames.FrameMod("/A/" + name, name, base, max_rank, [[line]] * (max_rank + 1), name, aura=True)
+
+
+def test_auras_add_capacity_and_count_own_stats():
+    phys = aura("Physique", "Squad gains +20% Maximum Health")
+    assert phys.stats() == {"health": pytest.approx(0.2)}
+    assert phys.drain() == -7 and phys.aura_capacity() == 14  # double its drain, matching polarity
+    assert aura("Stand United", "Squad receives +25% Armor").stats() == {"armor": pytest.approx(0.25)}
+    assert aura(
+        "Power Donation",
+        "You lose <LOWER_IS_BETTER>30% Ability Strength\r\nSquadmates gain 30% Ability Strength",
+        base=-4,
+    ).stats() == {"strength": pytest.approx(-0.3)}
+    assert aura("Corrosive Projection", "Enemies lose -18% Armor").stats() == {}
+    f = frame()
+    w = frames.weights_for(f, None, "some")
+    pick = frames.pick_aura(f, w, [(aura("Corrosive Projection", "Enemies lose -18% Armor"), 5), (phys, 5)])
+    assert pick[0].name == "Physique"  # helps your own health; same capacity otherwise
+    big = aura("Steel Charge", "Squad receives +60% Melee Damage", base=-4)
+    small = aura("Sprint Boost", "Squad receives +15% Sprint Speed")
+    pick = frames.pick_aura(f, w, [(small, 5), (big, 5)])
+    assert pick[0].name == "Steel Charge" and pick[0].aura_capacity(5) == 18  # no stat effect: most capacity
+
+
+def test_exilus_slot_takes_one_utility_mod():
+    gen = [(mod(f"G{i}", ["+10% Ability Strength"], drain=2), 0) for i in range(8)]
+    drift = (
+        frames.FrameMod(
+            "/F/Cunning Drift", "Cunning Drift", 2, 0, [["+15% Ability Range"]], "Cunning Drift", utility=True
+        ),
+        0,
+    )
+    extra = (mod("G9", ["+10% Ability Strength"], drain=2), 0)
+    assert frames._ok([*gen, drift])  # 8 general + 1 in the Exilus slot
+    assert not frames._ok([*gen, extra])  # a 9th general mod has no slot
+    assert frames.exilus_of([*gen, drift]) == drift
+    assert frames.frame_exclusive_key("Umbral Fiber") == frames.frame_exclusive_key("Steel Fiber")
+
+
+def test_suggest_reports_aura_and_exilus(tmp_path: Path):
+    from openwarframe.codex.schema import SCHEMA
+
+    con = sqlite3.connect(tmp_path / "c.sqlite")
+    con.executescript(SCHEMA)
+
+    def add(uid, name, lines, drain=4, kind="WARFRAME", utility=False, rank=0):
+        d = {"type": kind, "compatName": kind, "baseDrain": drain, "fusionLimit": rank,
+             "levelStats": [{"stats": lines}] * (rank + 1), "isUtility": utility}  # fmt: skip
+        con.execute(
+            "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+            (uid, name, "Mod", None, None, None, None, json.dumps(d)),
+        )
+
+    add("/M/Intensify", "Intensify", ["+30% Ability Strength"])
+    add("/M/Drift", "Cunning Drift", ["+15% Ability Range"], utility=True)
+    add("/A/Physique", "Physique", ["Squad gains +20% Maximum Health"], drain=-2, kind="AURA", rank=5)
+    b = frames.suggest_frame(con, "/Lotus/Powersuits/Saryn/SarynPrime")
+    assert b["aura"]["name"] == "Physique" and b["aura"]["capacity"] == 14 and b["capacity"] == 74
+    assert [m["name"] for m in b["mods"] if m["exilus"]] == ["Cunning Drift"]
+    assert b["stats"]["health"] == pytest.approx(365 * 1.2)

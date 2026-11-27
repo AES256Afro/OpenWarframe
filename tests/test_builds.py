@@ -324,3 +324,70 @@ def test_status_build_against_steel_path_grineer():
     assert score == pytest.approx(best)
     assert "viral" in result.by_type and "heat" in result.by_type
     assert result.viral_stacks > 5 and result.heat_uptime > 0.9 and result.status_dps > 0
+
+
+# -- shields (wiki Shield, Damage/Magnetic_Damage, Damage/Toxin_Damage, Enemy_Level_Scaling) --
+
+
+def test_health_and_shield_scaling():
+    from openwarframe.builds.enemy import enemy_for, scale_health, scale_shields
+
+    assert scale_health(700, 15, 15, "Corpus") == 700
+    # q = 20 (below the blend): 1 + 0.015 x 20^2.12 and 1 + 0.02 x 20^1.76
+    assert scale_health(700, 15, 35, "Corpus") == pytest.approx(700 * (1 + 0.015 * 20**2.12))
+    assert scale_shields(250, 15, 35, "Corpus") == pytest.approx(250 * (1 + 0.02 * 20**1.76))
+    # q = 120 (above the blend): the second curve; Steel Path x2.5
+    e = enemy_for("Corpus", "sp")
+    assert e.unit == "Corpus Tech" and e.armor == 0
+    assert e.health == pytest.approx(700 * (1 + 13.4165 * 120**0.55) * 2.5)
+    assert e.shields == pytest.approx(250 * (1 + 2 * 120**0.76) * 2.5)
+    assert enemy_for("Grineer", "sp").shields == 0 and enemy_for("Grineer", "none").health == 0
+
+
+def test_time_to_kill_phases():
+    from openwarframe.builds.damage import _time_to_kill
+
+    assert _time_to_kill(100, 0, 0, 0, 50) == 2  # no shields: health / dps
+    # 100 shields at 50/s = 2 s, toxin 10/s meanwhile: 80 health left at 40/s -> 2 s more
+    assert _time_to_kill(100, 100, 50, 10, 40) == pytest.approx(4)
+    assert _time_to_kill(100, 1000, 1, 100, 100) == pytest.approx(1)  # toxin kills before shields break
+    assert _time_to_kill(100, 100, 0, 0, 100) == float("inf")
+
+
+def test_magnetic_and_toxin_against_shields():
+    from openwarframe.builds.enemy import Enemy
+
+    g = gun(damage={"magnetic": 100.0}, crit_chance=0.0, status_chance=1.0)
+    t = damage.add_up([], stacks=False)
+    r = damage.evaluate(g, t, None, enemy=Enemy(None, 0.0, health=1000.0, shields=1000.0))
+    plain = damage.evaluate(g, t, None)
+    # 6 procs/s x 6 s -> 10 Magnetic stacks: shields take x4.25
+    assert r.magnetic_stacks == 10 and r.shield_dps == pytest.approx(plain.sustained_dps * 4.25)
+    g = gun(damage={"toxin": 100.0}, crit_chance=0.0, status_chance=0.0)
+    r = damage.evaluate(g, t, None, enemy=Enemy(None, 0.0, health=600.0, shields=10_000.0))
+    assert r.shield_dps == 0 and r.time_to_kill == pytest.approx(1.0)  # 600/s straight to health
+
+
+def test_corpus_search_is_optimal(tmp_path: Path):
+    """Against Steel Path Corpus (shields, then much more health) the search still finds the best
+    build. With one Cold mod, Viral beats Magnetic: since Update 36 shields are the smaller pool."""
+    from openwarframe.builds.enemy import enemy_for
+
+    g = gun(damage={"impact": 30.0, "puncture": 30.0, "slash": 40.0}, crit_chance=0.05, status_chance=0.6)
+    pool_mods = {
+        "Serration": eff(damage=1.65), "Split Chamber": eff(multishot=0.9), "Hellfire": eff(heat=0.9),
+        "Cryo Rounds": eff(cold=0.9), "Infected Clip": eff(toxin=0.9), "Stormbringer": eff(electricity=0.9),
+        "Rifle Aptitude": eff(status_chance=0.9), "Speed Trigger": eff(fire_rate=0.6), "Vital Sense": eff(crit_damage=1.2),
+    }  # fmt: skip
+    pool = [
+        search.Pick(
+            mods.GunMod("/" + n, n, "Rifle", "PRIMARY", None, 4, 10, "RARE", [[]], exclusive=n), 10, e, None
+        )
+        for n, e in pool_mods.items()
+    ]
+    enemy = enemy_for("Corpus", "sp")
+    found = search.search(g, pool, "Corpus", False, enemy)
+    score, result, _ = search._score(g, found, "Corpus", False, enemy)
+    best = max(search._score(g, list(c), "Corpus", False, enemy)[0] for c in combinations(pool, 8))
+    assert score == pytest.approx(best)
+    assert "viral" in result.by_type and 0 < result.time_to_kill < float("inf")

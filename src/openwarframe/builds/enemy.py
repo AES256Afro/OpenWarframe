@@ -9,8 +9,10 @@ q = level - base level:
 
 The Steel Path adds 100 levels and no armor (Update 36). The armored unit is a Heavy Gunner
 (500 armor at level 8, Module:Enemies/data/grineer, edited 2026-11-26), the usual reference
-for "how armored is this mission". Factions whose common units carry no armor (Corpus rely on
-shields, most Infested have none) are judged without armor; shields aren't modelled.
+for "how armored is this mission". Corpus are judged on a Corpus Tech (shields, no armor),
+Infested on a Toxic Ancient (no armor; its own Toxin resistance isn't applied), other factions
+on an unarmored unit with a Heavy Gunner's health. Health and shields scale with level too, and
+the Steel Path multiplies both by 2.5.
 """
 
 from __future__ import annotations
@@ -26,13 +28,36 @@ LEVELS = {"none": None, "normal": 35, "sp": 135}
 ARMORED = {"Grineer", "Kuva Grineer", "Scaldra", "Orokin", "Narmer", "Anarchs", None}
 
 
-def scale_armor(base: float, base_level: int, level: int) -> float:
-    q = max(0, level - base_level)
-    f1 = 1 + 0.005 * q**1.75
-    f2 = 1 + 0.4 * q**0.75
+def _blend(q: float, c1: float, e1: float, c2: float, e2: float) -> float:
+    """1 + c1 q^e1 below 70 levels over base, 1 + c2 q^e2 above 80, smoothly blended between."""
+    f1 = 1 + c1 * q**e1
+    f2 = 1 + c2 * q**e2
     t = min(1.0, max(0.0, (q - 70) / 10))
     s = t * t * (3 - 2 * t)
-    return min(ARMOR_CAP, max(ARMOR_FLOOR, base * (f1 + (f2 - f1) * s)))
+    return f1 + (f2 - f1) * s
+
+
+def scale_armor(base: float, base_level: int, level: int) -> float:
+    q = max(0, level - base_level)
+    return min(ARMOR_CAP, max(ARMOR_FLOOR, base * _blend(q, 0.005, 1.75, 0.4, 0.75)))
+
+
+# health and shield curves per faction (Enemy_Level_Scaling, edited 2026-07-29)
+HEALTH_CURVES = {
+    "Grineer": (0.015, 2.12, 10.7332, 0.72),
+    "Corpus": (0.015, 2.12, 13.4165, 0.55),
+    "Infested": (0.0225, 2.12, 16.0998, 0.72),
+}
+SHIELD_CURVES = {"Corpus": (0.02, 1.76, 2.0, 0.76)}
+STEEL_PATH_HEALTH = STEEL_PATH_SHIELDS = 2.5  # The_Steel_Path, edited 2026-10-14
+
+
+def scale_health(base: float, base_level: int, level: int, curve: str) -> float:
+    return base * _blend(max(0, level - base_level), *HEALTH_CURVES[curve])
+
+
+def scale_shields(base: float, base_level: int, level: int, curve: str) -> float:
+    return base * _blend(max(0, level - base_level), *SHIELD_CURVES[curve])
 
 
 def armor_reduction(armor: float) -> float:
@@ -50,10 +75,34 @@ class Enemy:
     armor: float  # before any stripping
     stripped: bool = False  # armor already removed by abilities or the squad
     level: int | None = None
+    health: float = 0.0  # 0: judge by damage per second only (no time to kill)
+    shields: float = 0.0
+    unit: str = ""
+
+
+# reference units (Module:Enemies/data/*): (name, health, shields, armor, base level, health curve)
+UNITS = {
+    "armored": ("Heavy Gunner", 300.0, 0.0, HEAVY_ARMOR, HEAVY_LEVEL, "Grineer"),  # grineer, 2026-11-26
+    "Corpus": ("Corpus Tech", 700.0, 250.0, 0.0, 15, "Corpus"),  # corpus, 2026-07-18
+    "Corpus Amalgam": ("Corpus Tech", 700.0, 250.0, 0.0, 15, "Corpus"),
+    "Infested": ("Toxic Ancient", 400.0, 0.0, 0.0, 1, "Infested"),  # infestation, 2026-09-13
+    "Infested Deimos": ("Toxic Ancient", 400.0, 0.0, 0.0, 1, "Infested"),
+    "other": ("Heavy Gunner (no armor)", 300.0, 0.0, 0.0, HEAVY_LEVEL, "Grineer"),
+}
 
 
 def enemy_for(faction: str | None, level_choice: str = "sp", stripped: bool = False) -> Enemy:
     level = LEVELS.get(level_choice, LEVELS["sp"])
-    if level is None or faction not in ARMORED:
-        return Enemy(faction, 0.0, stripped, level)
-    return Enemy(faction, scale_armor(HEAVY_ARMOR, HEAVY_LEVEL, level), stripped, level)
+    if level is None:
+        return Enemy(faction, 0.0, stripped, None)
+    key = "armored" if faction in ARMORED else faction if faction in UNITS else "other"
+    name, health, shields, armor, base_level, curve = UNITS[key]
+    sp = level_choice == "sp"
+    hp = scale_health(health, base_level, level, curve) * (STEEL_PATH_HEALTH if sp else 1)
+    sh = (
+        scale_shields(shields, base_level, level, "Corpus") * (STEEL_PATH_SHIELDS if sp else 1)
+        if shields
+        else 0.0
+    )
+    ar = scale_armor(armor, base_level, level) if armor else 0.0
+    return Enemy(faction, ar, stripped, level, hp, sh, name)

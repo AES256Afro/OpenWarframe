@@ -51,6 +51,22 @@ Builds are judged against an enemy (wiki pages read 2026-11-27; edit dates in br
 | Slash ticks ignore armor (Cinematic damage); the others are reduced by armor | Damage/Slash_Damage, Armor |
 | Each pellet rolls status; the proc type follows each damage type's share of the weapon's damage, before faction modifiers | Status_Effect (2026-11-20) |
 
+| Shields take every damage type except Toxin, which goes to health (hits and ticks); armor doesn't protect shields; faction modifiers apply to shields too | Damage/Toxin_Damage (2026-11-25), Damage/Calculation (2026-11-04), Damage (2026-10-30) |
+| Magnetic: shield damage x2 at 1 stack, +0.25 per stack, x4.25 at 10; 6 s each | Damage/Magnetic_Damage (2026-10-26) |
+| Slash bleed hits shields since Update 36 | Damage/Slash_Damage (2026-11-25) |
+| Health and shields grow with level (per-faction curves); the Steel Path multiplies both by 2.5 | Enemy_Level_Scaling (2026-07-29), The_Steel_Path (2026-10-14) |
+
+The faction-modifier-on-shields rule is read from "regardless of the presence of armor or shields"
+on the Damage page; no page says it outright. Heat, Electricity and Gas ticks are taken to hit
+shields first, since only Toxin is described as skipping them.
+
+Builds are scored by **time to kill** one reference enemy: shields first (Toxin hurts health
+meanwhile), then health. Reference units (Module:Enemies/data): a Heavy Gunner (300 health, 500
+armor, level 8) for Grineer, Scaldra, Orokin, Narmer, Anarchs and "any enemy"; a Corpus Tech (700
+health, 250 shields, level 15) for Corpus; a Toxic Ancient (400 health, level 1) for Infested; an
+unarmored unit with a Heavy Gunner's health for the rest. At the Steel Path (level 135) a Corpus
+Tech has about 328,500 health and 48,200 shields, so Viral still matters more than Magnetic there.
+
 The model is a steady state while firing: proc rate per type = multishot x status chance x fire
 rate x the share of time not reloading x that type's share; stacks = proc rate x duration,
 capped. Choices in the app:
@@ -72,7 +88,9 @@ many Forma that takes.
 
 ## Not counted yet
 
-- Shields and overguard (Corpus rely on shields: Magnetic and Toxin are worth more there).
+- Shield regeneration between bursts, the Magnetic shield-break burst, overguard, and the
+  Toxic Ancient's own Toxin resistance.
+- Stacks are taken at their steady state from the first shot; very short kills get less.
 - Heat's growing stacks in long fights (each Heat proc refreshes them all; counted per proc),
   Heat's 2-second ramp, Electricity and Gas hitting nearby enemies, Blast and Puncture effects.
 - Status-based bonuses (Galvanized Aptitude's damage per status type).

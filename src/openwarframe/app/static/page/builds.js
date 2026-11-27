@@ -22,13 +22,15 @@ function buildHtml(b){
   if(b.error) return '<p class="muted">'+esc(b.error)+'</p>';
   var s=b.stats, h='';
   h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li><b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+(m.owned===false?' · you don\'t have it':'')+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
-  h+='<div class="buildstats"><span>Damage per second <b>'+num(s.total_dps)+'</b></span><span>Direct hits <b>'+num(s.direct_dps)+'</b></span><span>Status damage over time <b>'+num(s.status_dps)+'</b></span></div>';
+  if(s.time_to_kill) h+='<div class="buildstats"><span>Time to kill <b>'+num(s.time_to_kill)+' s</b></span>'+(s.shield_dps?'<span>To shields <b>'+num(s.shield_dps)+'</b>/s</span>':'')+'</div>';
+  h+='<div class="buildstats"><span>Damage per second to health <b>'+num(s.total_dps)+'</b></span><span>Direct hits <b>'+num(s.direct_dps)+'</b></span><span>Status damage over time <b>'+num(s.status_dps)+'</b></span></div>';
   h+='<div class="buildstats"><span>Per shot <b>'+num(s.per_shot)+'</b> before armor</span><span>Crit <b>'+pct(s.crit_chance)+'</b> × '+num(s.crit_multiplier)+'</span><span>Status <b>'+pct(s.status_chance)+'</b> ('+num(s.procs_per_second)+' procs/s)</span><span>Multishot <b>'+num(s.multishot)+'</b></span><span>Fire rate <b>'+num(s.fire_rate)+'</b></span></div>';
   var fx=[];
   if(s.armor_reduction) fx.push('armor '+Math.round(s.armor).toLocaleString()+' stops '+pct(s.armor_reduction));
   if(s.corrosive_stacks>=0.5) fx.push(num(s.corrosive_stacks)+' Corrosive stacks');
   if(s.heat_uptime>=0.05) fx.push('Heat strip '+pct(s.heat_uptime)+' of the time');
   if(s.viral_stacks>=0.5) fx.push(num(s.viral_stacks)+' Viral stacks');
+  if(s.magnetic_stacks>=0.5) fx.push(num(s.magnetic_stacks)+' Magnetic stacks');
   if(s.cold_stacks>=0.5) fx.push(num(s.cold_stacks)+' Cold stacks');
   if(fx.length) h+='<p class="muted">On the enemy: '+esc(fx.join(' · '))+'</p>';
   h+='<p class="muted">Damage: '+b.elements.map(function(e){return esc(e[0])+' '+num(e[1])}).join(' · ')+'</p>';

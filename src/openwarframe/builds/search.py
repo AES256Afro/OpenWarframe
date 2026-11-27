@@ -54,7 +54,7 @@ def _score(
     locked = any(p.mod.locks_fire_rate for p in picks)
     t = add_up([p.effect for p in picks], stacks=stacks, fire_rate_locked=locked)
     r, order = best_order(gun, t, target, enemy)
-    return r.total_dps, r, order
+    return r.effective_dps, r, order
 
 
 def forma_needed(picks: list[Pick]) -> int | None:
@@ -256,20 +256,23 @@ def suggest(
             upgrade = {"name": gain_best[0].mod.name, "gain": f"+{round((gain_best[1] / score - 1) * 100)}%"}
     drain = sum(p.mod.drain(p.rank) for p in chosen)
     forma = forma_needed(chosen) or 0
-    who = f"{target} " if target else ""
     if enemy.level is None:
-        foe = "a target without armor"
+        ranked = "Ranked by damage per second against a target without armor or shields"
     else:
-        foe = f"level {enemy.level} {who}enemies" + (
-            f" with {round(enemy.armor):,} armor" + (" (already stripped)" if enemy.stripped else "")
-            if enemy.armor
-            else " (no armor)"
+        pools = [f"{round(enemy.health):,} health"]
+        if enemy.shields:
+            pools.append(f"{round(enemy.shields):,} shields")
+        if enemy.armor:
+            pools.append(f"{round(enemy.armor):,} armor" + (", already stripped" if enemy.stripped else ""))
+        ranked = (
+            f"Ranked by time to kill a level {enemy.level} {enemy.unit} ({', '.join(pools)}): shields first "
+            "(Toxin goes straight to health), then health; direct hits plus status damage over time, with "
+            "Corrosive and Heat stripping armor, Magnetic raising shield damage and Viral raising health damage"
         )
     notes = [
-        f"Ranked by damage per second to health against {foe}: direct hits plus damage over time from "
-        "status, with Corrosive and Heat stripping armor and Viral raising health damage.",
-        "Not counted: shields, headshots and weak points, Rivens, arcanes, Incarnon forms; Heat is counted "
-        "per proc, though in long fights its stacks keep growing.",
+        ranked + ".",
+        "Not counted: shield regeneration and the Magnetic shield-break burst, headshots and weak points, "
+        "Rivens, arcanes, Incarnon forms; Heat is counted per proc, though in long fights its stacks keep growing.",
         f"Mod drain {drain} against {CAPACITY} capacity with an Orokin Catalyst"
         + (
             f": polarize {forma} slot{'s' if forma != 1 else ''} with Forma to match the costliest mods."
@@ -277,11 +280,6 @@ def suggest(
             else "."
         ),
     ]
-    if target in ("Corpus", "Corpus Amalgam"):
-        notes.append(
-            "Corpus rely on shields, which aren't modelled yet: Magnetic (more damage to shields) and Toxin "
-            "(skips shields) are worth more against them than these numbers show."
-        )
     if stacks and any(p.effect.stacks for p in chosen):
         notes.append("On-kill stacks are counted at their maximum, as in steady fighting.")
     cond = sorted({c for p in chosen for c in p.effect.conditional})

@@ -23,6 +23,9 @@ uv run ruff check . && uv run ruff format .
 - Knowledge-base entries (`kb/`) need a source and a `last_verified` date.
 - Read `docs/ROADMAP.md` before opening a large pull request; milestones have
   acceptance criteria.
+- Changes to the app page follow the checklist in `docs/ACCESSIBILITY.md`;
+  `tests/test_accessibility.py` checks theme contrast and control labels.
+- A new data source or bundled library goes on the checklist in `docs/LEGAL.md`.
 
 ## Building and releasing
 

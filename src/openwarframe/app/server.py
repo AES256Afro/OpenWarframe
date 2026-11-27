@@ -193,8 +193,10 @@ class AppState:
                 )
             codex = Codex(s.codex_path)
             try:  # always close, so a failed build never leaves the database file locked
-                report = build_report(reparse(snap, codex), codex, inventory=inv)
+                parsed = reparse(snap, codex)
+                report = build_report(parsed, codex, inventory=inv)
                 data = build_app_data(report, codex, inv)
+                data["meta"]["standing_left"] = dict(parsed.progression.daily_affiliations)
             finally:
                 codex.close()
             data["meta"]["inventory_error"] = inv_error
@@ -317,7 +319,13 @@ class AppState:
             "grab": bool(session.SUPPORTED and game_here),
             "ocr": bool(game_here and ocr_available()),
             "platform_label": PLATFORM_LABELS.get(self.settings.platform or "pc", self.settings.platform),
-            "os": "mac" if sys.platform == "darwin" else "windows" if sys.platform == "win32" else "other",
+            "os": "mac"
+            if sys.platform == "darwin"
+            else "windows"
+            if sys.platform == "win32"
+            else "linux"
+            if sys.platform.startswith("linux")
+            else "other",
         }
 
     # -- freshness -------------------------------------------------------------------

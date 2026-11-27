@@ -174,9 +174,17 @@ class Result:
     viral_stacks: float = 0.0
     heat_uptime: float = 0.0
     cold_stacks: float = 0.0
+    magnetic_stacks: float = 0.0
+    shield_dps: float = 0.0  # damage per second to shields while they are up
+    time_to_kill: float = 0.0  # seconds for one reference enemy (0: not judged on one)
+    effective_dps: float = 0.0  # (shields + health) / time to kill; the score
 
     def as_dict(self) -> dict:
-        return {k: getattr(self, k) for k in self.__dataclass_fields__}
+        # infinity (nothing gets through) isn't valid JSON: say "unknown" instead
+        return {
+            k: (None if isinstance(v, float) and math.isinf(v) else v)
+            for k, v in ((k, getattr(self, k)) for k in self.__dataclass_fields__)
+        }
 
 
 def evaluate(
@@ -217,7 +225,7 @@ def evaluate(
     if enemy is not None:
         extra = _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy)
     else:
-        extra = {"direct_dps": sustained, "total_dps": sustained}
+        extra = {"direct_dps": sustained, "total_dps": sustained, "effective_dps": sustained}
     return Result(
         per_shot=per_shot,
         burst_dps=burst,
@@ -236,56 +244,93 @@ def evaluate(
 
 
 def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy) -> dict:
-    """Damage per second to the enemy's health: armor and its stripping, Viral, Cold, and the
-    damage over time of Slash, Heat, Toxin, Electricity and Gas. Steady state while firing.
+    """Damage to one enemy while firing steadily: armor and its stripping, shields, Viral,
+    Magnetic, Cold, and the damage over time of Slash, Heat, Toxin, Electricity and Gas.
 
     Proc type follows each type's share of the weapon's damage (before faction modifiers);
-    stacks are proc rate x duration, capped (Corrosive 10 for 8 s, Viral 10 and Cold 9 for 6 s).
-    Heat strips 50% while a Heat proc is active. Each DoT proc deals 6 ticks.
+    stacks are proc rate x duration, capped (Corrosive 10 for 8 s; Viral, Magnetic 10 and
+    Cold 9 for 6 s). Heat strips 50% while a Heat proc is active. Each DoT proc deals 6 ticks.
+
+    Shields take every type except Toxin (hits and ticks go to health), without armor and with
+    the Magnetic bonus; health takes damage reduced by armor and raised by Viral. With health and
+    shields set, the score is the time to kill: shields first (Toxin hurts health meanwhile),
+    then health.
     """
     total = sum(by_type.values()) or 1.0
     procs = ms * sc * fr * uptime
     rate = {k: procs * v / total for k, v in by_type.items()}
     n_corr = min(10.0, rate.get("corrosive", 0.0) * 8)
     n_viral = min(10.0, rate.get("viral", 0.0) * 6)
+    n_mag = min(10.0, rate.get("magnetic", 0.0) * 6)
     n_cold = min(9.0, rate.get("cold", 0.0) * 6)
     heat_up = 1 - math.exp(-rate.get("heat", 0.0) * 6)
     corr_strip = 0.26 * n_corr if n_corr < 1 else 0.20 + 0.06 * n_corr
     armor = 0.0 if enemy.stripped else enemy.armor * (1 - 0.5 * heat_up) * (1 - corr_strip)
     dr = armor_reduction(armor)
     viral = 1 + _stack_multiplier(n_viral, 1.0, 0.25)
+    magnetic = 1 + _stack_multiplier(n_mag, 1.0, 0.25)
     crit = 1 + cc * (cd + _stack_multiplier(n_cold, 0.10, 0.05) - 1)
-    # direct hits: every type is reduced by armor and scaled by the faction modifier
-    per_shot = sum(v * mods.get(k, 1.0) for k, v in by_type.items()) * (1 - dr) * ms * crit * bane * viral
-    direct = per_shot * fr * uptime
-    # damage over time: modded base x bane (counted twice) x that element's mod bonus
+    # direct hits per second by type, before armor, Viral or Magnetic
+    hits = {k: v * mods.get(k, 1.0) * ms * crit * bane * fr * uptime for k, v in by_type.items()}
+    # damage over time per second by type: modded base x bane twice x that element's mod bonus
     base = gun.total * base_mult * bane
-    elem = {}
+    elem: dict[str, float] = {}
     for el, pct in t.elements:
         elem[el] = elem.get(el, 0.0) + pct
     sd = 1 + t.sums.get("status_damage", 0.0)
-    dot = 0.0
+    dots = {}
     for k, c in DOT.items():
         r = rate.get(k, 0.0)
-        if not r:
-            continue
-        tick = c * base * (1 + elem.get(k, 0.0)) * bane * sd * crit
-        if k == "slash":  # bleed is Cinematic damage: no armor, no faction modifier
-            per_proc = DOT_TICKS * tick * viral
-        else:
-            per_proc = DOT_TICKS * tick * mods.get(k, 1.0) * (1 - dr) * viral
-        dot += r * per_proc
+        if r:
+            tick = c * base * (1 + elem.get(k, 0.0)) * bane * sd * crit
+            # Slash bleed is Cinematic damage: no faction modifier, no armor
+            dots[k] = r * DOT_TICKS * tick * (1.0 if k == "slash" else mods.get(k, 1.0))
+    # to health: armor reduces everything but Slash bleed; Viral raises everything
+    to_health = {k: v * (1 - dr) * viral for k, v in hits.items()}
+    for k, v in dots.items():
+        to_health[k] = to_health.get(k, 0.0) + v * (1.0 if k == "slash" else 1 - dr) * viral
+    health_dps = sum(to_health.values())
+    direct = sum(v * (1 - dr) * viral for v in hits.values())
+    dot_total = health_dps - direct
+    # to shields: everything but Toxin, no armor, Magnetic bonus; Toxin meanwhile hits health
+    shield_dps = sum(v for k, v in hits.items() if k != "toxin") * magnetic
+    shield_dps += sum(v for k, v in dots.items() if k != "toxin") * magnetic
+    bypass = to_health.get("toxin", 0.0)
+    ttk, effective = 0.0, health_dps
+    if enemy.health:
+        ttk = _time_to_kill(enemy.health, enemy.shields, shield_dps, bypass, health_dps)
+        effective = (enemy.health + enemy.shields) / ttk if ttk else 0.0
     return {
         "direct_dps": direct,
-        "status_dps": dot,
-        "total_dps": direct + dot,
+        "status_dps": dot_total,
+        "total_dps": health_dps,
         "armor": armor,
         "armor_reduction": dr,
         "corrosive_stacks": n_corr,
         "viral_stacks": n_viral,
         "heat_uptime": heat_up,
         "cold_stacks": n_cold,
+        "magnetic_stacks": n_mag,
+        "shield_dps": shield_dps if enemy.shields else 0.0,
+        "time_to_kill": ttk,
+        "effective_dps": effective,
     }
+
+
+def _time_to_kill(
+    health: float, shields: float, shield_dps: float, bypass_dps: float, health_dps: float
+) -> float:
+    """Seconds to empty shields, then health. Damage that skips shields (Toxin) lands on health
+    while the shields are still up. Returns infinity when nothing gets through."""
+    if shields <= 0:
+        return health / health_dps if health_dps > 0 else math.inf
+    if shield_dps <= 0:
+        return health / bypass_dps if bypass_dps > 0 else math.inf
+    t1 = shields / shield_dps
+    if bypass_dps * t1 >= health:
+        return health / bypass_dps
+    left = health - bypass_dps * t1
+    return t1 + (left / health_dps if health_dps > 0 else math.inf)
 
 
 def best_order(
@@ -303,7 +348,7 @@ def best_order(
             continue
         seen.add(key)
         r = evaluate(gun, t, target, list(perm), enemy=enemy)
-        if best is None or r.total_dps > best[0].total_dps:
+        if best is None or r.effective_dps > best[0].effective_dps:
             best = (r, list(perm))
     assert best is not None
     return best

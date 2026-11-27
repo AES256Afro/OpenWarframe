@@ -3,6 +3,14 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Builds count shields.** Builds are now scored by the time to kill one reference enemy:
+  shields first, then health. Toxin skips shields, Magnetic raises shield damage (up to x4.25),
+  armor doesn't protect shields, and health and shields grow with level (x2.5 more on the Steel
+  Path). Corpus are judged on a Corpus Tech, Grineer on a Heavy Gunner, Infested on a Toxic Ancient.
+  The build shows the time to kill and the damage per second to shields.
+
 ## 0.15.0
 
 - **Builds count armor and status.** Pick Normal missions or the Steel Path (or no armor, or armor

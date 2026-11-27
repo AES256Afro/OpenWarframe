@@ -1,0 +1,167 @@
+"""Warframe builds: ability facts, mod stats, weights, effective health and the search."""
+
+from __future__ import annotations
+
+import json
+import math
+import sqlite3
+import sys
+from itertools import combinations
+from pathlib import Path
+
+import pytest
+
+from openwarframe.builds import frames
+
+ROOT = Path(__file__).parents[1]
+
+
+def mod(name, lines, drain=4, rank=None):
+    return frames.FrameMod("/F/" + name, name, drain, 0, [lines], frames.frame_exclusive_key(name))
+
+
+def frame(**kw):
+    abilities = kw.pop("abilities", None) or [
+        {"key": 1, "ability": "One", "strength": True, "duration": True, "range": False, "energy": 25, "channeled": False},
+        {"key": 2, "ability": "Two", "strength": True, "duration": False, "range": True, "energy": 50, "channeled": False},
+        {"key": 4, "ability": "Four", "strength": True, "duration": False, "range": True, "energy": 25, "channeled": True},
+    ]  # fmt: skip
+    base = dict(name="Testframe", unique_name="/W", health=300.0, shields=300.0, armor=300.0, energy=150.0)
+    base.update(kw)
+    return frames.Frame(abilities=abilities, **base)
+
+
+def test_mod_stats_and_variants():
+    assert mod("Blind Rage", ["+99% Ability Strength", "-55% Ability Efficiency"]).stats() == {
+        "strength": 0.99,
+        "efficiency": -0.55,
+    }
+    assert (
+        mod(
+            "Adaptation", ["When Damaged:", "+10% Resistance to that Damage Type for 20s. Stacks up to 90%."]
+        ).stats()
+        == {}
+    )
+    assert frames.frame_exclusive_key("Umbral Intensify") == frames.frame_exclusive_key("Intensify")
+    assert frames.frame_exclusive_key("Archon Vitality") == "Vitality"
+    assert frames.frame_exclusive_key("Primed Continuity") == "Continuity"
+
+
+def test_weights_follow_the_abilities_you_use():
+    f = frame()
+    w = frames.weights_for(f, None)
+    # strength: 3 abilities; duration: 1 + 1 channeled; range: 2; efficiency: 3 cost + 1 channeled
+    assert (w.strength, w.duration, w.range, w.efficiency) == (3, 2, 2, 4)
+    w = frames.weights_for(f, [2])
+    assert (w.strength, w.duration, w.range, w.efficiency) == (1, 0, 1, 1)
+    assert frames.weights_for(f, None, "none").survivability == 0
+
+
+def test_totals_and_effective_health():
+    f = frame()
+    t = frames.totals(f, [(mod("Vitality", ["+100% Health"]), 0), (mod("Steel Fiber", ["+100% Armor"]), 0)])
+    # health 600, armor 600: 600 x (600 + 300) / 300 + 300 shields = 2100
+    assert t["effective_health"] == pytest.approx(2100) and t["damage_reduction"] == pytest.approx(600 / 900)
+    t = frames.totals(f, [(mod("Streamline", ["+130% Ability Efficiency"]), 0)])
+    assert t["energy_cost"] == pytest.approx(0.25)  # efficiency caps at 175%: cost floor 25%
+
+
+def test_search_matches_trying_every_combination():
+    f = frame()
+    pool = [
+        (mod("Intensify", ["+30% Ability Strength"]), 0),
+        (mod("Transient Fortitude", ["+55% Ability Strength", "-27.5% Ability Duration"]), 0),
+        (mod("Blind Rage", ["+99% Ability Strength", "-55% Ability Efficiency"]), 0),
+        (mod("Continuity", ["+30% Ability Duration"]), 0),
+        (mod("Stretch", ["+45% Ability Range"]), 0),
+        (mod("Overextended", ["+90% Ability Range", "-60% Ability Strength"]), 0),
+        (mod("Streamline", ["+30% Ability Efficiency"]), 0),
+        (mod("Fleeting Expertise", ["+60% Ability Efficiency", "-60% Ability Duration"]), 0),
+        (mod("Vitality", ["+100% Health"]), 0),
+        (mod("Steel Fiber", ["+100% Armor"]), 0),
+        (mod("Umbral Intensify", ["+44% Ability Strength"]), 0),  # can't sit next to Intensify
+    ]
+    w = frames.weights_for(f, None)
+    base = frames.totals(f, [])["effective_health"]
+    found = frames.search(f, w, pool)
+    best = max(  # every size up to 8: an empty slot beats a mod that only hurts
+        frames.score(f, w, list(c), base)
+        for k in range(1, 9)
+        for c in combinations(pool, k)
+        if len({m.exclusive for m, _ in c}) == k
+    )
+    assert frames.score(f, w, found, base) == pytest.approx(best)
+    names = {m.name for m, _ in found}
+    assert not {"Intensify", "Umbral Intensify"} <= names
+
+
+def test_kb_file_is_consistent():
+    data = json.loads((ROOT / "kb/builds/abilities.json").read_text(encoding="utf-8"))
+    assert "CC BY-NC-SA" in data["license"] and data["last_verified"]
+    by_name = {a["ability"] for a in data["abilities"]}
+    warframes = [f for f in data["frames"] if f["unique_name"].startswith("/Lotus/Powersuits/")]
+    assert len(warframes) > 100
+    missing = [(f["frame"], a) for f in warframes for a in f["abilities"] if a not in by_name]
+    assert len(missing) <= 6, missing  # Archwing and Octavia's Amp only
+    saryn = next(f for f in data["frames"] if f["frame"] == "Saryn Prime")
+    assert saryn["abilities"] == ["Spores", "Molt", "Toxic Lash", "Miasma"] and saryn["armor"] > 0
+    f = frames.load_frame("/Lotus/Powersuits/Rhino/Rhino", data)
+    assert [a["ability"] for a in f.abilities] == ["Rhino Charge", "Iron Skin", "Roar", "Rhino Stomp"]
+    with pytest.raises(frames.NotAFrame):
+        frames.load_frame("/Lotus/Nope", data)
+
+
+def test_generator_reads_an_ability_template(tmp_path: Path):
+    sys.path.insert(0, str(ROOT / "tools"))
+    import ability_scaling
+
+    t = ability_scaling.template(
+        "{{AbilityU10.3\n| name = Miasma\n| energy = 75\n| strength = 110 / 150\n| range = 10 / 20 m\n"
+        "| duration = 6 s\n| misc = 100%\n|info = text\n}}"
+    )
+    assert t["strength"] and t["range"] and t["duration"] and t["energy"] == "75"
+
+
+def test_suggest_and_endpoint(tmp_path: Path):
+    from openwarframe.app.server import AppState, page_source
+    from openwarframe.codex.schema import SCHEMA
+    from openwarframe.config import Settings
+
+    con = sqlite3.connect(tmp_path / "codex.sqlite")
+    con.executescript(SCHEMA)
+
+    def add(uid, name, lines, drain=4):
+        d = {
+            "type": "WARFRAME",
+            "compatName": "WARFRAME",
+            "baseDrain": drain,
+            "fusionLimit": 0,
+            "levelStats": [{"stats": lines}],
+        }
+        con.execute(
+            "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+            (uid, name, "Mod", None, None, None, None, json.dumps(d)),
+        )
+
+    add("/M/Intensify", "Intensify", ["+30% Ability Strength"])
+    add("/M/Vitality", "Vitality", ["+440% Health"])
+    con.commit()
+    con.close()
+    b = frames.suggest_frame(sqlite3.connect(tmp_path / "codex.sqlite"), "/Lotus/Powersuits/Saryn/SarynPrime")
+    assert b["frame"] == "Saryn Prime" and {m["name"] for m in b["mods"]} == {"Intensify", "Vitality"}
+    assert b["stats"]["strength"] == pytest.approx(1.3) and b["abilities"][3]["name"] == "Miasma"
+    state = AppState(Settings(home=tmp_path))
+    r = state.frame_build_for(
+        "/Lotus/Powersuits/Saryn/SarynPrime", abilities=[4], survivability="none", owned_only=False
+    )
+    assert [a["used"] for a in r["abilities"]] == [False, False, False, True]
+    assert "error" in state.frame_build_for(
+        "/Lotus/Nope", abilities=None, survivability="some", owned_only=False
+    )
+    page = page_source()
+    assert (
+        "function frameBuildPanel(r)" in page
+        and '"/api/frame-build?id="' in page
+        and "function fChosen(id)" in page
+    )
+    assert not math.isnan(b["stats"]["effective_health"])

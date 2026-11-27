@@ -35,6 +35,15 @@ What changed in each release, newest first. Releases are on
 - **Safer.** Console profiles are fetched over HTTPS. Windows shortcuts work in folders with
   an apostrophe, and `tasklist` runs from System32.
 
+## 0.7.0
+
+- **Windows installer.** `OpenWarframe-v0.7.0-windows-setup.exe` installs OpenWarframe like a
+  normal app: for your user only (no admin prompt) into `%LOCALAPPDATA%\Programs\OpenWarframe`,
+  with a Start menu entry, an optional desktop shortcut and an uninstaller under Settings > Apps.
+  Running a newer setup updates in place. Uninstalling keeps your data folder. It is not
+  code-signed yet, so SmartScreen asks once (More info, then Run anyway). The zip and the
+  PowerShell install line are still there.
+
 ## 0.6.2
 
 - **Log file.** The app and the CLI write `logs/openwarframe.log` in the data folder (four

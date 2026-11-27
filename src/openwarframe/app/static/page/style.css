@@ -171,3 +171,10 @@ body.big-text .tab .n, body.big-text .brand span{display:none}
   body.compact .brand{justify-content:center; padding:4px 0 10px}
 }
 @media (max-width:820px){ body{grid-template-columns:1fr; overflow:auto} nav.side{flex-direction:row; flex-wrap:wrap} .who,.spacer{display:none} input[type=search]{width:100%} }
+.buildbox{margin-top:12px; border-top:1px solid var(--line); padding-top:10px}
+.buildbox h3{margin:0 0 8px; font-size:14px}
+.buildopts{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; font-size:13px}
+.buildmods{margin:10px 0; padding-left:1.4em; display:grid; gap:4px; font-size:13px}
+.buildstats{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px}
+.buildnotes{font-size:12px; margin:6px 0 0; padding-left:1.2em}
+

@@ -3,6 +3,17 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Suggested weapon builds.** Open a primary or secondary gun and click **Suggest a build**: the
+  app picks the 8 mods with the most sustained damage against the enemy you choose, worked out
+  from the game data and the wiki's current damage formulas (not copied from build sites). With
+  an inventory it can stick to your mods at your ranks and names the best mod you're missing. It
+  shows the numbers, the Forma it needs and what isn't counted yet (armor, status damage over
+  time, Rivens, arcanes). See [docs/BUILDS.md](docs/BUILDS.md).
+- **Game data schema 4:** weapon classes and mod compatibility tags for builds. The app updates
+  the game data once on start.
+
 ## 0.13.0
 
 - **Item names in your language.** Settings > **Item names** shows items, parts and relics in any

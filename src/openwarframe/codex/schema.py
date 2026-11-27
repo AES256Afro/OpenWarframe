@@ -1,7 +1,9 @@
 """SQLite schema for the codex. Rebuilt from sources; safe to delete."""
 
-SCHEMA_VERSION = 3  # 3: ingredient counts summed per recipe; (Caches)/(Extra) drops linked to nodes
-# oldest schema this code can still read (2 -> 3 changed content, not tables): used offline
+SCHEMA_VERSION = (
+    4  # 4: weapon_class (builds); 3: ingredient counts summed per recipe, (Caches)/(Extra) linked
+)
+# oldest schema this code can still read (3 -> 4 only added weapon_class; builds say to update): used offline
 READABLE_FROM = 2
 
 SCHEMA = """
@@ -24,6 +26,22 @@ CREATE TABLE item (
 );
 CREATE INDEX item_name ON item(name);
 CREATE INDEX item_category ON item(category);
+
+-- weapon class from warframe-public-export-plus: which mods fit (builds)
+CREATE TABLE weapon_class (
+    unique_name TEXT PRIMARY KEY,
+    holster     TEXT,               -- RIFLE, SHOTGUN, SNIPER, BOW, WIDE_RIFLE, SMG, MELEE, ...
+    parent      TEXT,               -- parentName: some mods fit one weapon family (augments)
+    tags        TEXT                -- JSON list: compatibilityTags
+);
+
+-- mod tags from warframe-public-export-plus: a mod needs every compat tag on the weapon
+-- (SEMI_AUTO, BEAM...) and none of the incompat tags (SINGLESHOT, AOE...)
+CREATE TABLE mod_compat (
+    unique_name   TEXT PRIMARY KEY,
+    compat_tags   TEXT,             -- JSON list
+    incompat_tags TEXT              -- JSON list
+);
 
 CREATE TABLE recipe (
     unique_name   TEXT PRIMARY KEY,

@@ -3,6 +3,14 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Item names in your language.** Settings > **Item names** shows items, parts and relics in any
+  of the 15 game languages across the app, Live, item details and every export. The app's own text
+  stays English, and search finds the English names too. `openwarframe export --names <lang>` does
+  the same from the command line (default: the app's setting).
+- **Excel summary** and a few CLI lines use " · " between facts instead of a spaced hyphen.
+
 ## 0.12.0
 
 - **Reward helper in every game language.** Pick your game client's language in the Reward helper

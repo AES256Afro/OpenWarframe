@@ -271,5 +271,5 @@ credited in [docs/DATA_SOURCES.md](docs/DATA_SOURCES.md). OpenWarframe is a fan 
 made by or affiliated with Digital Extremes; Warframe is a trademark of Digital Extremes Ltd.
 [docs/LEGAL.md](docs/LEGAL.md) lists what we owe to each source and library.
 [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) says what works for keyboard, screen-reader and
-low-vision users and what doesn't yet. The reward helper reads all 15 game languages; the app's own text is
-English ([docs/I18N.md](docs/I18N.md)).
+low-vision users and what doesn't yet. Item names can be shown in any of the 15 game languages (Settings > Item names), and the reward
+helper reads all of them; the app's own text is English ([docs/I18N.md](docs/I18N.md)).

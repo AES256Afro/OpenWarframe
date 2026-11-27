@@ -174,7 +174,7 @@ function sellBest(r){ var p=Number(r.price), d=Number(r.ducats); r.best=r.price=
 var CHECKS={};  // checkbox filter key -> test, filled in by renderFilters
 function matches(r){
   if(Q){
-    var hay=(r.name+" "+(r.category||"")+" "+(r.how||"")+" "+(r.sources||[]).join(" ")+" "+(r.drops||[]).map(function(d){return d.part+" "+d.for}).join(" ")+" "+(r.parts||[]).map(function(p){return p.name}).join(" ")+" "+(r.pieces||[]).map(function(p){return p.name+" "+p.sources.join(" ")}).join(" ")+" "+(r.place||"")+" "+(r.gives||[]).join(" ")+" "+(r.where||"")+" "+(r.mission||"")+" "+(r.tier||"")).toLowerCase();
+    var hay=(r.name+" "+(r.name_en||"")+" "+(r.category||"")+" "+(r.how||"")+" "+(r.sources||[]).join(" ")+" "+(r.drops||[]).map(function(d){return d.part+" "+d.for}).join(" ")+" "+(r.parts||[]).map(function(p){return p.name}).join(" ")+" "+(r.pieces||[]).map(function(p){return p.name+" "+p.sources.join(" ")}).join(" ")+" "+(r.place||"")+" "+(r.gives||[]).join(" ")+" "+(r.where||"")+" "+(r.mission||"")+" "+(r.tier||"")).toLowerCase();
     if(hay.indexOf(Q)<0) return false;
   }
   for(var k in F){ var want=F[k]; if(want==null||want===""||k==="sub") continue;

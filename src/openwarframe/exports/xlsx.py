@@ -179,14 +179,14 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table], extra
     ws.sheet_view.showGridLines = False
     h = report.headline
     who = report.identity.display_name or "Account"
-    ws["B2"] = _v(f"{who}  -  Mastery Rank {h.mastery_rank}")
+    ws["B2"] = _v(f"{who} · Mastery Rank {h.mastery_rank}")
     ws["B2"].font = TITLE_FONT
     sub = f"{report.identity.platform.upper()}"
     if h.account_age_days:
-        sub += f"  -  {h.account_age_days // 365} years"
+        sub += f" · {h.account_age_days // 365} years"
     if h.play_time_hours:
-        sub += f"  -  {h.play_time_hours:,.0f} hours played"
-    sub += f"  -  snapshot {report.snapshot_taken_at:%Y-%m-%d %H:%M} UTC"
+        sub += f" · {h.play_time_hours:,.0f} hours played"
+    sub += f" · snapshot {report.snapshot_taken_at:%Y-%m-%d %H:%M} UTC"
     ws["B3"] = sub
     ws["B3"].font = SUB_FONT
 

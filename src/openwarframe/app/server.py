@@ -45,6 +45,7 @@ SERVER_SETTINGS = (
     "save_recordings",
     "capture_hotkey",
     "game_language",
+    "names_lang",
 )  # changed by their own endpoints, not the page  # an inventory file is a few MB; anything this big is not one of ours
 
 # The page only ever talks to this server. These headers stop other sites from framing it
@@ -110,6 +111,8 @@ class AppState:
             stamp(latest) if latest else None,
             stamp(self.inventory_path),
             stamp(s.codex_path),
+            stamp(s.home / "names" / f"{self.names_lang}.json"),  # names refreshed or language changed
+            self.names_lang,
         )
 
     def _latest_snapshot(self) -> Path | None:
@@ -208,6 +211,13 @@ class AppState:
                 report = build_report(parsed, codex, inventory=inv)
                 data = build_app_data(report, codex, inv)
                 data["meta"]["standing_left"] = dict(parsed.progression.daily_affiliations)
+                tr = self._translator(codex.conn)
+                if tr:
+                    tr.strings({k: v for k, v in data.items() if k != "meta"})
+                data["meta"]["names_lang"] = tr.lang if tr else "en"
+                from ..codex.languages import LANGUAGES
+
+                data["meta"]["languages"] = [[c, label] for c, (label, _) in LANGUAGES.items()]
             finally:
                 codex.close()
             data["meta"]["inventory_error"] = inv_error
@@ -310,7 +320,9 @@ class AppState:
         with Codex(self.settings.codex_path) as codex:
             if codex.item(uid) is None:
                 return {"error": "That item isn't in the game data."}
-            return how_to_get(codex, uid, owned)
+            answer = how_to_get(codex, uid, owned)
+            tr = self._translator(codex.conn)
+            return tr.strings(answer) if tr else answer
 
     def capabilities(self) -> dict:
         """What this computer and account can do, so the page never offers the impossible.
@@ -387,6 +399,38 @@ class AppState:
             load_names(self.settings.home, lang, client, refresh=True)
         finally:
             client.close()
+
+    @property
+    def names_lang(self) -> str:
+        return str(self.get_prefs().get("settings", {}).get("names_lang") or "en")
+
+    def _translator(self, conn):
+        from ..codex.translate import translator
+
+        return translator(self.settings.home, conn, self.names_lang)
+
+    def set_names_lang(self, lang: str) -> dict:
+        """Show item names in ``lang`` in the app and exports. Downloads its names once."""
+        from ..codex.languages import LANGUAGES, load_names
+        from ..http import CachedClient
+
+        if lang not in LANGUAGES:
+            return {"error": f"Unknown language {lang!r}."}
+        if lang != "en":
+            client = CachedClient(self.settings.cache_dir)
+            try:
+                names = load_names(self.settings.home, lang, client)
+            finally:
+                client.close()
+            if not names:
+                return {
+                    "error": f"Could not download the {LANGUAGES[lang][0]} item names. Check your connection."
+                }
+        self.save_prefs(json.dumps({"settings": {"names_lang": lang}}).encode())
+        with self.lock:
+            self.cache = None  # build again with the new names
+        self._live = None
+        return self.build(force=True)
 
     def reward_status(self) -> dict:
         from ..codex.languages import LANGUAGES
@@ -539,9 +583,16 @@ class AppState:
             parsed = reparse(snap, codex)
             report = build_report(parsed, codex, inventory=inv)
             extras = gather_extras(s, store, parsed, codex)
+            tr = self._translator(codex.conn)
         folder = export_folder(s, snap, share=False)
         results = run_exports(
-            report, folder, formats, guide_pdf=bool(req.get("pdf", True)), guide_docx=True, extras=extras
+            report,
+            folder,
+            formats,
+            guide_pdf=bool(req.get("pdf", True)),
+            guide_docx=True,
+            extras=extras,
+            translator=tr,
         )
         with contextlib.suppress(OSError):
             atomic_write_text(s.exports_dir / "LATEST.txt", str(folder.resolve()) + "\n")
@@ -654,6 +705,9 @@ class AppState:
         client = CachedClient(self.settings.cache_dir)
         try:
             answer = build_live(codex.conn, data, client)
+            tr = self._translator(codex.conn)
+            if tr:
+                tr.strings(answer)
         finally:
             client.close()
             codex.close()
@@ -921,6 +975,9 @@ def make_handler(state: AppState):
                 elif self.path == "/api/reward/capture":
                     state.rewards.capture_now("button")
                     self._json(state.reward_status())
+                elif self.path == "/api/names":
+                    req = json.loads(body.decode("utf-8") or "{}")
+                    self._json(state.set_names_lang(str(req.get("lang") or "en")))
                 elif self.path == "/api/reward/language":
                     req = json.loads(body.decode("utf-8") or "{}")
                     self._json(state.set_game_language(str(req.get("lang") or "en")))

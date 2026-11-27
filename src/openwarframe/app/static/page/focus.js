@@ -231,6 +231,8 @@ function renderFocus(){
   h+='<label class="tick opt"><input type="checkbox" id="st-calm"'+(st.calm?' checked':'')+'><span class="t">No motion</span><span></span></label>';
   h+='<label class="tick opt"><input type="checkbox" id="st-bar"'+(st.bar!==false?' checked':'')+'><span class="t">Show the Next bar on every screen</span><span></span></label>';
   h+='<label class="tick opt"><input type="checkbox" id="st-owned"'+(st.ownedonly!==false?' checked':'')+'><span class="t">Only suggest relics I already have<small>Off: also suggests farming a relic first</small></span><span></span></label>';
+  var langs=DATA.meta.languages||[["en","English"]], nl=DATA.meta.names_lang||"en";
+  h+='<div class="tick opt"><span class="t"><label>Item names <select id="st-names">'+langs.map(function(l){return '<option value="'+esc(l[0])+'"'+(l[0]===nl?' selected':'')+'>'+esc(l[1])+'</option>'}).join('')+'</select></label><small>Names of items, parts and relics in the app and exports, as the game shows them. The app\'s own text stays English; search finds both names.</small></span><span></span></div>';
   h+='<label class="tick opt"><input type="checkbox" id="st-updates"'+(st.check_updates!==false?' checked':'')+'><span class="t">Tell me when a new version is out<small>Asks GitHub once a day. Nothing about you is sent.</small></span><span></span></label>';
   h+='<label class="tick opt"><input type="checkbox" id="st-start"'+(st.start!=="last"?' checked':'')+'><span class="t">Open on this Focus screen</span><span></span></label>';
   h+='<div class="tick opt"><span class="t">Account: '+esc(DATA.meta.player||"not named")+' ('+esc((DATA.meta.platform||"pc").toUpperCase())+')<small>Switch to another account. Each account keeps its own profile history and inventory, so you can switch back.</small></span><button class="btn" type="button" id="st-account">Change account</button></div>';
@@ -263,6 +265,8 @@ function renderFocus(){
   if($("st-consent")) $("st-consent").onclick=function(){ api("/api/consent/forget",{method:"POST"}).then(function(){ DATA.meta.session_ok=false; renderAll(); toast("Permission taken back. The app will ask before reading the game again."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
   var bind2=function(id,k,fn){ var e=$(id); if(e) e.onchange=function(){ setSetting(k, fn(e.checked)); }; };
   bind2("st-contrast","contrast",function(v){return v}); bind2("st-calm","calm",function(v){return v});
+  var sn=$("st-names"); if(sn) sn.onchange=function(){ var lang=this.value; toast("Getting item names…", 60000);
+    api("/api/names",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lang:lang})}).then(function(d){ if(d.error&&!d.meta){ toast(d.error,9000); renderAll(); return; } HOWTO={}; HOWTO_ASKED={}; load(d); LIVE=null; loadLive(true); toast("Item names: "+sn.options[sn.selectedIndex].text+"."); }).catch(unreachable); };
   bind2("st-bar","bar",function(v){return v}); bind2("st-updates","check_updates",function(v){ setTimeout(checkUpdate, 300); return v; }); bind2("st-owned","ownedonly",function(v){return v}); bind2("st-start","start",function(v){return v?"focus":"last"});
   return [];
 }

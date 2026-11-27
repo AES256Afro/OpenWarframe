@@ -46,15 +46,33 @@ def run_exports(
     copy_to: list[str] | None = None,
     share: bool = False,
     extras: ExportExtras | None = None,
+    translator=None,
 ) -> list[ExportResult]:
+    """``translator`` (codex.translate.Translator): item names in another language."""
     unknown = set(formats) - set(FORMATS)
     if unknown:
         raise ValueError(f"unknown formats: {sorted(unknown)}; choose from {', '.join(FORMATS)}")
     out_dir.mkdir(parents=True, exist_ok=True)
+    extras = extras or ExportExtras()
+    if translator:
+        import dataclasses
+
+        report = translator.model(report)
+        extras = dataclasses.replace(extras, goals=[translator.by_name(g) for g in extras.goals])
+        diff = extras.diff
+        if diff is not None and dataclasses.is_dataclass(diff):
+            extras.diff = dataclasses.replace(
+                diff,
+                newly_mastered=[translator.by_name(n) for n in diff.newly_mastered],
+                newly_leveled=[translator.by_name(n) for n in diff.newly_leveled],
+                rank_ups=[(translator.by_name(n), a, b) for n, a, b in diff.rank_ups],
+            )
     tables = build_tables(report)
+    if translator:
+        for t in tables:
+            translator.strings(t.rows)
     stamp = report.snapshot_taken_at.strftime("%Y-%m-%d")
     rows = sum(len(t.rows) for t in tables)
-    extras = extras or ExportExtras()
 
     def one(fmt: str) -> list[ExportResult]:
         # one format failing (a workbook open in Excel, a missing knowledge base) must not

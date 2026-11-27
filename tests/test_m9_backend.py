@@ -293,21 +293,19 @@ def test_live_answer_is_reused_until_the_log_changes(
     assert state.live() == {"n": 3}
 
 
-def test_snapshot_folder_is_listed_only_when_it_changes(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def test_newest_snapshot_is_seen_at_once(tmp_path: Path):
+    """No folder-time cache: Windows can keep the folder's time when a file is added."""
     s = Settings(home=tmp_path)
     s.ensure_dirs()
     state = AppState(s)
+    assert state._fingerprint()[0] is None
     (s.snapshots_dir / "2026-11-24T181907Z.json").write_text("{}", encoding="utf-8")
-    first = state._fingerprint()
-    assert first[0] == "2026-11-24T181907Z.json"
-    listed = []
-    real_glob = Path.glob
-    monkeypatch.setattr(Path, "glob", lambda self, pat: listed.append(pat) or real_glob(self, pat))
-    assert state._fingerprint() == first and listed == []
-    (s.snapshots_dir / "2026-11-25T000000Z.json").write_text("{}", encoding="utf-8")
+    (s.snapshots_dir / "notes.txt").write_text("x", encoding="utf-8")
+    assert state._fingerprint()[0] == "2026-11-24T181907Z.json"
     st = s.snapshots_dir.stat()
-    os.utime(s.snapshots_dir, ns=(st.st_atime_ns, st.st_mtime_ns + 1_000_000))
-    assert state._fingerprint()[0] == "2026-11-25T000000Z.json" and listed == ["*.json"]
+    (s.snapshots_dir / "2026-11-25T000000Z.json").write_text("{}", encoding="utf-8")
+    os.utime(s.snapshots_dir, ns=(st.st_atime_ns, st.st_mtime_ns))  # folder time unchanged
+    assert state._fingerprint()[0] == "2026-11-25T000000Z.json"
 
 
 def test_ocr_probe_runs_once(monkeypatch: pytest.MonkeyPatch):

@@ -3,7 +3,13 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## 0.8.0
+## 0.8.1
+
+0.8.0 was tagged but never published: its Windows build failed a test. 0.8.1 is the same
+release with that fixed.
+
+- **Fix.** On Windows the app could miss a new profile sync until it was restarted, because it
+  only looked in the snapshot folder again when the folder's time changed.
 
 - **Trading.** The Sell list has a Best column (Baro or market) and links each part to its
   warframe.market page. Mods and arcanes are priced unranked and relics as Intact, and the

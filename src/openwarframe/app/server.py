@@ -77,7 +77,6 @@ class AppState:
         self.prefs_lock = threading.Lock()
         self.windows = None  # NativeWindows when the app has its own window
         self._live: tuple[tuple, float, dict] | None = None  # (key, time.monotonic(), answer)
-        self._snaps: tuple[tuple, Path | None] | None = None  # (folder stamp, newest snapshot)
 
     @property
     def inventory_path(self) -> Path:
@@ -103,22 +102,17 @@ class AppState:
         )
 
     def _latest_snapshot(self) -> Path | None:
-        """Newest snapshot file; the folder is only listed again when it changes.
+        """Newest snapshot file: one quick scan of the folder, no sorting.
 
-        /api/version is polled, and listing a folder of hundreds of snapshots each time
-        is wasted work. Adding or removing a file changes the folder's modified time.
+        Snapshot names are UTC timestamps, so the largest name is the newest. Caching on the
+        folder's modified time missed new files on Windows, where that time can lag behind.
         """
-        d = self.settings.snapshots_dir
         try:
-            st = d.stat()
-            stamp = (str(d), st.st_mtime_ns, st.st_size, st.st_ino)
+            with os.scandir(self.settings.snapshots_dir) as it:
+                newest = max((e.name for e in it if e.name.endswith(".json") and e.is_file()), default=None)
         except OSError:
-            self._snaps = None
             return None
-        if self._snaps is None or self._snaps[0] != stamp:
-            snaps = sorted(d.glob("*.json"))
-            self._snaps = (stamp, snaps[-1] if snaps else None)
-        return self._snaps[1]
+        return self.settings.snapshots_dir / newest if newest else None
 
     def ensure_codex(self) -> str | None:
         """Build or update the game database when it is missing or older than this code.

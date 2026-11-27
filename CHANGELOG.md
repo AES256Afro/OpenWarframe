@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.17.0
 
 - **Warframe builds.** Open a Warframe and click **Suggest a build**: the app balances Ability
   Strength, Duration, Range, Efficiency and survivability by how many of the abilities you use

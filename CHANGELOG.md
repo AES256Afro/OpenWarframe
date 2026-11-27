@@ -5,6 +5,12 @@ What changed in each release, newest first. Releases are on
 
 ## Unreleased
 
+- **Update from inside the app.** When a new version is out, the sidebar shows **Update to x.y.z
+  now**. One click downloads it, checks it against the release's SHA-256 list, installs it and
+  reopens OpenWarframe. With the Setup .exe it runs the new installer silently (no admin prompt:
+  it installs per user); with the Windows zip it swaps the files in the folder you unpacked it to;
+  on a Mac it replaces OpenWarframe.app. Copies run from source still get the install command.
+  This works from 0.10.0 onward: updating to 0.10.0 itself is the last manual update.
 - **Internal.** The app page's style and script are split by area into `app/static/page/`; the
   server stitches them back into one page, so nothing changes for players.
 

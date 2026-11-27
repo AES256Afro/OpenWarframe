@@ -196,3 +196,22 @@ def test_page_is_assembled_from_its_parts():
     assert not INCLUDE_RE.search(page) and page.count("<script>") == 1
     assert page.index("function api(") > page.index("function renderAllNow(")  # parts keep their order
     assert _page() == page.encode("utf-8")
+
+
+def test_page_scripts_parse(tmp_path: Path):
+    """The assembled page's script is valid JavaScript (a bad merge or a typo fails here)."""
+    import shutil
+    import subprocess
+
+    import pytest
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("node is not installed")
+    for name in ("static/index.html", "static/mini.html"):
+        page = page_source(name)
+        js = page[page.index("<script>") + len("<script>") : page.rindex("</script>")]
+        f = tmp_path / (name.rsplit("/", 1)[1] + ".js")
+        f.write_text(js, encoding="utf-8")
+        r = subprocess.run([node, "--check", str(f)], capture_output=True, text=True, check=False)  # noqa: S603
+        assert r.returncode == 0, r.stderr

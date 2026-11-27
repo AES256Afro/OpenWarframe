@@ -14,7 +14,9 @@
 ; - adds a Start menu entry and, if ticked, a desktop shortcut;
 ; - registers an uninstaller under Settings > Apps > Installed apps;
 ; - installs a newer version over the old one in place (same AppId), clearing the old
-;   _internal folder first so files a newer build dropped do not linger.
+;   _internal folder first so files a newer build dropped do not linger;
+; - when the app updates itself it runs this setup with /SILENT /RELAUNCH=1, and the setup
+;   starts the new version once it has installed it.
 ;
 ; The user's data lives in %LOCALAPPDATA%\OpenWarframe (config.default_home), a different
 ; folder that this script never writes to, so uninstalling leaves it alone.
@@ -104,3 +106,11 @@ Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; WorkingDir: "{app
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:LaunchProgram,{#AppName}}"; Flags: nowait postinstall skipifsilent
+; the app's own "Update now" runs this setup with /SILENT /RELAUNCH=1: reopen the app when done
+Filename: "{app}\{#AppExe}"; WorkingDir: "{app}"; Flags: nowait; Check: WantRelaunch
+
+[Code]
+function WantRelaunch: Boolean;
+begin
+  Result := WizardSilent and (ExpandConstant('{param:RELAUNCH|0}') = '1');
+end;

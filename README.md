@@ -34,7 +34,8 @@ The screenshots below show a real account (MR 24, PC).
 2. Run it. The installer is not code-signed yet, so Windows SmartScreen asks once: click
    **More info**, then **Run anyway**. It installs for your user only (no admin prompt) into
    `%LOCALAPPDATA%\Programs\OpenWarframe`, adds OpenWarframe to the Start menu (and the desktop,
-   if you tick it) and to **Settings > Apps** for uninstalling. To update, run a newer setup.
+   if you tick it) and to **Settings > Apps** for uninstalling. To update, click **Update to x.y.z now**
+   in the app's sidebar when it appears: it downloads, installs and reopens the new version by itself.
 3. On first start the app downloads the game's item and drop data (about a minute). Then either
    click **Find my account in the game** with Warframe running, or type your account ID. The
    welcome screen explains how to find it.

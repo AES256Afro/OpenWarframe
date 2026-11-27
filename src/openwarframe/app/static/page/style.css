@@ -28,6 +28,7 @@ nav.side{background:var(--panel); border-right:1px solid var(--line); display:fl
 .tab .n{font:12px var(--mono); color:var(--muted)}
 .side .spacer{flex:1}
 .side .btn{margin:4px 0}
+.side .updnow{display:block; width:100%; margin:6px 0 0}
 .side .upd{display:block; margin:6px 0 0; padding:8px 10px; border-radius:8px; background:var(--gold-soft); color:var(--gold); font-weight:600; font-size:13px; text-decoration:none}
 .fresh{margin:12px 18px 0; padding:10px 14px; border-radius:10px; border:1px solid var(--line); background:var(--panel); display:flex; flex-wrap:wrap; gap:10px; align-items:center}
 .fresh p{margin:0; flex:1 1 380px}
@@ -163,7 +164,7 @@ body.big-text .tab .n, body.big-text .brand span{display:none}
 @media (min-width:821px){
   body.compact{grid-template-columns:72px 1fr}
   body.compact nav.side{padding:12px 6px}
-  body.compact .brand span, body.compact .who, body.compact .tab .n, body.compact .tab .lbl, body.compact .side .btn .lbl, body.compact .upd{display:none}
+  body.compact .brand span, body.compact .who, body.compact .tab .n, body.compact .tab .lbl, body.compact .side .btn .lbl, body.compact .upd, body.compact .updnow{display:none}
   body.compact .tab .ab, body.compact .side .btn .ab{display:inline}
   body.compact .tab{justify-content:center; padding:9px 4px; font-size:12px}
   body.compact .side .btn{padding:8px 4px; text-align:center}

@@ -13,16 +13,18 @@ a mod with the same element); an innate combined element never combines further.
 Per shot = sum over types (damage x faction modifier) x multishot x (1 + CC x (CD - 1)) x bane.
 Sustained DPS = per shot x fire rate x mag / (fire rate x reload + mag).
 
-Not modelled: armor and its stripping, damage over time from status, headshots and weak
-points, Riven mods, arcanes, Incarnon forms. Status is reported (chance and procs per
-second), not counted in DPS.
+Against an enemy (see ``_against``): armor and its stripping by Corrosive and Heat, Viral,
+Cold and the damage over time of Slash, Heat, Toxin, Electricity and Gas.
+Not modelled: shields, headshots and weak points, Riven mods, arcanes, Incarnon forms.
 """
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from itertools import permutations
 
+from .enemy import Enemy, armor_reduction
 from .mods import ELEMENTS, PHYSICAL, ModEffect
 from .weapons import Gun
 
@@ -69,10 +71,14 @@ NUMERIC = (
     "crit_chance",
     "crit_damage",
     "status_chance",
+    "status_damage",
     "fire_rate",
     "magazine",
     "reload",
 )
+# damage over time per proc: share of modded base damage per tick (wiki Damage/<Type>_Damage)
+DOT = {"slash": 0.35, "heat": 0.5, "toxin": 0.5, "electricity": 0.5, "gas": 0.5}
+DOT_TICKS = 6  # one per second for 6 seconds
 
 
 @dataclass
@@ -137,6 +143,13 @@ def element_damage(gun: Gun, t: Totals, base_mult: float) -> dict[str, float]:
     return out
 
 
+def _stack_multiplier(n: float, first: float, per: float) -> float:
+    """Bonus at n stacks: ``first`` at the first stack, ``per`` for each further one; linear below 1."""
+    if n <= 0:
+        return 0.0
+    return first * n if n < 1 else first + per * (n - 1)
+
+
 @dataclass
 class Result:
     per_shot: float
@@ -151,13 +164,27 @@ class Result:
     magazine: int
     reload: float
     by_type: dict[str, float]  # per projectile, before faction modifiers
+    # against the enemy (armor, status); without an enemy these equal the plain numbers
+    direct_dps: float = 0.0
+    status_dps: float = 0.0
+    total_dps: float = 0.0
+    armor: float = 0.0  # after stripping
+    armor_reduction: float = 0.0
+    corrosive_stacks: float = 0.0
+    viral_stacks: float = 0.0
+    heat_uptime: float = 0.0
+    cold_stacks: float = 0.0
 
     def as_dict(self) -> dict:
         return {k: getattr(self, k) for k in self.__dataclass_fields__}
 
 
 def evaluate(
-    gun: Gun, t: Totals, target: str | None = None, element_order: list[int] | None = None
+    gun: Gun,
+    t: Totals,
+    target: str | None = None,
+    element_order: list[int] | None = None,
+    enemy: Enemy | None = None,
 ) -> Result:
     if element_order is not None:
         t = Totals(t.sums, [t.elements[i] for i in element_order], t.physical, t.bane)
@@ -184,7 +211,13 @@ def evaluate(
     reload = gun.reload / max(0.05, 1 + s.get("reload", 0.0))
     per_shot = per_projectile * ms * (1 + cc * (cd - 1)) * bane
     burst = per_shot * fr
-    sustained = burst * mag / (fr * reload + mag) if reload > 0 else burst
+    uptime = mag / (fr * reload + mag) if reload > 0 else 1.0
+    sustained = burst * uptime
+    extra = {}
+    if enemy is not None:
+        extra = _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy)
+    else:
+        extra = {"direct_dps": sustained, "total_dps": sustained}
     return Result(
         per_shot=per_shot,
         burst_dps=burst,
@@ -198,14 +231,70 @@ def evaluate(
         magazine=mag,
         reload=reload,
         by_type=by_type,
+        **extra,
     )
 
 
-def best_order(gun: Gun, t: Totals, target: str | None) -> tuple[Result, list[int]]:
+def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy) -> dict:
+    """Damage per second to the enemy's health: armor and its stripping, Viral, Cold, and the
+    damage over time of Slash, Heat, Toxin, Electricity and Gas. Steady state while firing.
+
+    Proc type follows each type's share of the weapon's damage (before faction modifiers);
+    stacks are proc rate x duration, capped (Corrosive 10 for 8 s, Viral 10 and Cold 9 for 6 s).
+    Heat strips 50% while a Heat proc is active. Each DoT proc deals 6 ticks.
+    """
+    total = sum(by_type.values()) or 1.0
+    procs = ms * sc * fr * uptime
+    rate = {k: procs * v / total for k, v in by_type.items()}
+    n_corr = min(10.0, rate.get("corrosive", 0.0) * 8)
+    n_viral = min(10.0, rate.get("viral", 0.0) * 6)
+    n_cold = min(9.0, rate.get("cold", 0.0) * 6)
+    heat_up = 1 - math.exp(-rate.get("heat", 0.0) * 6)
+    corr_strip = 0.26 * n_corr if n_corr < 1 else 0.20 + 0.06 * n_corr
+    armor = 0.0 if enemy.stripped else enemy.armor * (1 - 0.5 * heat_up) * (1 - corr_strip)
+    dr = armor_reduction(armor)
+    viral = 1 + _stack_multiplier(n_viral, 1.0, 0.25)
+    crit = 1 + cc * (cd + _stack_multiplier(n_cold, 0.10, 0.05) - 1)
+    # direct hits: every type is reduced by armor and scaled by the faction modifier
+    per_shot = sum(v * mods.get(k, 1.0) for k, v in by_type.items()) * (1 - dr) * ms * crit * bane * viral
+    direct = per_shot * fr * uptime
+    # damage over time: modded base x bane (counted twice) x that element's mod bonus
+    base = gun.total * base_mult * bane
+    elem = {}
+    for el, pct in t.elements:
+        elem[el] = elem.get(el, 0.0) + pct
+    sd = 1 + t.sums.get("status_damage", 0.0)
+    dot = 0.0
+    for k, c in DOT.items():
+        r = rate.get(k, 0.0)
+        if not r:
+            continue
+        tick = c * base * (1 + elem.get(k, 0.0)) * bane * sd * crit
+        if k == "slash":  # bleed is Cinematic damage: no armor, no faction modifier
+            per_proc = DOT_TICKS * tick * viral
+        else:
+            per_proc = DOT_TICKS * tick * mods.get(k, 1.0) * (1 - dr) * viral
+        dot += r * per_proc
+    return {
+        "direct_dps": direct,
+        "status_dps": dot,
+        "total_dps": direct + dot,
+        "armor": armor,
+        "armor_reduction": dr,
+        "corrosive_stacks": n_corr,
+        "viral_stacks": n_viral,
+        "heat_uptime": heat_up,
+        "cold_stacks": n_cold,
+    }
+
+
+def best_order(
+    gun: Gun, t: Totals, target: str | None, enemy: Enemy | None = None
+) -> tuple[Result, list[int]]:
     """Try every slot order of the elemental mods (it decides what combines) and keep the best."""
     n = len(t.elements)
     if n <= 1:
-        return evaluate(gun, t, target), list(range(n))
+        return evaluate(gun, t, target, enemy=enemy), list(range(n))
     best: tuple[Result, list[int]] | None = None
     seen: set[tuple[str, ...]] = set()
     for perm in permutations(range(n)):
@@ -213,8 +302,8 @@ def best_order(gun: Gun, t: Totals, target: str | None) -> tuple[Result, list[in
         if key in seen:
             continue
         seen.add(key)
-        r = evaluate(gun, t, target, list(perm))
-        if best is None or r.sustained_dps > best[0].sustained_dps:
+        r = evaluate(gun, t, target, list(perm), enemy=enemy)
+        if best is None or r.total_dps > best[0].total_dps:
             best = (r, list(perm))
     assert best is not None
     return best

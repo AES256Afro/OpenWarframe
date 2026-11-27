@@ -138,3 +138,46 @@ def test_trust_docs_exist_and_are_linked():
         assert name in readme
     page = (DOCS.parent / "src/openwarframe/app/static/index.html").read_text(encoding="utf-8")
     assert "not affiliated with Digital Extremes" in page
+
+
+def test_helminth_candidates_are_mastered_base_frames_not_yet_fed():
+    from datetime import UTC, datetime
+
+    from openwarframe.app.data import build_helminth
+    from openwarframe.inventory.parse import Inventory, parse_inventory
+
+    def frame(path, name, mastered=True, owned=True):
+        return {"id": path, "name": name, "category": "Warframe", "owned": owned,
+                "mastery": "Mastered" if mastered else "Leveling"}  # fmt: skip
+
+    items = [
+        frame("/Lotus/Powersuits/Rhino/Rhino", "Rhino"),  # fed as its Prime: same ability
+        frame("/Lotus/Powersuits/Rhino/RhinoPrime", "Rhino Prime"),
+        frame("/Lotus/Powersuits/Loki/Loki", "Loki"),
+        frame("/Lotus/Powersuits/Nyx/Nyx", "Nyx", mastered=False),
+        frame("/Lotus/Powersuits/Mag/MagPrime", "Mag Prime"),  # only the Prime: keep it
+        frame("/Lotus/Powersuits/Excalibur/ExcaliburUmbra", "Excalibur Umbra"),
+        {
+            "id": "/Lotus/Weapons/X",
+            "name": "Braton",
+            "category": "Primary",
+            "owned": True,
+            "mastery": "Mastered",
+        },
+    ]
+    inv = parse_inventory(
+        {
+            "Suits": [],
+            "InfestedFoundry": {"ConsumedSuits": [{"s": "/Lotus/Powersuits/Rhino/RhinoPrime"}, {"c": {}}]},
+        }
+    )
+    assert inv.helminth_fed == ["/Lotus/Powersuits/Rhino/RhinoPrime"]
+    assert build_helminth(items, inv) == {"fed": 1, "candidates": ["Loki"]}
+    assert build_helminth(items, Inventory(loaded_at=datetime.now(UTC), source="x")) is None  # no data
+    assert build_helminth(items, None) is None
+
+
+def test_focus_suggests_helminth_and_circuit_picks():
+    page = (DOCS.parent / "src/openwarframe/app/static/index.html").read_text(encoding="utf-8")
+    assert '"Feed "+hm.candidates[0]+" to the Helminth"' in page
+    assert 'r.kind==="Circuit, Steel Path" && r.for_you' in page

@@ -77,6 +77,32 @@ def _syndicate_rank(where: str, ranks: dict[str, int]) -> int | None:
     return None
 
 
+def frame_family(unique_name: str) -> str | None:
+    """'/Lotus/Powersuits/Rhino/RhinoPrime' -> 'rhino': a frame and its Prime give one ability."""
+    parts = unique_name.split("/")
+    return parts[3].lower() if len(parts) > 4 and parts[2] == "Powersuits" else None
+
+
+def build_helminth(items: list[dict], inventory: Inventory | None) -> dict | None:
+    """Mastered Warframes you own whose ability the Helminth hasn't taken yet.
+
+    Feeding a frame to the Helminth costs that frame (you can build it again) and unlocks its
+    ability for every other frame. Only known when the inventory file has Helminth data.
+    """
+    if inventory is None or inventory.helminth_fed is None:
+        return None
+    fed = {f for f in map(frame_family, inventory.helminth_fed) if f}
+    candidates: dict[str, str] = {}
+    for it in items:
+        fam = frame_family(it["id"])
+        if it["category"] != "Warframe" or not fam or fam in fed or "Umbra" in it["name"]:
+            continue
+        # only the base frame: a Prime is the copy worth keeping, and gives the same ability
+        if it.get("owned") and it["mastery"] == "Mastered" and not it["name"].endswith(" Prime"):
+            candidates[fam] = it["name"]
+    return {"fed": len(fed), "candidates": sorted(candidates.values())}
+
+
 def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = None) -> dict:
     conn = codex.conn
     graph = codex.graph
@@ -303,6 +329,7 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             row["batch"] = batch.get(recipe) or 1
 
     farm = build_farm(report, codex, inventory, relics)
+    helminth = build_helminth(items, inventory)
 
     m = report.mastery
     return {
@@ -336,6 +363,7 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             },
         },
         "items": items,
+        "helminth": helminth,
         "relics": relics,
         "blueprints": blueprints,
         "farm": farm,

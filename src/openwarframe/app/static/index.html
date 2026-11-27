@@ -1090,6 +1090,10 @@ function suggestions(){
       out.push({id:"fissure:"+fz.id, what:inv?("Run the "+fz.tier+" "+fz.mission+" fissure on "+fz.where):("If you have "+fz.tier+" relics: run the "+fz.mission+" fissure on "+fz.where), where:fz.where+(fz.steel_path?" (Steel Path)":""), why:why, m:fz.fast?5:10, go:"live"}); } }
   if(LIVE&&LIVE.baro&&LIVE.baro.here){ var duc=(DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0);
     if(duc) out.push({id:"baro", what:"Turn spare Prime parts into ducats, then visit Baro", where:LIVE.baro.where, why:duc+" ducats from spares. Baro leaves in "+LIVE.baro.hours_left+" h.", m:10, go:"sell"}); }
+  var inc=((LIVE&&LIVE.weekly)||[]).filter(function(r){return r.kind==="Circuit, Steel Path" && r.for_you})[0];
+  if(inc && (DATA.meta.steel_path_unlocked)) out.push({id:"circuit:"+inc.id, what:"Take the "+inc.what+" from the Steel Path Circuit", where:"Duviri, the Circuit (Steel Path)", why:inc.note+"."+(inc.hours_left!=null?" This week's choice changes in "+Math.max(1,Math.round(inc.hours_left/24))+" d.":""), m:30, go:"live"});
+  var hm=DATA.helminth;
+  if(hm && hm.candidates.length) out.push({id:"helminth:"+hm.candidates[0], what:"Feed "+hm.candidates[0]+" to the Helminth", where:"Your Orbiter, Helminth room", why:"You've mastered it and its ability isn't subsumed yet; every frame can then use it. "+(hm.candidates.length>1?(hm.candidates.length-1)+" more mastered frames could go next.":"It's the last one you own."), m:5});
   var ownedOnly=(PREFS.settings||{}).ownedonly!==false;
   var one=(f.finish||[]).filter(function(x){return x.missing===1 && !isGoal(x.id)})
     .map(function(c){ var p=c.pieces.find(function(x){return x.short!==0}); return p?{c:c,p:p,r:pieceRoute(p)}:null; })

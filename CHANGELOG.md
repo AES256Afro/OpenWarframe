@@ -10,6 +10,10 @@ What changed in each release, newest first. Releases are on
   and how much syndicate standing you can still earn today.
 - **Live: Varzia.** Prime Resurgence stock with Aya and Regal Aya prices; Prime gear you haven't
   mastered and relics holding parts you need come first. The Live header says how many there are.
+- **Helminth.** With an inventory that has Helminth data, Focus suggests feeding a mastered base
+  Warframe whose ability you haven't subsumed yet (never a Prime or Umbra).
+- **Circuit pick on Focus.** When this week's Steel Path Circuit offers an Incarnon Genesis for a
+  weapon you own, Focus suggests taking it.
 - **Linux.** The app finds the game log in Steam's Proton prefix (every Steam library, Flatpak
   Steam too), Lutris and Wine, so "you are here" works. The README says what Linux supports.
 - **Docs.** A legal checklist ([docs/LEGAL.md](docs/LEGAL.md)), an accessibility statement and

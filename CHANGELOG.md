@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.12.0
 
 - **Reward helper in every game language.** Pick your game client's language in the Reward helper
   view (15 languages). OpenWarframe downloads DE's item names for it once (about 1.4 MB, saved in

@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.6.2
 
 - **Log file.** The app and the CLI write `logs/openwarframe.log` in the data folder (four
   files of at most 1 MB), crashes included, with the game session key masked.

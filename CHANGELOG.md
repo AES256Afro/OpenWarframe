@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.13.0
 
 - **Item names in your language.** Settings > **Item names** shows items, parts and relics in any
   of the 15 game languages across the app, Live, item details and every export. The app's own text

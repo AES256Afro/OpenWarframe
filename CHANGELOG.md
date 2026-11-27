@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.18.0
 
 - **Warframe builds fill the Aura and Exilus slots.** The Exilus slot takes one exilus-capable mod
   (the Drift mods and the like). The aura is picked for what it does for your own frame (Physique,

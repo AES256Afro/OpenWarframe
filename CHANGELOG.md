@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.9.0
 
 - **Live: This week.** The Archon Hunt (which Archon, its three missions and the shard colour),
   the Circuit's Warframe and Incarnon Genesis picks (flagged when you own the weapon or its Prime)

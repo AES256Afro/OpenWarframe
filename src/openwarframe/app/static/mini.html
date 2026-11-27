@@ -23,6 +23,8 @@ ol .w{color:var(--muted)}
 .vault{color:var(--violet)}
 .empty{color:var(--muted)}
 .age{font-size:12px; color:var(--muted)}
+.now{justify-self:start; font:600 12px "Segoe UI", system-ui, sans-serif; color:var(--fg); background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:4px 10px; cursor:pointer}
+.now:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
 .stale .pick{border-color:var(--line); opacity:.6}
 :root.hc{--muted:#c9d3e6; --line:#5a6a8c}
 @media (prefers-reduced-motion:no-preference){ .pick{transition:opacity .2s} }
@@ -30,6 +32,7 @@ ol .w{color:var(--muted)}
 </head>
 <body>
 <div class="state" id="state">Connecting…</div>
+<button type="button" id="now" class="now">Read the screen now</button>
 <div id="out" class="empty" role="status" aria-live="polite">Waiting for a fissure reward screen.</div>
 <div class="age" id="age"></div>
 <script>
@@ -52,7 +55,8 @@ ol .w{color:var(--muted)}
   function draw(d){
     var st=document.getElementById("state");
     state=d.state||"";
-    st.innerHTML=d.state==="watching"||d.state==="reading"?'<b>Watching</b> · '+esc(d.message):esc(d.state==="off"?"Not watching. Start it in the Reward helper view.":d.message);
+    var key=(d.hotkey&&d.hotkey.active)?" Or press "+d.hotkey.key+".":"";
+    st.innerHTML=d.state==="watching"||d.state==="reading"?'<b>Watching</b> · '+esc(d.message):esc(d.state==="off"?"Not watching. Start it in the Reward helper view, or read the screen now."+key:d.message);
     var r=d.last; if(!r){ freshness(); return; }
     last=r;
     // prices arrive a moment after the pick: redraw when the ranking changes, not only the time
@@ -73,6 +77,7 @@ ol .w{color:var(--muted)}
   }
   comfort(); setInterval(comfort, 15000);
   function poll(){ fetch("/api/reward").then(function(r){return r.json()}).then(draw).catch(function(){ document.getElementById("state").textContent="OpenWarframe is not running."; }); }
+  document.getElementById("now").onclick=function(){ fetch("/api/reward/capture",{method:"POST"}).then(function(r){return r.json()}).then(draw).catch(function(){}); };
   poll(); setInterval(poll, 1000);
 })();
 </script>

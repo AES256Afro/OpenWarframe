@@ -3,6 +3,12 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Reward helper: read now.** A system-wide key (Windows, default Ctrl+Alt+F9, changeable or
+  off) reads the reward screen on demand, without waiting for the game log. A **Read the screen
+  now** button does the same in the Reward helper view and the pop-out, on Windows and macOS.
+
 ## 0.10.0
 
 - **Update from inside the app.** When a new version is out, the sidebar shows **Update to x.y.z

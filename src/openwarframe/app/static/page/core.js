@@ -53,7 +53,7 @@ function pill(state){
 }
 function accessPill(a){
   if(a==="Available") return '<span class="pill p-owned">Available</span>';
-  if(a==="Leveled before") return '<span class="muted">—</span>';
+  if(a==="Leveled before") return '<span class="muted">-</span>';
   if(a&&a.indexOf("Needs MR")===0) return '<span class="pill p-bad">'+esc(a)+'</span>';
   return '<span class="pill p-warn">'+esc(a)+'</span>';
 }

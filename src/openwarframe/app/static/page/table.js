@@ -20,7 +20,7 @@ function detailHtml(spec, r){
   if(spec.key==="missions") return '<div class="drops">'+r.gives.map(function(g){return '<div>'+esc(g)+'</div>'}).join('')+'</div>'+(r.popular_why?'<p class="muted">Popular farm: '+esc(r.popular_why)+'</p>':'');
   if(spec.key==="resources") return '<span class="muted">Needed by: '+esc((r.used_by||[]).join(", "))+'</span>';
   if(spec.key!=="items") return '<span class="muted">'+(r.slug?tradeName(r.slug):'Not tradeable')+'</span>';
-  var goal=r.mastery==="Mastered"?'':'<p><button class="btn" type="button" data-goal="'+esc(r.id)+'">'+(isGoal(r.id)?'Goal ✓ (remove)':'Add to goals')+'</button></p>';
+  var goal=r.mastery==="Mastered"?'':'<p><button class="btn" type="button" data-goal="'+esc(r.id)+'">'+(isGoal(r.id)?'Remove goal':'Add to goals')+'</button></p>';
   var lead=r.mastery!=="Never leveled"?'<p class="muted">You leveled this before. Here is how to get it again.</p>':'';
   return lead+'<div class="howto" data-howto="'+esc(r.id)+'">'+(HOWTO[r.id]?howtoHtml(HOWTO[r.id]):'<span class="muted">Looking up how to get this…</span>')+'</div>'+goal;
 }
@@ -82,7 +82,7 @@ function renderTable(){
   }
   h+='</tbody></table>';
   // a long list is cut for speed: say so, so nothing looks missing
-  if(rows.length>ROW_CAP) h+='<p class="capnote" role="status">Showing first '+ROW_CAP.toLocaleString()+' of '+rows.length.toLocaleString()+' — refine your search or filters to see the rest.</p>';
+  if(rows.length>ROW_CAP) h+='<p class="capnote" role="status">Showing first '+ROW_CAP.toLocaleString()+' of '+rows.length.toLocaleString()+'. Refine your search or filters to see the rest.</p>';
   $("view").innerHTML=h;
   return rows;
 }

@@ -122,7 +122,7 @@ def _amount(v) -> str | None:
     if isinstance(v, dict):
         lo, hi = _amount(v.get("minValue")), _amount(v.get("maxValue"))
         if lo and hi:
-            return lo if lo == hi else f"{lo}–{hi}"
+            return lo if lo == hi else f"{lo}-{hi}"
         return lo or hi
     return None
 

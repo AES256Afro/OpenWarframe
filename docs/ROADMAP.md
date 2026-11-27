@@ -77,7 +77,7 @@ every later milestone builds on.
 
 **Risks.** None technical. The license choice blocks public contributions.
 
-**Size.** S (2–3 days).
+**Size.** S (2-3 days).
 
 ---
 
@@ -159,7 +159,7 @@ boosters, Helminth, Incarnon evolution, Lich/Sister state.
 - No stable public source for inventory. The adapter interface keeps the rest of the tool working with whatever is available.
 - Inventory JSON is large (megabytes); stream-parse or load once and index.
 
-**Size.** M–L (1–2 weeks plus the DG1 decision).
+**Size.** M-L (1-2 weeks plus the DG1 decision).
 
 ---
 
@@ -244,7 +244,7 @@ it, tuned to this account.
 
 **Risks.** World state sections change without notice; keep raw JSON, tolerate unknown fields. `EE.log` line formats are undocumented; treat parsing as best-effort.
 
-**Size.** M–L (1.5–2 weeks).
+**Size.** M-L (1.5-2 weeks).
 
 ---
 
@@ -300,12 +300,12 @@ have not unlocked, what you probably never knew existed.
 | 1 | M0 Foundation | S | week 1 |
 | 2 | M1 Codex | M | week 2 |
 | 3 | M2 Profile snapshot | M | week 3 |
-| 4 | M4 Exports v1 (JSON, SQLite, Excel, LLM brief) | M | week 4–5 |
-| 5 | M5 Reports (dashboard, PDF, DOCX) | M | week 6–7 |
-| 6 | M3 Inventory adapters (+ DG1) | M–L | week 8–9 |
+| 4 | M4 Exports v1 (JSON, SQLite, Excel, LLM brief) | M | week 4-5 |
+| 5 | M5 Reports (dashboard, PDF, DOCX) | M | week 6-7 |
+| 6 | M3 Inventory adapters (+ DG1) | M-L | week 8-9 |
 | 7 | M6 Farm intelligence | M | week 10 |
-| 8 | M7 Live planner | M–L | week 11–12 |
-| 9 | M8 Goals & guides | L | week 13–14, then ongoing |
+| 8 | M7 Live planner | M-L | week 11-12 |
+| 9 | M8 Goals & guides | L | week 13-14, then ongoing |
 | 10 | M9 Share & package | M | week 15 |
 
 M3 is placed after the first exports on purpose: profile data alone already produces

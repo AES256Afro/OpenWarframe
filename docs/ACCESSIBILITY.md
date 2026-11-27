@@ -26,7 +26,7 @@ today, what doesn't yet, and how we keep it from slipping.
   every Office theme.
 - There is no full automated audit (such as axe) in CI yet; the contrast and labelling tests cover
   the theme and the page's static markup only.
-- The UI is English only. See [I18N.md](I18N.md).
+- The UI is English only; the reward helper reads every game language. See [I18N.md](I18N.md).
 
 ## Checklist for changes to the page
 

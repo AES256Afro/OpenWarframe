@@ -23,7 +23,6 @@ log = logging.getLogger(__name__)
 CAPTURE_DELAY = 1.5
 PRICE_TIMEOUT = 4  # seconds per request: prices are a bonus, the pick must not wait on them
 KEEP_RECORDINGS = 30  # newest reward screens kept when saving them is on
-OCR_LANGUAGE = "en-US"  # the item list is English; reading with the profile language fails
 
 _OCR: tuple[object, bool] | None = None  # (the probe that answered, its answer)
 
@@ -88,8 +87,9 @@ class RewardWatcher:
     leave two threads writing the status.
     """
 
-    def __init__(self, settings: Settings, *, save_recordings: bool = False) -> None:
+    def __init__(self, settings: Settings, *, save_recordings: bool = False, language: str = "en") -> None:
         self.settings = settings
+        self.language = language  # the game client's language (codex.languages.LANGUAGES)
         self.lock = threading.Lock()  # status fields
         self._control = threading.Lock()  # start/stop
         self.thread: threading.Thread | None = None
@@ -112,6 +112,7 @@ class RewardWatcher:
                 "last": self.last,
                 "history": list(self.history),
                 "save_recordings": self.save_recordings,
+                "language": self.language,
             }
 
     def start(self) -> dict:
@@ -165,17 +166,28 @@ class RewardWatcher:
             except OSError:
                 return None
 
+        from ..codex.languages import names_path
+
         snaps = sorted(s.snapshots_dir.glob("*.json")) if s.snapshots_dir.exists() else []
-        return (mtime(s.codex_path), mtime(s.inventory_path), snaps[-1].name if snaps else None)
+        lang = self.language
+        return (
+            mtime(s.codex_path),
+            mtime(s.inventory_path),
+            snaps[-1].name if snaps else None,
+            lang,
+            mtime(names_path(s.home, lang)),
+        )
 
     def _context(self):
         """(reward catalog, account needs). The database is closed before this returns."""
         from ..codex import Codex
+        from ..codex.languages import load_names
         from ..live.match import RewardCatalog, account_needs
 
+        names = load_names(self.settings.home, self.language)
         codex = Codex(self.settings.codex_path)
         try:
-            catalog = RewardCatalog.from_codex(codex.conn)
+            catalog = RewardCatalog.from_codex(codex.conn, names)
         finally:
             codex.close()
         return catalog, account_needs(self.settings)
@@ -189,10 +201,14 @@ class RewardWatcher:
         the reward screen gives 15. The pick without prices is published first; prices
         re-rank it a moment later (or right away with ``prices_now``, for the sample).
         """
+        from ..codex.languages import CJK, ocr_tag
         from ..live import ocr
         from ..live.reward import analyze, save_recording
 
-        analysis = analyze(image, catalog, ui_scale=ocr.read_ui_scale(), language=OCR_LANGUAGE, needs=needs)
+        lang = self.language
+        analysis = analyze(
+            image, catalog, ui_scale=ocr.read_ui_scale(), language=ocr_tag(lang), needs=needs, cjk=lang in CJK
+        )
         result = analysis.to_dict()
         result["time"] = datetime.now(UTC).isoformat(timespec="seconds")
         result["source"] = source
@@ -343,10 +359,10 @@ class RewardWatcher:
         from ..live.synthetic import reward_screen
 
         catalog, needs = self._context()
-        names = (
-            names or [e.name for e in catalog.entries[:: max(1, len(catalog.entries) // players)]][:players]
-        )
-        image = reward_screen(names, (1920, 1080))
+        picked = catalog.entries[:: max(1, len(catalog.entries) // players)][:players]
+        # drawn as the game prints them: in the game's language when its names are loaded
+        names = names or [e.read_name or e.name for e in picked]
+        image = reward_screen(names, (1920, 1080), lang=self.language)
         result = self._analyze(image, catalog, needs, source="sample", prices_now=True)
         result["sample_names"] = names
         return result

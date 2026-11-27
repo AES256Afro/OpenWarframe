@@ -60,12 +60,14 @@ def analyze(
     language: str | None = None,
     needs: tuple[set[str], dict[str, int], set[str]] | None = None,
     prices: dict | None = None,
+    cjk: bool = False,
 ) -> Analysis:
-    language = language or "en-US"  # item names are English; a profile-language engine misreads them
+    # the game's language, not the PC's: a profile-language engine misreads English names
+    language = language or "en-US"
     if players:
-        layouts = {players: ocr.read_slots(image, players, ui_scale, language=language)}
+        layouts = {players: ocr.read_slots(image, players, ui_scale, language=language, cjk=cjk)}
     else:
-        layouts = ocr.read_all_layouts(image, ui_scale, language=language)
+        layouts = ocr.read_all_layouts(image, ui_scale, language=language, cjk=cjk)
     n, matches = catalog.pick_layout(layouts)
     needed, parts, owned = needs or (set(), {}, set())
     ranked = rank(matches, needed_items=needed, owned_parts=parts, owned_items=owned, prices=prices)

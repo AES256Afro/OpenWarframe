@@ -249,18 +249,18 @@ def _recognize_vision(img: Image.Image, language: str | None) -> list[str]:
 
 
 def read_slots(
-    image: Image.Image, players: int, ui_scale: float = 1.0, *, language: str | None = None
+    image: Image.Image, players: int, ui_scale: float = 1.0, *, language: str | None = None, cjk: bool = False
 ) -> list[str]:
     """Raw OCR text for each reward box (lines joined with a space)."""
     out = []
-    for box in slot_boxes(image.width, image.height, players, ui_scale):
+    for box in slot_boxes(image.width, image.height, players, ui_scale, cjk=cjk):
         lines = ocr_lines(prepare(image.crop(box.as_tuple())), language)
         out.append(" ".join(s.strip() for s in lines if s.strip()))
     return out
 
 
 def read_all_layouts(
-    image: Image.Image, ui_scale: float = 1.0, *, language: str | None = None
+    image: Image.Image, ui_scale: float = 1.0, *, language: str | None = None, cjk: bool = False
 ) -> dict[int, list[str]]:
     """OCR for every squad size; the matcher picks the layout that reads best.
 
@@ -271,7 +271,7 @@ def read_all_layouts(
     out: dict[int, list[str]] = {}
     for n in (4, 3, 2, 1):
         row = []
-        for box in slot_boxes(image.width, image.height, n, ui_scale):
+        for box in slot_boxes(image.width, image.height, n, ui_scale, cjk=cjk):
             key = box.as_tuple()
             if key not in seen:
                 lines = ocr_lines(prepare(image.crop(key)), language)

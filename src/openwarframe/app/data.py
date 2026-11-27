@@ -85,6 +85,8 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
     # -- items -----------------------------------------------------------------------
     items: list[dict] = []
     mastered_ids: set[str] = set()
+    # the MR an item needs, known for owned items too (the profile only lists it for missing ones)
+    mastery_req = dict(conn.execute("SELECT unique_name, mastery_req FROM item"))
     for o in report.owned:
         if o.mastered:
             mastered_ids.add(o.unique_name)
@@ -97,8 +99,8 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
                 "mastery": "Mastered" if o.mastered else "Leveling",
                 "rank": o.rank,
                 "owned": inventory.owns(o.unique_name) if have_inv else None,
-                "mr": None,
-                "how": "",
+                "mr": mastery_req.get(o.unique_name) or None,  # 0 or unknown: shown blank
+                "how": None,  # you had it: the page shows "—"
                 "access": "Leveled before",
                 "slug": None,
             }
@@ -111,10 +113,10 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
                 "category": m.category,
                 "group": GROUPS.get(m.category, "Companions & more"),
                 "mastery": "Never leveled",
-                "rank": 0,
+                "rank": None,  # never leveled: a blank cell, not a 0
                 "owned": inventory.owns(m.unique_name) if have_inv else None,
-                "mr": m.mastery_req,
-                "how": m.acquisition,
+                "mr": m.mastery_req or None,
+                "how": m.acquisition or None,
                 "access": _access(m, syndicate_ranks),
                 "slug": m.market_slug,
                 "sources": [f"{s.where}: {s.detail}" for s in m.blueprint_sources][:4]
@@ -209,6 +211,7 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
 
     # -- blueprints ------------------------------------------------------------------
     blueprints: list[dict] = []
+    batch = {k: v for k, v in conn.execute("SELECT unique_name, num FROM recipe") if v and v > 1}
     unknown_blueprints = 0  # in the inventory but not in the game data yet (new content)
     if have_inv:
         for rid, n in inventory.recipes.items():
@@ -254,6 +257,7 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
                 {
                     "id": rid,
                     "name": item_names.get(result, result.rsplit("/", 1)[-1]),
+                    "batch": batch.get(rid) or 1,  # one build makes this many (Cipher: 10)
                     "blueprints": n,
                     "ready": ready,
                     # part and consumable blueprints: mastery is about what they end up building
@@ -290,6 +294,10 @@ def build_app_data(report: Report, codex: Codex, inventory: Inventory | None = N
             "mods": build_mods(conn, inventory),
             "sell": build_sell(conn, inventory, graph, mastered_ids, item_names),
         }
+        for row in extra["foundry"]:
+            # the row id is the recipe followed by its ready time
+            recipe = row["id"].removesuffix(row.get("ready_at") or "")
+            row["batch"] = batch.get(recipe) or 1
 
     farm = build_farm(report, codex, inventory, relics)
 
@@ -382,6 +390,10 @@ def build_farm(report: Report, codex: Codex, inventory: Inventory | None, relics
                 "needed": r["needed"],
                 "vaulted_parts": r["vaulted_parts"],
                 "vaulted": r["vaulted"],
+                # the same detail as on Relics: what it drops and its market name
+                "drops": r.get("drops") or [],
+                "slug": r.get("slug"),
+                "price": r.get("price"),
             }
             for r in crack
         ],

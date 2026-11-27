@@ -10,7 +10,6 @@ from docx import Document
 from openwarframe.guide import (
     GuideFiles,
     build_mastery_plan,
-    documents,
     find_browser,
     load_kb,
     render_mastery_html,
@@ -112,7 +111,9 @@ def test_find_browser_honours_env(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
 
 def test_pdf_without_browser_explains(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr(documents, "find_browser", lambda: None)
+    from openwarframe import printing
+
+    monkeypatch.setattr(printing, "find_browser", lambda: None)
     page = tmp_path / "p.html"
     page.write_text("<p>x</p>", encoding="utf-8")
     with pytest.raises(RuntimeError, match="OPENWARFRAME_BROWSER"):

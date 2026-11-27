@@ -91,3 +91,23 @@ def test_selfcheck_and_version(home: Path):
 def test_every_run_writes_the_log_file(home: Path):
     run("version")
     assert (home / "logs" / "openwarframe.log").exists()
+
+
+def test_export_points_latest_at_its_folder_and_guide_share_keeps_its_own(home: Path):
+    out = run("export", "-f", "json", "--no-pdf")
+    latest = (home / "exports" / "LATEST.txt").read_text(encoding="utf-8").strip()
+    assert Path(latest).name == "full" and (Path(latest) / "account.json").exists()
+    assert "Export folder:" in out
+
+    personal = run("guide", "mastery", "--no-pdf", "--no-docx")
+    shared = run("guide", "mastery", "--share", "--no-pdf", "--no-docx")
+    folder = Path(latest).parent
+    assert (folder / "full" / "mastery-plan.html").exists() and (
+        folder / "share" / "mastery-plan.html"
+    ).exists()
+    assert "Tester" in (folder / "full" / "mastery-plan.html").read_text(encoding="utf-8")
+    assert "Tester" not in (folder / "share" / "mastery-plan.html").read_text(encoding="utf-8")
+    # short by default: a summary and the files written, the full plan only on request
+    assert "The path" not in personal and "wrote" in personal and len(personal.splitlines()) < 20
+    assert "wrote" in shared
+    assert "The path" in run("guide", "mastery", "--no-html", "--show-plan")

@@ -19,12 +19,18 @@ Extremes (DE) and can change.
 
 ```
 PC:         https://api.warframe.com/cdn/getProfileViewingData.php?playerId=<accountId>
-PlayStation http://content-ps4.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
-Xbox        http://content-xb1.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
-Switch      http://content-swi.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
-iOS         http://content-mob.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
-Android     http://content-and.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
+PlayStation https://content-ps4.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
+Xbox        https://content-xb1.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
+Switch      https://content-swi.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
+iOS         https://content-mob.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
+Android     https://content-and.warframe.com/dynamic/getProfileViewingData.php?playerId=<accountId>
 ```
+
+Console profiles are fetched over HTTPS. The console hosts have long been documented
+with plain `http://` addresses; they answer HTTPS with a valid certificate, so
+OpenWarframe uses HTTPS and only falls back to plain HTTP when an HTTPS connection
+cannot be made at all (the log says so when that happens). Only the account ID and
+platform travel in the request either way.
 
 Verified today: a request with `?n=<display name>` returns HTTP 200 with an empty
 body on the PC host and 404 on the legacy `content.warframe.com` host, so lookup is

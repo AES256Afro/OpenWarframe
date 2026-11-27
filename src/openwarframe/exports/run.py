@@ -2,16 +2,24 @@
 
 from __future__ import annotations
 
+import logging
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 
 from ..report.model import Report
 from .brief import write_brief
 from .data import write_csv, write_json, write_sqlite
+from .extras import ExportExtras
 from .tables import build_tables
 from .xlsx import write_xlsx
 
 FORMATS = ("json", "sqlite", "csv", "xlsx", "llm", "dashboard", "guide")
+# Formats that print a PDF with the browser. Each print starts the browser and mostly waits
+# on it, so these run side by side instead of one after another.
+PRINTING = ("llm", "dashboard", "guide")
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -37,6 +45,7 @@ def run_exports(
     guide_docx: bool = True,
     copy_to: list[str] | None = None,
     share: bool = False,
+    extras: ExportExtras | None = None,
 ) -> list[ExportResult]:
     unknown = set(formats) - set(FORMATS)
     if unknown:
@@ -44,11 +53,13 @@ def run_exports(
     out_dir.mkdir(parents=True, exist_ok=True)
     tables = build_tables(report)
     stamp = report.snapshot_taken_at.strftime("%Y-%m-%d")
-    results: list[ExportResult] = []
     rows = sum(len(t.rows) for t in tables)
-    for fmt in formats:
+    extras = extras or ExportExtras()
+
+    def one(fmt: str) -> list[ExportResult]:
         # one format failing (a workbook open in Excel, a missing knowledge base) must not
         # cost the player every format after it
+        results: list[ExportResult] = []
         try:
             _run_one(
                 fmt,
@@ -63,6 +74,7 @@ def run_exports(
                 guide_docx,
                 copy_to,
                 share,
+                extras,
             )
         except PermissionError as exc:
             name = Path(exc.filename).name if exc.filename else fmt
@@ -72,8 +84,24 @@ def run_exports(
                 )
             )
         except Exception as exc:  # noqa: BLE001 - reported in the result table instead
-            results.append(ExportResult("warning", out_dir, f"{fmt} failed: {type(exc).__name__}: {exc}"))
-    return results
+            log.debug("%s export failed", fmt, exc_info=True)
+            results.append(ExportResult("warning", out_dir, f"{fmt} failed: {exc}"))
+        return results
+
+    parallel = [f for f in formats if f in PRINTING] if guide_pdf else []
+    done: dict[str, list[ExportResult]] = {}
+    if len(parallel) > 1:
+        with ThreadPoolExecutor(max_workers=len(parallel)) as pool:
+            futures = {f: pool.submit(one, f) for f in parallel}
+            for f in formats:
+                if f not in futures:
+                    done[f] = one(f)
+            for f, fut in futures.items():
+                done[f] = fut.result()
+    else:
+        for f in formats:
+            done[f] = one(f)
+    return [r for f in formats for r in done[f]]
 
 
 def _run_one(
@@ -89,6 +117,7 @@ def _run_one(
     guide_docx: bool,
     copy_to: list[str] | None,
     share: bool,
+    extras: ExportExtras,
 ) -> None:
     if fmt == "json":
         p = write_json(report, out_dir / "account.json")
@@ -100,10 +129,11 @@ def _run_one(
         p = write_csv(tables, out_dir / "csv")
         results.append(ExportResult("csv", p, f"{len(tables)} files"))
     elif fmt == "xlsx":
-        p = write_xlsx(report, tables, out_dir / f"OpenWarframe-{stamp}.xlsx")
-        results.append(ExportResult("xlsx", p, f"{len(tables) - 1} sheets, {rows:,} rows"))
+        p = write_xlsx(report, tables, out_dir / f"OpenWarframe-{stamp}.xlsx", extras)
+        sheets = len(tables) - 1 + (1 if extras.diff is not None and not extras.diff.is_empty() else 0)
+        results.append(ExportResult("xlsx", p, f"{sheets} sheets, {rows:,} rows"))
     elif fmt == "llm":
-        md, js, tokens = write_brief(report, out_dir, brief_budget)
+        md, js, tokens = write_brief(report, out_dir, brief_budget, extras)
         results.append(ExportResult("llm", md, f"{brief_budget}, about {tokens:,} tokens (+ {js.name})"))
         from .brief_pdf import write_brief_documents
 
@@ -116,7 +146,7 @@ def _run_one(
     elif fmt == "dashboard":
         from .dashboard import write_dashboard
 
-        files = write_dashboard(report, out_dir, pdf=guide_pdf, docx=guide_docx)
+        files = write_dashboard(report, out_dir, pdf=guide_pdf, docx=guide_docx, extras=extras)
         results.append(ExportResult("dashboard", files.html, "account dashboard, single HTML file"))
         if files.pdf:
             results.append(ExportResult("dashboard-pdf", files.pdf, "dashboard as PDF"))

@@ -2,7 +2,8 @@
 
 The design follows the hand-made "Road to Mastery 30" guide: one reading column,
 Orokin gold for mastery and Tenno cyan for actions, light and dark themes. The page
-works offline; the Google Fonts link only improves the type when online.
+is self-contained and contacts no other site: fonts come from what is installed
+(Cinzel when present, otherwise Georgia).
 """
 
 from __future__ import annotations
@@ -131,7 +132,7 @@ td.r,th.r{text-align:right}
 .cloud-panel .row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
 footer{font-size:.88rem; color:var(--muted); display:grid; gap:8px; border-top:1px solid var(--line); padding-top:18px}
 footer a{color:var(--cyan)}
-@page{margin:14mm 12mm}
+@page{size:A4; margin:14mm 12mm}
 @media print{
   :root, :root[data-theme="dark"], :root:not([data-theme="light"]){
     --bg:#ffffff; --panel:#ffffff; --panel2:#f4f6f9; --fg:#172033; --muted:#566178; --line:#d6dce7;
@@ -336,10 +337,6 @@ def render_mastery_html(plan: MasteryPlan, files: GuideFiles | None = None) -> s
     a('<!doctype html><html lang="en"><head><meta charset="utf-8">')
     a('<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">')
     a(f"<title>Road to Mastery {plan.target_rank}</title>")
-    a(
-        '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700'
-        '&family=Source+Sans+3:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">'
-    )
     a(f'<style>{CSS}</style></head><body><div class="wrap">')
 
     # header

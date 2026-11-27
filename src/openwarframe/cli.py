@@ -121,6 +121,32 @@ def selfcheck() -> None:
     console.print("bundled files: ok")
 
 
+def _export_folder(s, snap, share: bool) -> Path:
+    from .exports.extras import export_folder
+
+    return export_folder(s, snap, share)
+
+
+def _remember_latest(s, folder: Path) -> Path:
+    """exports/LATEST.txt names the newest export folder (a link would not work everywhere)."""
+    pointer = s.exports_dir / "LATEST.txt"
+    atomic_write_text(pointer, str(folder.resolve()) + "\n")
+    return pointer
+
+
+def _open_in_browser(path: Path) -> None:
+    """Open a file or folder the way `guide mastery --open` does."""
+    import webbrowser
+
+    webbrowser.open(path.resolve().as_uri())
+
+
+def _export_extras(s, store, snapshot: str, parsed, codex):
+    from .exports.extras import gather_extras
+
+    return gather_extras(s, store, parsed, codex, compare=snapshot == "latest")
+
+
 @app.command()
 def export(
     formats: str = typer.Option(
@@ -130,28 +156,52 @@ def export(
         help="Comma-separated: json, sqlite, csv, xlsx, llm, dashboard, guide.",
     ),
     out: Path | None = typer.Option(
-        None, "--out", "-o", help="Output directory (default: data dir/exports/<date>)."
+        None,
+        "--out",
+        "-o",
+        help="Output folder (default: data dir/exports/<date>/full, or /share with --share).",
     ),
     snapshot: str = typer.Option(
         "latest", "--snapshot", help="Snapshot file, prefix, 'latest' or 'previous'."
     ),
     share: bool = typer.Option(False, "--share", help="Strip display name, clan and raw payloads."),
-    budget: str = typer.Option("compact", "--budget", help="LLM brief budget: compact (~8k tokens) or full."),
-    pdf: bool = typer.Option(
-        True, "--pdf/--no-pdf", help="With the guide, also print a PDF (needs Chrome or Edge)."
+    budget: str | None = typer.Option(
+        None, "--budget", help="LLM brief size: compact (~8k tokens, the default) or full."
+    ),
+    pdf: bool | None = typer.Option(
+        None,
+        "--pdf/--no-pdf",
+        help="Also print PDFs of the guide, brief and dashboard (needs Chrome, Edge, Chromium or Brave). On by default.",
     ),
     copy_to: str | None = typer.Option(
         None, "--copy-to", help="Copy the guide files to cloud sync folders: onedrive, gdrive or both."
     ),
+    open_: bool = typer.Option(False, "--open", help="Open the export folder when done."),
+    remember: bool = typer.Option(
+        False, "--remember", help="Save --budget, --pdf/--no-pdf and --copy-to as your defaults."
+    ),
 ) -> None:
-    """Export a snapshot to JSON, SQLite, CSV, Excel, an LLM brief and the mastery guide (HTML, Word, PDF)."""
+    """Export a snapshot to JSON, SQLite, CSV, Excel, an LLM brief, a dashboard and the mastery guide."""
     from .account.store import SnapshotStore
     from .account.sync import reparse
     from .codex import Codex
+    from .config import save_settings
     from .exports import FORMATS, run_exports
     from .report import build_report
 
     s = load_settings()
+    saved = s.export_prefs
+    if budget is not None and budget not in ("compact", "full"):
+        raise typer.BadParameter("budget must be compact or full")
+    if copy_to is not None:
+        _cloud_targets(copy_to)  # a bad name stops here, before it is saved
+    if remember:
+        given = {"budget": budget, "pdf": pdf, "copy_to": copy_to}
+        s.remember_export(**{k: v for k, v in given.items() if v is not None})
+        save_settings(s)
+    budget = budget if budget is not None else saved.get("budget", "compact")
+    pdf = pdf if pdf is not None else saved.get("pdf", True)
+    copy_to = copy_to if copy_to is not None else saved.get("copy_to")
     if not s.codex_path.exists():
         console.print("[red]No codex yet; run `openwarframe codex update` first.[/red]")
         raise typer.Exit(code=1)
@@ -169,33 +219,56 @@ def export(
         raise typer.BadParameter("budget must be compact or full")
     targets = _cloud_targets(copy_to)
     with Codex(s.codex_path) as codex, console.status("Building report..."):
-        report = build_report(reparse(snap, codex), codex, anonymize=share, inventory=_saved_inventory(s))
-    target = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M") / ("share" if share else "full"))
+        parsed = reparse(snap, codex)
+        report = build_report(parsed, codex, anonymize=share, inventory=_saved_inventory(s))
+        extras = _export_extras(s, store, snapshot, parsed, codex)
+    target = out or _export_folder(s, snap, share)
     with console.status("Writing exports..."):
         results = run_exports(
-            report, target, wanted, brief_budget=budget, guide_pdf=pdf, copy_to=targets, share=share
+            report,
+            target,
+            wanted,
+            brief_budget=budget,
+            guide_pdf=pdf,
+            copy_to=targets,
+            share=share,
+            extras=extras,
         )
-    t = Table(title=f"exports -> {target}", show_edge=False)
+    t = Table(title=f"exports -> {_e(str(target))}", show_edge=False)
     t.add_column("format")
     t.add_column("file")
     t.add_column("detail")
     t.add_column("size", justify="right")
     for r in results:
         t.add_row(
-            r.format, r.path.name + ("/" if r.path.is_dir() else ""), r.detail, f"{r.size / 1024:,.0f} KB"
+            _e(r.format),
+            _e(r.path.name + ("/" if r.path.is_dir() else "")),
+            _e(r.detail),
+            f"{r.size / 1024:,.0f} KB",
         )
     console.print(t)
     if share:
         console.print("[yellow]share mode: display name, clan and raw payloads removed[/yellow]")
+    if remember:
+        console.print(f"Saved your export choices to {s.config_path}", markup=False)
+    pointer = _remember_latest(s, target)
+    console.print(f"Export folder: {target.resolve()}", markup=False)
+    console.print(f"(its path is also in {pointer})", markup=False, style="dim")
+    if open_:
+        _open_in_browser(target)
 
 
-@app.command()
-def schema(out: Path = typer.Option(Path("docs/schema/account.schema.json"), "--out")) -> None:
-    """Write the JSON Schema for account.json."""
+@app.command(hidden=True)
+def schema(
+    out: Path = typer.Option(
+        ..., "--out", help="Where to write the schema, e.g. docs/schema/account.schema.json."
+    ),
+) -> None:
+    """Write the JSON Schema for account.json (for developers)."""
     from .exports.data import write_schema
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    console.print(f"wrote {write_schema(out)}")
+    console.print(f"wrote {write_schema(out)}", markup=False)
 
 
 # -- desktop app -------------------------------------------------------------------------
@@ -209,6 +282,17 @@ $s.Description = 'OpenWarframe'
 $s.IconLocation = '{icon},0'
 $s.Save()
 """
+
+
+def _ps_quote(value: str) -> str:
+    """Text for inside a single-quoted PowerShell string: a quote is written twice."""
+    return str(value).replace("'", "''")
+
+
+def shortcut_script(lnk: Path | str, target: str, cwd: Path | str, icon: Path | str) -> str:
+    return SHORTCUT_PS.format(
+        lnk=_ps_quote(lnk), target=_ps_quote(target), cwd=_ps_quote(cwd), icon=_ps_quote(icon)
+    )
 
 
 @app.command()
@@ -225,6 +309,15 @@ def gui(
     if shortcut:
         import shutil
         import subprocess
+        import sys
+
+        if sys.platform != "win32":
+            console.print(
+                "Desktop shortcuts are made on Windows only. On this computer, start the app with: "
+                "openwarframe gui",
+                markup=False,
+            )
+            return
 
         target = shutil.which("openwarframe-app") or shutil.which("openwarframe")
         if not target:
@@ -238,9 +331,9 @@ def gui(
         from importlib import resources
 
         icon = resources.files("openwarframe.app").joinpath("static/icon.ico")
-        script = SHORTCUT_PS.format(lnk=str(lnk), target=target, cwd=str(Path.home()), icon=str(icon))
+        script = shortcut_script(lnk, target, Path.home(), icon)
         subprocess.run(["powershell", "-NoProfile", "-Command", script], check=True)  # noqa: S603, S607
-        console.print(f"[green]Shortcut created:[/green] {lnk}")
+        console.print(f"[green]Shortcut created:[/green] {_e(str(lnk))}")
         return
     from .app import run_app
 
@@ -387,16 +480,26 @@ def guide_mastery(
         "latest", "--snapshot", help="Snapshot file, prefix, 'latest' or 'previous'."
     ),
     out: Path | None = typer.Option(
-        None, "--out", "-o", help="Where to write mastery-plan.html (default: data dir/exports/<date>/)."
+        None,
+        "--out",
+        "-o",
+        help="Folder for mastery-plan.html (default: data dir/exports/<date>/full, or /share with --share).",
     ),
     html: bool = typer.Option(True, "--html/--no-html", help="Write the guide files (HTML, Word, PDF)."),
-    pdf: bool = typer.Option(True, "--pdf/--no-pdf", help="Also print a PDF (needs Chrome or Edge)."),
+    pdf: bool = typer.Option(
+        True, "--pdf/--no-pdf", help="Also print a PDF (needs Chrome, Edge, Chromium or Brave)."
+    ),
     docx: bool = typer.Option(True, "--docx/--no-docx", help="Also write a Word document."),
     copy_to: str | None = typer.Option(
         None, "--copy-to", help="Copy the files to cloud sync folders: onedrive, gdrive or both."
     ),
     open_: bool = typer.Option(False, "--open", help="Open the HTML guide in your browser when done."),
     share: bool = typer.Option(False, "--share", help="Strip display name and clan."),
+    show_plan: bool = typer.Option(
+        False,
+        "--show-plan",
+        help="Also print the whole plan here: ranks, tonight's list, every step and test.",
+    ),
 ) -> None:
     """Your road to Mastery Rank 30: rank table, tonight's checklist, phased plan and test cards."""
     from .guide import build_mastery_plan, load_kb, write_guide_bundle
@@ -412,10 +515,39 @@ def guide_mastery(
             style="yellow",
         )
     plan = build_mastery_plan(report, kb)
+    if show_plan:
+        _print_plan(plan)
     console.print(
         f"[bold]MR {plan.rank}[/bold]  estimated mastery ~{plan.estimate:,}  -  "
-        f"~{plan.needed_to_target:,} to MR {plan.target_rank}"
+        f"~{plan.needed_to_target:,} to MR {plan.target_rank}, in {len(plan.phases)} steps"
     )
+    if plan.tonight:
+        console.print(f"Tonight: {plan.tonight[0].title}", markup=False)
+    if not html:
+        if not show_plan:
+            console.print("Add --show-plan to print the whole plan here.", markup=False, style="dim")
+        return
+    folder = out or _export_folder(s, snap, share)
+    if folder.suffix.lower() == ".html":
+        folder = folder.parent
+    with console.status("Writing the guide..."):
+        bundle = write_guide_bundle(plan, folder, pdf=pdf, docx=docx, copy_to=targets, share=share)
+    for w in bundle.warnings:
+        console.print(w, markup=False, style="yellow")
+    for t_, where in bundle.cloud.items():
+        console.print(f"copied to {t_}: {where}", markup=False, style="green")
+    console.print()
+    for f in bundle.files():
+        console.print(f"[green]wrote[/green] {_e(str(f))}")
+    if not show_plan:
+        console.print(
+            "Open the HTML file for the full plan, or add --show-plan to print it here.", style="dim"
+        )
+    if open_:
+        _open_in_browser(bundle.html)
+
+
+def _print_plan(plan) -> None:
     t = Table(title="ranks", show_edge=False)
     for col, just in (
         ("rank", "right"),
@@ -426,38 +558,24 @@ def guide_mastery(
     ):
         t.add_column(col, justify=just)
     for r in plan.ranks:
-        t.add_row(str(r.rank), r.title, f"{r.threshold:,}", f"{r.to_earn:,}", r.test)
+        t.add_row(str(r.rank), _e(r.title), f"{r.threshold:,}", f"{r.to_earn:,}", _e(r.test))
     console.print(t)
     console.print("\n[bold]Tonight[/bold]")
     for item in plan.tonight:
-        console.print(f"  [yellow]{item.gain_label:>8}[/yellow]  {item.title}")
+        console.print(f"  [yellow]{_e(item.gain_label):>8}[/yellow]  {_e(item.title)}")
     console.print("\n[bold]The path[/bold]")
     for p in plan.phases:
         head = "already there" if p.already_there else f"~{p.need:,}"
-        console.print(f"  [bold]{p.from_rank} -> {p.to_rank}[/bold] {p.title} ({head}, test: {p.test})")
+        console.print(
+            f"  [bold]{p.from_rank} -> {p.to_rank}[/bold] {_e(p.title)} ({head}, test: {_e(p.test)})"
+        )
         for st in p.steps:
             names = ", ".join(st.items[:6]) + (" ..." if len(st.items) > 6 else "")
-            console.print(f"      +{st.mastery:>7,}  {st.title}: [dim]{names}[/dim]")
+            console.print(f"      +{st.mastery:>7,}  {_e(st.title)}: [dim]{_e(names)}[/dim]")
     console.print("\n[bold]Tests[/bold]")
     for tc in plan.tests:
-        console.print(f"  {tc.rank}  {tc.name}  [dim]bring: {tc.bring}[/dim]")
-    if html:
-        folder = out or (s.exports_dir / snap.taken_at.strftime("%Y-%m-%d_%H%M"))
-        if folder.suffix.lower() == ".html":
-            folder = folder.parent
-        with console.status("Writing the guide..."):
-            bundle = write_guide_bundle(plan, folder, pdf=pdf, docx=docx, copy_to=targets, share=share)
-        console.print()
-        for f in bundle.files():
-            console.print(f"[green]wrote[/green] {f}")
-        for t_, where in bundle.cloud.items():
-            console.print(f"[green]copied to {t_}[/green] {where}")
-        for w in bundle.warnings:
-            console.print(f"[yellow]{w}[/yellow]")
-        if open_:
-            import webbrowser
-
-            webbrowser.open(bundle.html.resolve().as_uri())
+        console.print(f"  {tc.rank}  {_e(tc.name)}  [dim]bring: {_e(tc.bring)}[/dim]")
+    console.print()
 
 
 # -- account -----------------------------------------------------------------------------
@@ -474,7 +592,11 @@ def account_howto() -> None:
 @account_app.command("set")
 def account_set(
     id: str = typer.Option(..., "--id", help="24-character account id (the warframe.com `gid` cookie)."),
-    platform: str = typer.Option("pc", "--platform", help="pc, ps4, xb1, swi, mob or and."),
+    platform: str = typer.Option(
+        "pc",
+        "--platform",
+        help="pc, ps4 (PlayStation), xb1 (Xbox), swi (Switch), mob (iPhone/iPad) or and (Android).",
+    ),
 ) -> None:
     """Store the account id and platform in config.toml."""
     from .config import save_settings
@@ -496,7 +618,8 @@ def account_show() -> None:
     """Show the configured account."""
     s = load_settings()
     console.print(
-        f"platform: {s.platform}\naccount id: {s.account_id or '[not set]'}\nconfig: {s.config_path}"
+        f"platform: {s.platform}\naccount id: {s.account_id or '[not set]'}\nconfig: {s.config_path}",
+        markup=False,
     )
 
 
@@ -694,7 +817,10 @@ def codex_info(
 
 
 @codex_app.command("search")
-def codex_search(text: str, limit: int = 25) -> None:
+def codex_search(
+    text: str = typer.Argument(..., help="Part of an item name, e.g. 'rhino'."),
+    limit: int = typer.Option(25, "--limit", help="Show at most this many matches."),
+) -> None:
     """Find items by name."""
     from .codex import Codex
 
@@ -776,7 +902,11 @@ def codex_sources(query: str) -> None:
 
 
 @codex_app.command("tree")
-def codex_tree(query: str, count: int = 1, depth: int = 6) -> None:
+def codex_tree(
+    query: str = typer.Argument(..., help="Item name, e.g. 'Rhino Prime'."),
+    count: int = typer.Option(1, "--count", help="How many to build: multiplies every amount."),
+    depth: int = typer.Option(6, "--depth", help="How many crafting levels to expand."),
+) -> None:
     """Full crafting tree with resource totals."""
     from .codex import Codex
 

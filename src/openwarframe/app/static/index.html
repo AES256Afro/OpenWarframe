@@ -53,7 +53,8 @@ input[type=search]{width:260px}
 .chip{background:var(--panel2); color:var(--fg); border:1px solid var(--line); border-radius:999px; padding:5px 12px; font:600 12.5px var(--body); cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--cyan); color:var(--on-accent); border-color:var(--cyan)}
 .chip .c{font:11px var(--mono); opacity:.8; margin-left:4px}
-.filters label{display:flex; gap:6px; align-items:center; color:var(--muted); font-size:13px}
+.filters label{display:flex; gap:6px; align-items:center; color:var(--muted); font-size:13px; white-space:nowrap}
+.filters .clear{display:flex; gap:8px; align-items:center}
 .notice{margin:12px 18px 0; padding:12px 14px; border-radius:10px; background:var(--gold-soft); display:flex; flex-wrap:wrap; gap:10px; align-items:center}
 .notice p{margin:0; flex:1 1 420px}
 .wrap{overflow:auto; min-height:0}
@@ -61,14 +62,15 @@ table{border-collapse:separate; border-spacing:0; width:100%}
 th{position:sticky; top:0; background:var(--panel); z-index:1; text-align:left; border-bottom:1px solid var(--line); padding:0}
 th button{all:unset; display:block; width:100%; box-sizing:border-box; padding:10px 12px; font:600 11.5px var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); cursor:pointer}
 th button:hover{color:var(--fg)}
+th.num button{text-align:right}  /* number headers sit over their right-aligned numbers */
 th[aria-sort="ascending"] button::after{content:" ▲"; color:var(--gold)}
 th[aria-sort="descending"] button::after{content:" ▼"; color:var(--gold)}
-td{padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+td{padding:8px 12px; border-bottom:1px solid var(--line); vertical-align:baseline}
 tbody tr{background:var(--row); cursor:pointer}
 tbody tr:hover{background:var(--panel2)}
 tbody tr[data-i]:focus-visible{outline:2px solid var(--cyan); outline-offset:-2px}
 input:focus-visible, select:focus-visible, summary:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
-td.num{font:13px var(--mono); text-align:right; white-space:nowrap}
+td.num{font:13px/1.45 var(--mono); text-align:right; white-space:nowrap}
 td.name{font-weight:600}
 .pill{display:inline-block; border-radius:999px; padding:2px 9px; font:600 11.5px var(--body); white-space:nowrap}
 .p-mastered{background:var(--gold-soft); color:var(--gold)}
@@ -94,6 +96,16 @@ footer{display:flex; gap:16px; flex-wrap:wrap; padding:8px 18px; border-top:1px 
 .card{background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:14px 16px}
 .card .v{font:700 26px var(--mono)}
 .card .k{color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.08em}
+.card > span{display:block}
+button.card{font:inherit; color:inherit; text-align:left; cursor:pointer; width:100%}
+button.card:hover{border-color:var(--gold)}
+button.card:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+.capnote{padding:10px 18px; color:var(--muted); font-size:13px}
+.goal .acts{display:flex; flex-wrap:wrap; gap:6px}
+.goal.done b{text-decoration:line-through; color:var(--muted)}
+.keys{margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 14px}
+.keys dt{font:600 13px var(--mono)} .keys dd{margin:0}
+kbd{font:12px var(--mono); border:1px solid var(--line); border-radius:4px; padding:1px 5px; background:var(--panel2)}
 .bar{height:8px; background:var(--panel2); border-radius:4px; overflow:hidden; margin-top:8px}
 .bar i{display:block; height:100%; background:var(--gold)}
 .now{margin:14px 18px 0; padding:16px 18px; border-radius:12px; background:var(--panel); border:1px solid var(--gold); display:grid; gap:6px}
@@ -150,6 +162,18 @@ details.box summary{cursor:pointer}
 .toast{position:fixed; right:18px; bottom:48px; background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:10px 14px; z-index:6; max-width:420px}
 body.big-text{grid-template-columns:150px 1fr}
 body.big-text .tab .n, body.big-text .brand span{display:none}
+.tab .ab, .side .btn .ab{display:none}
+#compact{font-size:12px; padding:6px 10px}
+/* compact sidebar: short labels only; every button keeps its full name (aria-label, title) */
+@media (min-width:821px){
+  body.compact{grid-template-columns:72px 1fr}
+  body.compact nav.side{padding:12px 6px}
+  body.compact .brand span, body.compact .who, body.compact .tab .n, body.compact .tab .lbl, body.compact .side .btn .lbl, body.compact .upd{display:none}
+  body.compact .tab .ab, body.compact .side .btn .ab{display:inline}
+  body.compact .tab{justify-content:center; padding:9px 4px; font-size:12px}
+  body.compact .side .btn{padding:8px 4px; text-align:center}
+  body.compact .brand{justify-content:center; padding:4px 0 10px}
+}
 @media (max-width:820px){ body{grid-template-columns:1fr; overflow:auto} nav.side{flex-direction:row; flex-wrap:wrap} .who,.spacer{display:none} input[type=search]{width:100%} }
 </style>
 </head>
@@ -159,11 +183,12 @@ body.big-text .tab .n, body.big-text .brand span{display:none}
   <div class="who" id="who">Loading…</div>
   <div id="tabs" role="tablist"></div>
   <div class="spacer"></div>
-  <button class="btn" id="refresh" type="button">Refresh profile</button>
-  <button class="btn primary" id="grab" type="button">Get inventory from game</button>
-  <button class="btn" id="loadinv" type="button">Load inventory file…</button>
-  <button class="btn" id="export" type="button">Export my account…</button>
-  <button class="btn" id="updatedata" type="button">Update game data</button>
+  <button class="btn" id="refresh" type="button" title="Refresh profile"><span class="lbl">Refresh profile</span><span class="ab" aria-hidden="true">Prof</span></button>
+  <button class="btn primary" id="grab" type="button" title="Get inventory from game"><span class="lbl">Get inventory from game</span><span class="ab" aria-hidden="true">Inv</span></button>
+  <button class="btn" id="loadinv" type="button" title="Load inventory file"><span class="lbl">Load inventory file…</span><span class="ab" aria-hidden="true">File</span></button>
+  <button class="btn" id="export" type="button" title="Export my account"><span class="lbl">Export my account…</span><span class="ab" aria-hidden="true">Exp</span></button>
+  <button class="btn" id="updatedata" type="button" title="Update game data"><span class="lbl">Update game data</span><span class="ab" aria-hidden="true">Data</span></button>
+  <button class="btn" id="compact" type="button" aria-pressed="false" title="Narrow sidebar"><span class="lbl">Narrow sidebar</span><span class="ab" aria-hidden="true">&raquo;</span></button>
   <a class="upd" id="newversion" hidden target="_blank" rel="noopener"></a>
   <input type="file" id="invfile" accept=".json,application/json" hidden>
 </nav>
@@ -180,6 +205,9 @@ body.big-text .tab .n, body.big-text .brand span{display:none}
 </main>
 <div class="drop" id="dropzone" hidden>Drop your inventory JSON to load it</div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<dialog id="keys" class="dialog" aria-labelledby="keys-title"><div style="display:grid; gap:12px"><h2 id="keys-title" style="margin:0; font-size:16px">Keyboard shortcuts</h2>
+<dl class="keys"><dt><kbd>/</kbd></dt><dd>Search</dd><dt><kbd>?</kbd></dt><dd>Show this list</dd><dt><kbd>&uarr;</kbd> <kbd>&darr;</kbd></dt><dd>Move between views in the sidebar</dd><dt><kbd>Enter</kbd></dt><dd>Open or close a row's details</dd><dt><kbd>Esc</kbd></dt><dd>Close this list</dd><dt>Back, Forward</dt><dd>Go to the view you were on</dd></dl>
+<div style="display:flex; justify-content:flex-end"><button class="btn" type="button" id="keys-close" autofocus>Close</button></div></div></dialog>
 <dialog id="consent" class="dialog" aria-labelledby="consent-title" aria-describedby="risktext"><div style="display:grid; gap:12px"><h2 id="consent-title" style="margin:0; font-size:16px">Read your game session?</h2><p id="risktext" style="margin:0"></p><div style="display:flex; gap:8px; justify-content:flex-end"><button class="btn" type="button" id="consent-no" autofocus>Cancel</button><button class="btn primary" type="button" id="consent-yes">I accept the risk, continue</button></div></div></dialog>
 
 <script>
@@ -212,24 +240,25 @@ function toast(msg, ms, action){
   t._h=setTimeout(function(){t.hidden=true}, ms||(action?8000:4000));
 }
 
+// ab: the short label shown when the sidebar is narrow
 var VIEWS=[
-  {id:"focus", label:"Focus"},
-  {id:"overview", label:"Overview"},
-  {id:"farm", label:"What to farm"},
-  {id:"live", label:"Live"},
-  {id:"rewards", label:"Reward helper"},
-  {id:"Warframes", label:"Warframes", group:"Warframes"},
-  {id:"Weapons", label:"Weapons", group:"Weapons"},
-  {id:"Companions", label:"Companions & more", group:"Companions & more"},
-  {id:"relics", label:"Relics"},
-  {id:"blueprints", label:"Blueprints"},
-  {id:"foundry", label:"Foundry"},
-  {id:"resources", label:"Resources"},
-  {id:"earn", label:"Earnings"},
-  {id:"sell", label:"Sell list"},
-  {id:"mods", label:"Mods & arcanes"},
-  {id:"locked", label:"Can't get yet"},
-  {id:"all", label:"All items"}
+  {id:"focus", label:"Focus", ab:"Focus"},
+  {id:"overview", label:"Overview", ab:"Home"},
+  {id:"farm", label:"What to farm", ab:"Farm"},
+  {id:"live", label:"Live", ab:"Live"},
+  {id:"rewards", label:"Reward helper", ab:"Pick"},
+  {id:"Warframes", label:"Warframes", group:"Warframes", ab:"Frame"},
+  {id:"Weapons", label:"Weapons", group:"Weapons", ab:"Guns"},
+  {id:"Companions", label:"Companions & more", group:"Companions & more", ab:"Pets"},
+  {id:"relics", label:"Relics", ab:"Relic"},
+  {id:"blueprints", label:"Blueprints", ab:"BPs"},
+  {id:"foundry", label:"Foundry", ab:"Fndry"},
+  {id:"resources", label:"Resources", ab:"Res"},
+  {id:"earn", label:"Earnings", ab:"Earn"},
+  {id:"sell", label:"Sell list", ab:"Sell"},
+  {id:"mods", label:"Mods & arcanes", ab:"Mods"},
+  {id:"locked", label:"Can't get yet", ab:"Lock"},
+  {id:"all", label:"All items", ab:"All"}
 ];
 
 function pill(state){
@@ -238,7 +267,7 @@ function pill(state){
 }
 function accessPill(a){
   if(a==="Available") return '<span class="pill p-owned">Available</span>';
-  if(a==="Leveled before") return '<span class="muted">-</span>';
+  if(a==="Leveled before") return '<span class="muted">—</span>';
   if(a&&a.indexOf("Needs MR")===0) return '<span class="pill p-bad">'+esc(a)+'</span>';
   return '<span class="pill p-warn">'+esc(a)+'</span>';
 }
@@ -251,10 +280,18 @@ function itemRows(){
   if(VIEW==="locked") rows=rows.filter(function(r){return r.access!=="Available"&&r.access!=="Leveled before"});
   return rows;
 }
+// one convention in this table: a blank cell is "none" (never leveled, no MR needed), "—" is unknown
+var blank0=function(v){ return v?esc(v):""; };
+var DASH='<span class="muted">—</span>';
 var ITEM_COLS=[
   {k:"name",l:"Name",cls:"name"},{k:"category",l:"Type"},{k:"state",l:"Status",fmt:pill},
-  {k:"rank",l:"Rank",cls:"num"},{k:"mr",l:"MR req",cls:"num"},{k:"how",l:"How to get"},{k:"access",l:"Access",fmt:accessPill}
+  {k:"rank",l:"Rank",cls:"num",fmt:blank0},{k:"mr",l:"MR req",cls:"num",fmt:blank0},
+  {k:"how",l:"How to get",fmt:function(v){ return v?esc(v):DASH; }},{k:"access",l:"Access",fmt:accessPill}
 ];
+// a build that makes several at once says so: "Cipher ×10"
+var batchName=function(v,r){ return esc(v)+(r.batch>1?' <span class="muted">×'+esc(r.batch)+'</span>':''); };
+// warframe.market page for a trade name; target=_blank opens the system browser in the app window
+function marketLink(slug){ return '<a href="https://warframe.market/items/'+encodeURIComponent(slug)+'" target="_blank" rel="noopener">'+esc(slug)+'</a>'; }
 var RELIC_COLS=[
   {k:"name",l:"Relic",cls:"name"},{k:"tier",l:"Tier"},
   {k:"vaulted",l:"Status",fmt:function(v){return v?'<span class="pill p-warn">Vaulted</span>':'<span class="pill p-owned">Farmable</span>'}},
@@ -264,7 +301,7 @@ var RELIC_COLS=[
   {k:"price",l:"Market (p)",cls:"num",fmt:function(v){return v==null?'<span class="muted">-</span>':esc(v)}}
 ];
 var BP_COLS=[
-  {k:"name",l:"Blueprint for",cls:"name"},
+  {k:"name",l:"Blueprint for",cls:"name",fmt:batchName},
   {k:"ready",l:"Status",fmt:function(v,r){return v?'<span class="pill p-owned">Ready to build</span>':'<span class="pill p-warn">'+r.missing+' part'+(r.missing===1?"":"s")+' missing</span>'}},
   {k:"mastered",l:"Mastery",fmt:function(v){return v==null?'<span class="muted">-</span>':v?'<span class="pill p-mastered">Mastered</span>':'<span class="pill p-leveling">Not mastered</span>'}},
   {k:"blueprints",l:"Copies",cls:"num"},{k:"credits",l:"Credits",cls:"num",fmt:function(v){return (v||0).toLocaleString()}},{k:"hours",l:"Build h",cls:"num"}
@@ -272,7 +309,7 @@ var BP_COLS=[
 
 var price=function(v){return v==null?'<span class="muted">-</span>':esc(v)};
 var FOUNDRY_COLS=[
-  {k:"name",l:"Building",cls:"name"},
+  {k:"name",l:"Building",cls:"name",fmt:batchName},
   // worked out from ready_at now, not when the inventory was loaded: long sessions stay right
   {k:"ready",l:"Status",fmt:function(v,r){return foundryReady(r)?'<span class="pill p-owned">Ready to claim</span>':'<span class="pill p-leveling">Building</span>'}},
   {k:"hours_left",l:"Time left",cls:"num",fmt:function(v,r){return esc(foundryLeft(r))}}
@@ -294,6 +331,7 @@ var SELL_COLS=[
   {k:"owned",l:"You have",cls:"num"},{k:"spare",l:"Spare",cls:"num",fmt:function(v){return v?'<b>'+v+'</b>':'<span class="muted">0</span>'}},
   {k:"ducats",l:"Ducats each",cls:"num"},{k:"ducats_total",l:"Ducats if sold",cls:"num"},
   {k:"price",l:"Market (p)",cls:"num",fmt:price},
+  {k:"best",l:"Best",tip:"Baro when a part gives 10 or more ducats per platinum it would sell for, otherwise the market. Check market prices first.",fmt:function(v){ return v?'<span class="pill '+(v==="Baro"?"p-mastered":"p-owned")+'">'+esc(v)+'</span>':DASH; }},
   {k:"status",l:"Why",fmt:function(v){return v==="Mastered or built"?'<span class="pill p-mastered">'+esc(v)+'</span>':'<span class="pill p-leveling">'+esc(v)+'</span>'}}
 ];
 var MOD_COLS=[
@@ -307,7 +345,7 @@ var MISSION_COLS=[
   {k:"mission",l:"Mission"},{k:"level",l:"Level",cls:"num"},
   {k:"tiers",l:"Relic tiers"},{k:"best_rotation",l:"Best rotation"},
   {k:"needed_count",l:"Things you need",cls:"num"},
-  {k:"score",l:"Score",cls:"num",fmt:function(v){return v.toFixed(2)}}
+  {k:"score",l:"Score",cls:"num",tip:"How much of what you still need one run can drop. Higher is better.",fmt:function(v){return v.toFixed(2)}}
 ];
 var CRACK_COLS=[
   {k:"name",l:"Relic",cls:"name"},{k:"count",l:"You have",cls:"num"},
@@ -334,10 +372,12 @@ var STORM_COLS=[
   {k:"tier",l:"Tier"},{k:"where",l:"Where",cls:"name"},{k:"minutes_left",l:"Time left",cls:"num",fmt:mins},
   {k:"useful_relics",l:"Useful relics",cls:"num"},{k:"best_relic",l:"Bring",fmt:relicCell}
 ];
+// the faction you fight for gives its side's reward
+function invSide(x,r){ if(x.faction) return x.faction; var side=x.side; return side==="Attacker"?(r.attacker_faction||r.attacker||side):side==="Defender"?(r.defender_faction||r.defender||side):side; }
 var INV_COLS=[
   {k:"where",l:"Where",cls:"name"},
-  {k:"attacker",l:"Fight",fmt:function(v,r){return esc(v)+' vs '+esc(r.defender)}},
-  {k:"rewards",l:"Rewards",fmt:function(v){return v.map(function(x){return (x.flag?'<b>':'')+esc(x.side)+': '+x.count+'× '+esc(x.name)+(x.flag?'</b>':'')}).join('<br>')}},
+  {k:"attacker",l:"Fight",fmt:function(v,r){return esc(r.attacker_faction||v||"?")+' vs '+esc(r.defender_faction||r.defender||"?")}},
+  {k:"rewards",l:"Rewards",fmt:function(v,r){return (v||[]).map(function(x){return (x.flag?'<b>':'')+'Side with '+esc(invSide(x,r))+': '+esc(x.count)+'× '+esc(x.name)+(x.flag?'</b>':'')}).join('<br>')}},
   {k:"progress",l:"Progress",cls:"num",fmt:function(v){return v+'%'}},
   {k:"worth_it",l:"For you",fmt:function(v){return v?'<span class="pill p-owned">You need this</span>':'<span class="muted">-</span>'}}
 ];
@@ -347,7 +387,7 @@ var BARO_COLS=[
 ];
 function loadLive(force){
   if(!force && LIVE && Date.now()-LIVE_AT<55000) return;
-  api("/api/live").then(function(d){ LIVE=d; LIVE_AT=Date.now(); if(VIEW==="live"||VIEW==="focus") renderAll(); else if(DATA) renderFocusBar(); })
+  api("/api/live"+(force?"?force=1":"")).then(function(d){ LIVE=d; LIVE_AT=Date.now(); if(VIEW==="live"||VIEW==="focus") renderAll(); else if(DATA) renderFocusBar(); })
     .catch(function(){ LIVE={error:"Could not load the world state."}; if(VIEW==="live") renderAll(); });
 }
 function liveHeader(){
@@ -382,12 +422,14 @@ function currentSpec(){
   }
   if(VIEW==="foundry") return {rows:DATA.foundry||[], cols:FOUNDRY_COLS, key:"foundry"};
   if(VIEW==="resources") return {rows:DATA.resources||[], cols:RES_COLS, key:"resources"};
-  if(VIEW==="sell") return {rows:DATA.sell||[], cols:SELL_COLS, key:"sell"};
+  if(VIEW==="sell") return {rows:(DATA.sell||[]).map(sellBest), cols:SELL_COLS, key:"sell"};
   if(VIEW==="mods") return {rows:DATA.mods||[], cols:MOD_COLS, key:"mods"};
   if(VIEW==="relics") return {rows:DATA.relics, cols:RELIC_COLS, key:"relics"};
   if(VIEW==="blueprints") return {rows:DATA.blueprints, cols:BP_COLS, key:"blueprints"};
   return {rows:itemRows(), cols:ITEM_COLS, key:"items"};
 }
+// Baro or the market for one sell row: 10 or more ducats per platinum means Baro. No price: no verdict.
+function sellBest(r){ var p=Number(r.price), d=Number(r.ducats); r.best=r.price==null||!(p>0)?null:(isFinite(d)&&d/p>=10?"Baro":"Market"); return r; }
 var CHECKS={};  // checkbox filter key -> test, filled in by renderFilters
 function matches(r){
   if(Q){
@@ -448,6 +490,8 @@ function renderFilters(){
       h+='<label><input type="checkbox" id="fpop"'+(F._pop?" checked":"")+'> Only popular farms</label>';
     }
     if(spec.key==="finish"){
+      if(F.id){ var one=(spec.rows||[]).find(function(x){return x.id===F.id});
+        h+='<span class="clear"><span>Showing <b>'+esc(one?one.name:"one item")+'</b></span><button class="btn" type="button" id="fshowall">Show all</button></span>'; }
       h+='<label><input type="checkbox" id="fone"'+(F._one?" checked":"")+'> Only one piece away</label>';
       if(DATA.meta.inventory) h+='<label><input type="checkbox" id="fdo"'+(F._do?" checked":"")+'> Only with relics I own</label>';
     }
@@ -469,7 +513,7 @@ function renderFilters(){
     h+='<label><input type="checkbox" id="fspare"'+(F._spare?" checked":"")+'> Only spares</label>';
     h+='<button class="btn" type="button" id="prices">Check market prices</button>';
     var tot=spec.rows.filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0);
-    h+='<span class="muted">Spares are worth <b>'+tot.toLocaleString()+'</b> ducats at Baro. Sell on the market instead when one part is worth more than about 10 platinum.</span>';
+    h+='<span class="muted">Spares are worth <b>'+tot.toLocaleString()+'</b> ducats at Baro. Best says where each part is worth more: Baro when it gives 10 or more ducats per platinum, otherwise the market.</span>';
   } else if(spec.key==="mods"){
     h+=chipGroup("Type", "category", Object.keys(countBy(spec.rows,"category")).sort(), countBy(spec.rows,"category"));
     h+='<label><input type="checkbox" id="fspare"'+(F._spare?" checked":"")+'> Only spares</label>';
@@ -506,19 +550,22 @@ function renderFilters(){
   bind("ffast","_fast",function(r){return r.fast});
   bind("fworth","_worth",function(r){return r.worth_it});
   var lr=$("liverefresh"); if(lr) lr.onclick=function(){ toast("Refreshing the world state…"); loadLive(true); };
-  el.querySelectorAll("[data-sub]").forEach(function(b){ b.onclick=function(){ var keep=b.dataset.sub; F={sub:keep}; OPEN={}; try{ history.replaceState(null,"","#"+VIEW+"/"+keep); }catch(e){} renderAll(); }; });
+  el.querySelectorAll("[data-sub]").forEach(function(b){ b.onclick=function(){ var keep=b.dataset.sub; F={sub:keep}; OPEN={}; setHash(VIEW+"/"+keep, true); renderAll(); }; });
+  var sa=$("fshowall"); if(sa) sa.onclick=function(){ F.id=null; renderAll(); };
   var pb=$("prices"); if(pb) pb.onclick=checkPrices;
   bind("fready","_ready",function(r){return r.ready});
   bind("funm","_unm",function(r){return r.mastered===false});
 }
 
 // ---- table --------------------------------------------------------------------
+var tradeName=function(slug){ return 'Trade name on warframe.market: '+marketLink(slug); };
 function detailHtml(spec, r){
-  if(spec.key==="relics"){
-    return '<div class="drops">'+r.drops.map(function(d){
+  if(spec.key==="relics"||spec.key==="crack"){  // Relics to crack shows the same drop list
+    var dr=r.drops||[];
+    return (dr.length?'<div class="drops">'+dr.map(function(d){
       var cls=d.needed?"need":"";
-      return '<div class="'+cls+'">'+esc(d.part)+' <span class="muted">· '+esc(d.rarity)+' '+d.intact+'% → '+d.radiant+'%</span>'+(d.vaulted?' <span class="pill p-violet">vaulted</span>':"")+(d.needed?' <span class="pill p-owned">you need this</span>':"")+'</div>';
-    }).join("")+'</div>';
+      return '<div class="'+cls+'">'+esc(d.part)+' <span class="muted">· '+esc(d.rarity)+' '+esc(d.intact)+'% → '+esc(d.radiant)+'%</span>'+(d.vaulted?' <span class="pill p-violet">vaulted</span>':"")+(d.needed?' <span class="pill p-owned">you need this</span>':"")+'</div>';
+    }).join("")+'</div>':'<span class="muted">No drops recorded.</span>')+(r.slug?'<p class="muted">'+tradeName(r.slug)+'</p>':'');
   }
   if(spec.key==="blueprints"){
     return '<div class="drops">'+r.parts.map(function(p){
@@ -529,30 +576,47 @@ function detailHtml(spec, r){
   if(["fissures","storms","invasions","baro"].indexOf(spec.key)>=0) return '<span class="muted">'+esc(r.faction||'')+(r.level?' · level '+esc(r.level):'')+'</span>';
   if(spec.key==="missions") return '<div class="drops">'+r.gives.map(function(g){return '<div>'+esc(g)+'</div>'}).join('')+'</div>'+(r.popular_why?'<p class="muted">Popular farm: '+esc(r.popular_why)+'</p>':'');
   if(spec.key==="resources") return '<span class="muted">Needed by: '+esc((r.used_by||[]).join(", "))+'</span>';
-  if(spec.key!=="items") return '<span class="muted">'+(r.slug?'Trade name on warframe.market: '+esc(r.slug):'Not tradeable')+'</span>';
+  if(spec.key!=="items") return '<span class="muted">'+(r.slug?tradeName(r.slug):'Not tradeable')+'</span>';
   var s=(r.sources||[]);
-  return s.length?'<div class="drops">'+s.map(function(x){return '<div>'+esc(x)+'</div>'}).join("")+'</div>'+(r.slug?'<p class="muted">Trade name on warframe.market: '+esc(r.slug)+'</p>':""):'<span class="muted">No drop sources recorded. Check the Market, your clan Dojo or quests.</span>';
+  var goal=r.mastery==="Mastered"?'':'<p><button class="btn" type="button" data-goal="'+esc(r.id)+'">'+(isGoal(r.id)?'Goal ✓ (remove)':'Add to goals')+'</button></p>';
+  if(r.mastery!=="Never leveled") return '<span class="muted">You leveled this before.'+(r.slug?' '+tradeName(r.slug):'')+'</span>'+goal;
+  return (s.length?'<div class="drops">'+s.map(function(x){return '<div>'+esc(x)+'</div>'}).join("")+'</div>'+(r.slug?'<p class="muted">'+tradeName(r.slug)+'</p>':""):'<span class="muted">No drop sources recorded. Check the Market, your clan Dojo or quests.</span>')+goal;
 }
 function renderTable(){
   var spec=currentSpec(), rows=sorted(filtered()), s=SORT[VIEW]||{};
   if(!rows.length){ $("view").innerHTML='<div class="empty">'+emptyText(spec)+'</div>'; return rows; }
-  var h='<table><thead><tr>'+spec.cols.map(function(c){ var srt=s.k===c.k?(s.dir>0?"ascending":"descending"):"none"; return '<th aria-sort="'+srt+'"><button type="button" data-k="'+c.k+'">'+esc(c.l)+'</button></th>'; }).join("")+'</tr></thead><tbody>';
-  var max=Math.min(rows.length, 1500);
+  var h='<table class="grid"><thead><tr>'+spec.cols.map(function(c){ var srt=s.k===c.k?(s.dir>0?"ascending":"descending"):"none";
+    return '<th aria-sort="'+srt+'"'+(c.cls==="num"?' class="num"':'')+'><button type="button" data-k="'+c.k+'"'+(c.tip?' title="'+esc(c.tip)+'"':'')+'>'+esc(c.l)+'</button></th>'; }).join("")+'</tr></thead><tbody>';
+  var max=Math.min(rows.length, ROW_CAP);
   for(var i=0;i<max;i++){
     var r=rows[i];
     h+='<tr data-i="'+esc(r.id)+'" tabindex="0" aria-expanded="'+(!!OPEN[r.id])+'">'+spec.cols.map(function(c){ var v=r[c.k]; return '<td class="'+(c.cls||"")+'">'+(c.fmt?c.fmt(v,r):esc(v==null?"":v))+'</td>'; }).join("")+'</tr>';
     if(OPEN[r.id]) h+='<tr class="detail"><td colspan="'+spec.cols.length+'">'+detailHtml(spec,r)+'</td></tr>';
   }
   h+='</tbody></table>';
+  // a long list is cut for speed: say so, so nothing looks missing
+  if(rows.length>ROW_CAP) h+='<p class="capnote" role="status">Showing first '+ROW_CAP.toLocaleString()+' of '+rows.length.toLocaleString()+' — refine your search or filters to see the rest.</p>';
   $("view").innerHTML=h;
-  $("view").querySelectorAll("th button").forEach(function(b){ b.onclick=function(){ var k=b.dataset.k, cur=SORT[VIEW]; SORT[VIEW]={k:k, dir:cur&&cur.k===k?-cur.dir:1}; keepFocus(renderTable); }; });
-  $("view").querySelectorAll("tbody tr[data-i]").forEach(function(tr){
-    var toggle=function(){ var id=tr.dataset.i; OPEN[id]=!OPEN[id]; keepFocus(renderTable); };
-    tr.onclick=toggle;
-    tr.onkeydown=function(e){ if(e.target===tr && (e.key==="Enter"||e.key===" ")){ e.preventDefault(); toggle(); } };
-  });
   return rows;
 }
+var ROW_CAP=1500;
+// One click and one key handler for every table, set once: sort headers, open rows, row buttons.
+function redrawTable(){ keepFocus(function(){ var rows=renderTable(); if(VIEW==="live") $("view").insertAdjacentHTML("afterbegin", liveHeader()); else if(VIEW==="farm") $("view").insertAdjacentHTML("afterbegin", nowCard()); return rows; }); }
+function toggleRow(tr){ var id=tr.dataset.i; OPEN[id]=!OPEN[id]; redrawTable(); }
+function onTableClick(e){
+  var t=e.target; if(!t.closest||!t.closest("table.grid")) return;
+  if(t.closest("a")) return;  // the warframe.market link opens by itself
+  var g=t.closest("[data-goal]"); if(g){ toggleGoal(g.dataset.goal); return; }
+  var th=t.closest("th button[data-k]");
+  if(th){ var k=th.dataset.k, cur=SORT[VIEW]; SORT[VIEW]={k:k, dir:cur&&cur.k===k?-cur.dir:1}; redrawTable(); rememberView(); return; }
+  var tr=t.closest("tbody tr[data-i]"); if(tr) toggleRow(tr);
+}
+function onTableKey(e){
+  var tr=e.target; if(!tr.matches||!tr.matches("table.grid tbody tr[data-i]")) return;
+  if(e.key==="Enter"||e.key===" "){ e.preventDefault(); toggleRow(tr); }
+}
+$("view").addEventListener("click", onTableClick);
+$("view").addEventListener("keydown", onTableKey);
 function emptyText(spec){
   if(["foundry","resources","sell","mods"].indexOf(spec.key)>=0&&!DATA.meta.inventory) return invHint("This view comes from your inventory.");
   if(spec.key==="blueprints"&&!DATA.meta.inventory) return "Owned blueprints come from your inventory. Load an inventory file to see what each blueprint still needs.";
@@ -569,25 +633,28 @@ function emptyText(spec){
 function renderOverview(){
   var m=DATA.meta, it=DATA.items;
   var by=function(g){ var rows=it.filter(function(r){return r.group===g}); var done=rows.filter(function(r){return r.mastery==="Mastered"}).length; return {done:done, total:rows.length}; };
-  var card=function(k,v,sub,pct){ return '<div class="card"><div class="k">'+esc(k)+'</div><div class="v">'+v+'</div>'+(sub?'<div class="muted">'+sub+'</div>':"")+(pct!=null?'<div class="bar"><i style="width:'+pct+'%"></i></div>':"")+'</div>'; };
+  // a card with a view opens it: a real button, so it works from the keyboard too
+  var card=function(k,v,sub,pct,go){ var inner='<span class="k">'+esc(k)+'</span><span class="v">'+v+'</span>'+(sub?'<span class="muted">'+sub+'</span>':"")+(pct!=null?'<span class="bar"><i style="width:'+pct+'%"></i></span>':"");
+    return go?'<button type="button" class="card" data-go="'+esc(go)+'">'+inner+'</button>':'<div class="card">'+inner+'</div>'; };
   var h='<div class="overview">';
-  h+=card("Mastery rank", m.mr, "≈"+(m.estimate||0).toLocaleString()+" of "+(m.next||0).toLocaleString()+" for MR "+(m.mr+1), m.next?Math.min(100,Math.round(100*m.estimate/m.next)):null);
-  ["Warframes","Weapons","Companions & more"].forEach(function(g){ var x=by(g); h+=card(g+" mastered", x.done+" / "+x.total, null, x.total?Math.round(100*x.done/x.total):0); });
+  h+=card("Mastery rank", m.mr, "≈"+(m.estimate||0).toLocaleString()+" of "+(m.next||0).toLocaleString()+" for MR "+(m.mr+1), m.next?Math.min(100,Math.round(100*m.estimate/m.next)):null, "focus");
+  [["Warframes","Warframes"],["Weapons","Weapons"],["Companions & more","Companions"]].forEach(function(g){ var x=by(g[0]); h+=card(g[0]+" mastered", x.done+" / "+x.total, null, x.total?Math.round(100*x.done/x.total):0, g[1]); });
   var lev=it.filter(function(r){return r.mastery==="Leveling"}).length;
-  h+=card("Started, not finished", lev, "Owned at some point and below max rank");
+  h+=card("Started, not finished", lev, "Owned at some point and below max rank", null, "all");
   var avail=it.filter(function(r){return r.access==="Available"}).length, locked=it.filter(function(r){return r.access!=="Available"&&r.access!=="Leveled before"}).length;
-  h+=card("Never leveled, can get now", avail, "Plus "+locked+" you can't get yet");
-  h+=card("Relics with parts you need", DATA.relics.filter(function(r){return r.needed>0}).length, m.inventory?"From your inventory":"Load your inventory to see which you own");
+  h+=card("Never leveled, can get now", avail, "Plus "+locked+" you can't get yet", null, "all");
+  h+=card("Relics with parts you need", DATA.relics.filter(function(r){return r.needed>0}).length, m.inventory?"From your inventory":"Load your inventory to see which you own", null, "relics");
   if(m.inventory){
-    var ready=(DATA.foundry||[]).filter(function(f){return f.ready}).length;
-    h+=card("Foundry", ready+" ready", (DATA.foundry||[]).length+" items building or done");
+    var ready=(DATA.foundry||[]).filter(function(f){return foundryReady(f)}).length;
+    h+=card("Foundry", ready+" ready", (DATA.foundry||[]).length+" items building or done", null, "foundry");
     var duc=(DATA.sell||[]).filter(function(r){return r.spare}).reduce(function(a,r){return a+r.ducats_total},0);
-    h+=card("Spare Prime parts", duc.toLocaleString()+" ducats", "You hold "+(m.inventory.ducats||0).toLocaleString()+" ducats now");
-    h+=card("Wallet", amt(m.inventory.credits).toLocaleString()+" cr", amt(m.inventory.platinum).toLocaleString()+" platinum · "+amt(m.inventory.endo).toLocaleString()+" endo");
+    h+=card("Spare Prime parts", duc.toLocaleString()+" ducats", "You hold "+amt(m.inventory.ducats).toLocaleString()+" ducats now", null, "sell");
+    h+=card("Wallet", amt(m.inventory.credits).toLocaleString()+" cr", amt(m.inventory.platinum).toLocaleString()+" platinum · "+amt(m.inventory.endo).toLocaleString()+" endo", null, "earn");
+    h+=card("Blueprints ready to build", DATA.blueprints.filter(function(b){return b.ready}).length, DATA.blueprints.length+" blueprints owned", null, "blueprints");
   }
-  if(m.inventory){ h+=card("Blueprints ready to build", DATA.blueprints.filter(function(b){return b.ready}).length, DATA.blueprints.length+" blueprints owned"); }
   h+='</div>';
   $("view").innerHTML=h;
+  $("view").querySelectorAll("[data-go]").forEach(function(b){ b.onclick=function(){ openView(b.dataset.go); }; });
 }
 
 // ---- shell ----------------------------------------------------------------------
@@ -612,15 +679,24 @@ function renderTabs(){
   var c=counts();
   $("tabs").setAttribute("aria-orientation","vertical");
   $("tabs").innerHTML=VIEWS.map(function(v){ var on=VIEW===v.id, n=c[v.id];
+    var name=v.label+(n!=null&&n!==''?', '+n:'');  // the full name stays when the sidebar is narrow
     return '<button class="tab" role="tab" type="button" data-v="'+v.id+'" aria-selected="'+on+'" aria-controls="view" tabindex="'+(on?0:-1)+'"'
-      +(n!=null&&n!==''?' aria-label="'+esc(v.label+', '+n)+'"':'')+'>'+esc(v.label)+'<span class="n" aria-hidden="true">'+(n==null?'':n)+'</span></button>'; }).join("");
+      +' aria-label="'+esc(name)+'" title="'+esc(name)+'"><span class="lbl">'+esc(v.label)+'</span><span class="ab" aria-hidden="true">'+esc(v.ab||v.label.charAt(0))+'</span><span class="n" aria-hidden="true">'+(n==null?'':n)+'</span></button>'; }).join("");
   var tabs=[].slice.call($("tabs").querySelectorAll(".tab"));
-  var open=function(b){ goView(b.dataset.v); try{localStorage.setItem("owf-view",VIEW); history.replaceState(null,"","#"+VIEW);}catch(e){} renderAll(); var t=$("tabs").querySelector('[data-v="'+VIEW+'"]'); if(t) t.focus(); };
+  var open=function(b){ openView(b.dataset.v); };
   tabs.forEach(function(b,i){
     b.onclick=function(){ open(b); };
     // the view list works like tabs: arrows move and open, Home and End jump to the ends
     b.onkeydown=function(e){ var j={ArrowDown:i+1, ArrowUp:i-1, Home:0, End:tabs.length-1}[e.key]; if(j==null) return; e.preventDefault(); open(tabs[(j+tabs.length)%tabs.length]); };
   });
+}
+function setHash(h, push){ try{ if(location.hash==="#"+h) return; history[push?"pushState":"replaceState"](null,"","#"+h); }catch(e){} }
+// Switch views as a new history step (Back returns to where you were); filter tweaks don't add steps.
+function openView(v, extra, reset){
+  goView(v); if(reset) F={}; if(extra) Object.keys(extra).forEach(function(k){ F[k]=extra[k]; });
+  try{ localStorage.setItem("owf-view",VIEW); }catch(e){}
+  setHash(VIEW+(F.sub?"/"+F.sub:""), true);
+  renderAll(); var t=$("tabs").querySelector('[data-v="'+VIEW+'"]'); if(t) t.focus();
 }
 // How fresh the data is: an old profile, old game data, or an update that failed offline.
 function renderFreshness(){
@@ -740,21 +816,23 @@ function renderEarnings(){
   var s=sum(sell,function(r){return r.spare}), rl=sum(relics.filter(function(r){return r.slug}),function(r){return r.count}), md=sum(mods,function(r){return r.spare});
   var duc=sell.reduce(function(a,r){return a+r.ducats_total},0);
   var card=function(k,v,sub){ return '<div class="card"><div class="k">'+esc(k)+'</div><div class="v">'+v+'</div><div class="muted">'+sub+'</div></div>'; };
-  var pl=function(x){ return x.priced?('≈'+x.plat.toLocaleString()+' p'):'?'; };
+  // one price times every copy you hold: an upper bound, not what a sale brings in
+  var pl=function(x,upTo){ return x.priced?((upTo?'up to ':'about ')+x.plat.toLocaleString()+' p'):'?'; };
   var cov=function(x){ return x.priced+' of '+x.total+' priced'; };
   var h='<div class="now"><div class="eyebrow">What you can make</div><div class="what">'+duc.toLocaleString()+' ducats from spare Prime parts'+(s.priced?', or about '+s.plat.toLocaleString()+' platinum on the market':'')+'</div>';
   h+='<div class="why">Prices come from warframe.market sell orders today and change often. Selling takes time; ducats are instant at Baro.</div>';
+  h+='<div class="why">These are estimates: one price times how many you hold. Refined relics are priced as intact and ranked mods as unranked, and selling many at once usually brings less.</div>';
   h+='<div class="also"><button class="btn primary" type="button" id="estimate">Estimate platinum value</button><span class="muted">Checks up to 80 items per list. Takes a few minutes the first time.</span></div></div>';
   h+='<div class="overview">';
   h+=card("Spare Prime parts", duc.toLocaleString()+' ducats', pl(s)+' · '+cov(s));
-  h+=card("Relics you own", relics.reduce(function(a,r){return a+r.count},0).toLocaleString()+' relics', pl(rl)+' · '+cov(rl));
-  h+=card("Spare rare mods", mods.reduce(function(a,r){return a+r.spare},0).toLocaleString()+' spare', pl(md)+' · '+cov(md));
+  h+=card("Relics you own", relics.reduce(function(a,r){return a+r.count},0).toLocaleString()+' relics', pl(rl,true)+' · '+cov(rl)+' · priced as intact');
+  h+=card("Spare rare mods", mods.reduce(function(a,r){return a+r.spare},0).toLocaleString()+' spare', pl(md,true)+' · '+cov(md)+' · priced unranked');
   h+=card("Wallet now", amt(inv.platinum).toLocaleString()+' p', amt(inv.ducats).toLocaleString()+' ducats · '+amt(inv.credits).toLocaleString()+' credits');
   h+='</div>';
-  var top=[].concat(sell.map(function(r){return {name:r.name, what:'spare part ×'+r.spare, p:r.price!=null?r.price*r.spare:null, d:r.ducats_total}}),
-    relics.map(function(r){return {name:r.name, what:'relic ×'+r.count, p:r.price!=null?r.price*r.count:null, d:null}}),
-    mods.map(function(r){return {name:r.name, what:'mod ×'+r.spare, p:r.price!=null?r.price*r.spare:null, d:null}})).filter(function(x){return x.p!=null}).sort(function(a,b){return b.p-a.p}).slice(0,15);
-  if(top.length){ h+='<div class="cards"><div class="fcard" style="grid-column:1/-1"><h3>Your 15 most valuable sells</h3><ul>'+top.map(function(x){return '<li><b>'+esc(x.name)+'</b> <span class="muted">'+esc(x.what)+'</span> · ≈'+x.p+' p'+(x.d?' or '+x.d+' ducats':'')+'</li>'}).join('')+'</ul></div></div>'; }
+  var top=[].concat(sell.map(function(r){return {name:r.name, what:'spare part ×'+r.spare, n:r.spare, p:r.price!=null?r.price*r.spare:null, d:r.ducats_total}}),
+    relics.map(function(r){return {name:r.name, what:'relic ×'+r.count, n:r.count, p:r.price!=null?r.price*r.count:null, d:null}}),
+    mods.map(function(r){return {name:r.name, what:'mod ×'+r.spare, n:r.spare, p:r.price!=null?r.price*r.spare:null, d:null}})).filter(function(x){return x.p!=null}).sort(function(a,b){return b.p-a.p}).slice(0,15);
+  if(top.length){ h+='<div class="cards"><div class="fcard" style="grid-column:1/-1"><h3>Your 15 most valuable sells <span class="muted">estimates</span></h3><ul>'+top.map(function(x){return '<li><b>'+esc(x.name)+'</b> <span class="muted">'+esc(x.what)+'</span> · '+(x.n>1?'up to ':'about ')+x.p+' p'+(x.d?' or '+x.d+' ducats':'')+'</li>'}).join('')+'</ul></div></div>'; }
   $("view").innerHTML=h;
   $("estimate").onclick=function(){
     var lists=[["sell",sell.filter(function(r){return r.slug&&r.price==null}).sort(function(a,b){return b.ducats_total-a.ducats_total})],
@@ -831,6 +909,8 @@ var GLOSSARY=[
   ["Rotation A, B, C","In endless missions the reward table changes every few rounds or minutes: A, A, B, C, then C again."],
   ["Steel Path","A harder copy of the star chart that opens once you finish every normal node. It gives mastery again."],
   ["Ducats","What Baro Ki'Teer takes. Sell spare Prime parts for ducats at a Relay kiosk."],
+  ["Score (What to farm)","How much of what you still need one run can drop. Each drop you need adds its drop chance, and a relic counts once for every part you need inside it. Higher is better. It does not count how long the mission takes."],
+  ["Invasion sides","Each invasion is a fight between two factions. Side with one and you get that side's reward after three missions."],
   ["Mastery, rank 30 and 40","Leveling a frame or weapon to 30 gives mastery once. Kuva, Tenet, Coda, Paracesis and Necramechs go to 40 for more."]
 ];
 var DAILY=[
@@ -868,12 +948,44 @@ function spOk(f){
 function steelPathOnly(){ var lf=VIEW==="live"?F:((PREFS.views||{}).live||{}).F; return !!(lf&&lf._sponly===true); }
 function lockedRoutine(x){ return !!x.needs && !(DATA&&DATA.meta.steel_path_unlocked); }
 function savePrefs(){
+  if(!PREFS_LOADED) return;  // a save before /api/prefs answers would wipe goals and ticks
   // keep only this and last period's ticks
   var keep={}; var dk=dayKey(), wk=weekKey(); Object.keys(PREFS.checks||{}).forEach(function(k){ if(k===dk||k===wk) keep[k]=PREFS.checks[k]; }); PREFS.checks=keep;
   api("/api/prefs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(PREFS)}).catch(function(){ toast("Could not save. Is OpenWarframe still running?"); });
 }
-function isGoal(id){ return (PREFS.goals||[]).indexOf(id)>=0; }
-function toggleGoal(id){ PREFS.goals=PREFS.goals||[]; var i=PREFS.goals.indexOf(id); if(i>=0) PREFS.goals.splice(i,1); else PREFS.goals.push(id); savePrefs(); renderAll(); toast(i>=0?"Goal removed":"Added to your goals. It shows on the Focus screen."); }
+// Goals: PREFS.goals is the ordered list of item ids (as before). Finished ones move to
+// PREFS.settings.goals_done, so older versions still read the list.
+function goalsDone(){ var st=PREFS.settings||{}; return Array.isArray(st.goals_done)?st.goals_done:[]; }
+function activeGoals(){ var dn=goalsDone(); return (PREFS.goals||[]).filter(function(g){return dn.indexOf(g)<0}); }
+function isGoal(id){ return activeGoals().indexOf(id)>=0; }
+function toggleGoal(id){ PREFS.goals=PREFS.goals||[]; var i=PREFS.goals.indexOf(id); if(i>=0) PREFS.goals.splice(i,1); else PREFS.goals.push(id);
+  PREFS.settings=PREFS.settings||{}; PREFS.settings.goals_done=goalsDone().filter(function(g){return g!==id});
+  savePrefs(); renderAll(); toast(i>=0?"Goal removed":"Added to your goals. It shows on the Focus screen."); }
+function moveGoal(id, by){ var g=PREFS.goals||[], i=g.indexOf(id), j=i+by; if(i<0||j<0||j>=g.length) return; g[i]=g[j]; g[j]=id; savePrefs(); renderAll(); }
+function goalDone(id){ PREFS.goals=(PREFS.goals||[]).filter(function(g){return g!==id}); PREFS.settings=PREFS.settings||{};
+  PREFS.settings.goals_done=goalsDone().filter(function(g){return g!==id}).concat([id]); savePrefs(); renderAll();
+  toast("Goal done. Nice work.", 0, {label:"Undo", run:function(){ PREFS.settings.goals_done=goalsDone().filter(function(g){return g!==id}); PREFS.goals.push(id); savePrefs(); renderAll(); }}); }
+function forgetDone(id){ PREFS.settings=PREFS.settings||{}; PREFS.settings.goals_done=goalsDone().filter(function(g){return g!==id}); savePrefs(); renderAll(); }
+// "Show me" on a goal or a one-piece-away idea opens that item's card in Finish an item
+function showMe(s){ if(s.item) openView("farm", {sub:"finish", id:s.item}, true); else openView(s.go); }
+// Display names for goal ids that are no longer in Finish an item: from the list, then the server
+var NAMES={}, NAMES_ASKED={};
+function splitCamel(id){ return String(id).split("/").pop().replace(/([a-z0-9])([A-Z])/g,"$1 $2"); }
+function goalName(id){
+  if(NAMES[id]) return NAMES[id];
+  var it=(DATA&&DATA.items||[]).find(function(x){return x.id===id}); if(it) return it.name;
+  return splitCamel(id);
+}
+function askNames(ids){
+  ids=ids.filter(function(id){ return !NAMES[id] && !NAMES_ASKED[id] && !(DATA.items||[]).some(function(x){return x.id===id}); });
+  if(!ids.length) return;
+  ids=ids.slice(0,500); ids.forEach(function(id){ NAMES_ASKED[id]=1; });
+  api("/api/names?ids="+ids.map(encodeURIComponent).join(",")).then(function(d){
+    if(!d||typeof d!=="object") return;
+    ids.forEach(function(id){ if(typeof d[id]==="string"&&d[id]) NAMES[id]=d[id]; });
+    if(VIEW==="focus") renderAll();
+  }).catch(function(){});  // the CamelCase fallback stays
+}
 function skippedToday(id){ return (PREFS.skipped||{})[id]===dayKey(); }
 function skip(id, quiet){ PREFS.skipped=PREFS.skipped||{}; PREFS.skipped[id]=dayKey(); var keep={}; Object.keys(PREFS.skipped).forEach(function(k){ if(PREFS.skipped[k]===dayKey()) keep[k]=PREFS.skipped[k]; }); PREFS.skipped=keep; savePrefs(); renderAll();
   if(!quiet) toast("Hidden until tomorrow.", 0, {label:"Undo", run:function(){ unskip(id); }}); }
@@ -899,11 +1011,11 @@ function suggestions(){
   if(!inv && caps().game_here) out.push({id:"inventory", what:"Load your inventory so ideas match what you own", where:caps().grab?"Warframe running, you in your Orbiter":"An inventory file from a Windows PC", why:invHint(DATA.meta.inventory_error||"Right now relic, blueprint and Foundry ideas are guesses, because the app cannot see what you own."), m:1, action:"grab"});
   var ready=(DATA.foundry||[]).filter(function(x){return x.ready});
   if(ready.length) out.push({id:"foundry", what:"Claim "+ready.length+" finished item"+(ready.length===1?"":"s")+" in your Foundry", where:"Your Orbiter, Foundry", why:ready.map(function(x){return x.name}).slice(0,4).join(", "), m:2, go:"foundry", routine:"d", rid:"foundry_d"});
-  (PREFS.goals||[]).forEach(function(gid){
+  activeGoals().forEach(function(gid){
     var c=(f.finish||[]).find(function(x){return x.id===gid}); if(!c) return;
-    var p=c.pieces.find(function(x){return x.short!==0}); if(!p){ out.push({id:"goal-build:"+gid, what:"Build "+c.name, where:"Your Orbiter, Foundry", why:"Every piece is in your inventory. Your goal is one build away.", m:2, go:"farm"}); return; }
+    var p=c.pieces.find(function(x){return x.short!==0}); if(!p){ out.push({id:"goal-build:"+gid, what:"Build "+c.name, where:"Your Orbiter, Foundry", why:"Every piece is in your inventory. Your goal is one build away.", m:2, go:"farm", item:gid}); return; }
     var gr=pieceRoute(p);
-    out.push({id:"goal:"+gid+":"+p.name, what:cap(gr.what)+" ("+c.name+" goal)", where:gr.where, why:"Your goal. "+gr.why, m:gr.can?10:20, go:"farm"});
+    out.push({id:"goal:"+gid+":"+p.name, what:cap(gr.what)+" ("+c.name+" goal)", where:gr.where, why:"Your goal. "+gr.why, m:gr.can?10:20, go:"farm", item:gid});
   });
   if(LIVE&&LIVE.fissures){ var fz=LIVE.fissures.filter(function(x){return x.useful_relics && x.best_relic && (!inv || x.best_relic_count) && spOk(x)})[0];
     if(fz){
@@ -917,7 +1029,7 @@ function suggestions(){
     .map(function(c){ var p=c.pieces.find(function(x){return x.short!==0}); return p?{c:c,p:p,r:pieceRoute(p)}:null; })
     .filter(function(x){ return x && (x.r.can || !ownedOnly); });
   one.sort(function(a,b){ return (b.r.can-a.r.can) || (b.r.chance-a.r.chance); });
-  one.slice(0,3).forEach(function(x){ out.push({id:"one:"+x.c.id, what:"Finish "+x.c.name+": "+x.r.what, where:x.r.where, why:"One piece away. "+x.r.why, m:x.r.can?10:20, go:"farm"}); });
+  one.slice(0,3).forEach(function(x){ out.push({id:"one:"+x.c.id, what:"Finish "+x.c.name+": "+x.r.what, where:x.r.where, why:"One piece away. "+x.r.why, m:x.r.can?10:20, go:"farm", item:x.c.id}); });
   var mis=(f.missions||[])[0]; if(mis) out.push({id:"mission:"+mis.id, what:"Run "+mis.place+" · "+mis.mission+", rotation "+mis.best_rotation, where:mis.place, why:"Drops the most of what you need: "+(mis.gives[0]||"").split(" · ")[0]+".", m:5, go:"farm"});
   var ck=(f.crack||[])[0]; if(ck) out.push({id:"crack:"+ck.id, what:"Crack "+ck.name+" in any "+ck.name.split(" ")[0]+" fissure", where:"Void Fissures", why:"You have "+ck.count+"; it holds "+ck.needed+" part"+(ck.needed===1?"":"s")+" you need.", m:5, go:"live"});
   DAILY.forEach(function(x){ if(x.id==="foundry_d" && ready.length) return; if(!checked("d",x.id) && !hiddenRoutine(x.id) && !lockedRoutine(x)) out.push({id:"daily:"+x.id, what:x.t, where:"Daily", why:x.why+". Resets in "+untilReset(false)+".", m:x.m, routine:"d", rid:x.id}); });
@@ -941,7 +1053,7 @@ function renderFocusBar(){
     '<button class="btn primary" type="button" id="fb-done">Done</button><button class="btn" type="button" id="fb-skip">Not now</button><button class="btn" type="button" id="fb-focus">Open Focus</button>';
   $("fb-done").onclick=function(){ doneSuggestion(s); };
   $("fb-skip").onclick=function(){ skip(s.id); };
-  $("fb-focus").onclick=function(){ VIEW="focus"; renderAll(); };
+  $("fb-focus").onclick=function(){ openView("focus"); };
 }
 function planSession(minutes){
   var picked=[], used=0, seen={};
@@ -987,13 +1099,19 @@ function renderFocus(){
   h+='</div>';
   // goals
   var mr=DATA.meta, mrPct=mr.next?Math.min(100,Math.round(100*mr.estimate/mr.next)):0;
-  h+='<div class="box"><h2>Goals <span class="muted">Add more from What to farm, Finish an item</span></h2>';
+  h+='<div class="box"><h2>Goals <span class="muted">Add more from Finish an item or any item\'s details</span></h2>';
   h+='<div class="goal"><b>Reach MR '+(mr.mr+1)+'</b><div class="bar"><i style="width:'+mrPct+'%"></i></div><span class="muted">≈'+(mr.estimate||0).toLocaleString()+' of '+(mr.next||0).toLocaleString()+' mastery</span></div>';
-  (PREFS.goals||[]).forEach(function(gid){ var c=(f.finish||[]).find(function(x){return x.id===gid});
-    if(!c){ h+='<div class="goal"><b>'+esc(gid.split("/").pop())+'</b><span class="muted">Done or no longer tracked.</span><button class="btn" type="button" data-ungoal="'+esc(gid)+'">Remove</button></div>'; return; }
+  var goals=activeGoals(), done=goalsDone();
+  askNames(goals.concat(done).filter(function(g){ return !(f.finish||[]).some(function(x){return x.id===g}); }));
+  goals.forEach(function(gid,i){ var c=(f.finish||[]).find(function(x){return x.id===gid});
+    var nm=c?c.name:goalName(gid);
+    var acts='<span class="acts"><button class="btn" type="button" data-gup="'+esc(gid)+'" aria-label="Move '+esc(nm)+' up"'+(i===0?' disabled':'')+'>Up</button><button class="btn" type="button" data-gdown="'+esc(gid)+'" aria-label="Move '+esc(nm)+' down"'+(i===goals.length-1?' disabled':'')+'>Down</button>'
+      +'<button class="btn" type="button" data-gdone="'+esc(gid)+'">Done</button><button class="btn" type="button" data-ungoal="'+esc(gid)+'">Remove</button></span>';
+    if(!c){ h+='<div class="goal"><b>'+esc(nm)+'</b><span class="muted">Not in Finish an item: built, owned, or no parts to track.</span>'+acts+'</div>'; return; }
     var have=c.total-c.missing, pct=c.total?Math.round(100*have/c.total):0;
-    h+='<div class="goal"><b>Build '+esc(c.name)+'</b><div class="bar"><i style="width:'+pct+'%"></i></div><span class="muted">'+have+' of '+c.total+' pieces'+(c.missing?'':' · ready to build')+'</span><button class="btn" type="button" data-ungoal="'+esc(gid)+'">Remove goal</button></div>'; });
-  if(!(PREFS.goals||[]).length) h+='<p class="muted">No item goals yet. On any card in Finish an item, click Make this my goal.</p>';
+    h+='<div class="goal"><b>Build '+esc(c.name)+'</b><div class="bar"><i style="width:'+pct+'%"></i></div><span class="muted">'+have+' of '+c.total+' pieces'+(c.missing?'':' · ready to build')+'</span>'+acts+'</div>'; });
+  if(!goals.length) h+='<p class="muted">No item goals yet. On any card in Finish an item, click Make this my goal, or open an item in All items and click Add to goals.</p>';
+  if(done.length) h+='<details><summary class="muted">Done <span>'+done.length+'</span></summary>'+done.map(function(gid){ return '<div class="goal done"><b>'+esc(goalName(gid))+'</b><span class="acts"><button class="btn" type="button" data-gforget="'+esc(gid)+'">Remove</button></span></div>'; }).join('')+'</details>';
   h+='</div>';
   // checklists
   var lst=function(title,items,key,weekly){ var vis=items.filter(function(x){return !hiddenRoutine(x.id) && !lockedRoutine(x)}); var done=vis.filter(function(x){return checked(key,x.id)}).length;
@@ -1025,7 +1143,7 @@ function renderFocus(){
     if(s.action==="grab") $("fx-done").textContent=caps().grab?"Get inventory from game":"Load inventory file";
     $("fx-skip").onclick=function(){ skip(s.id); };
     $("fx-tired").onclick=function(){ EASY=!EASY; renderAll(); toast(EASY?"Quickest things first. Click again to switch back.":"Back to the usual order."); };
-    if($("fx-go")) $("fx-go").onclick=function(){ goView(s.go); renderAll(); };
+    if($("fx-go")) $("fx-go").onclick=function(){ showMe(s); };
   }
   $("view").querySelectorAll("[data-plan]").forEach(function(b){ b.onclick=function(){ planSession(+b.dataset.plan); }; });
   $("view").querySelectorAll("[data-st]").forEach(function(b){ b.onchange=function(){ SESSION_TICKS[b.dataset.st]=b.checked; var it=SESSION.items[+b.dataset.st];
@@ -1034,6 +1152,10 @@ function renderFocus(){
     saveSession(); renderAll(); }; });
   $("view").querySelectorAll("[data-ck]").forEach(function(b){ b.onchange=function(){ var p=b.dataset.ck.split(":"); setCheck(p[0],p[1],b.checked); renderAll(); }; });
   $("view").querySelectorAll("[data-ungoal]").forEach(function(b){ b.onclick=function(){ toggleGoal(b.dataset.ungoal); }; });
+  $("view").querySelectorAll("[data-gup]").forEach(function(b){ b.onclick=function(){ moveGoal(b.dataset.gup,-1); }; });
+  $("view").querySelectorAll("[data-gdown]").forEach(function(b){ b.onclick=function(){ moveGoal(b.dataset.gdown,1); }; });
+  $("view").querySelectorAll("[data-gdone]").forEach(function(b){ b.onclick=function(){ goalDone(b.dataset.gdone); }; });
+  $("view").querySelectorAll("[data-gforget]").forEach(function(b){ b.onclick=function(){ forgetDone(b.dataset.gforget); }; });
   $("view").querySelectorAll("[data-zoom]").forEach(function(b){ b.onclick=function(){ setSetting("zoom", +b.dataset.zoom); }; });
   $("view").querySelectorAll("[data-hide]").forEach(function(b){ b.onchange=function(){ var hd=((PREFS.settings||{}).hide||[]).filter(function(x){return x!==b.dataset.hide}); if(b.checked) hd.push(b.dataset.hide); setSetting("hide",hd); }; });
   if($("st-account")) $("st-account").onclick=function(){ renderSetup({error:"Type the account ID to switch to. Your current account stays saved, so you can switch back the same way.", setup:true, has_account:false, switching:true}); };
@@ -1064,7 +1186,8 @@ var VIEW_STATE_SAVED="";
 function rememberView(){
   if(!DATA) return;
   PREFS.views=PREFS.views||{};
-  PREFS.views[VIEW]={F:F, sort:SORT[VIEW]||null};
+  var keep=Object.assign({},F); delete keep.id;  // "Show me" one item is for this visit only
+  PREFS.views[VIEW]={F:keep, sort:SORT[VIEW]||null};
   var now=JSON.stringify(PREFS.views);
   if(now!==VIEW_STATE_SAVED){ VIEW_STATE_SAVED=now; clearTimeout(rememberView.t); rememberView.t=setTimeout(savePrefs, 800); }
 }
@@ -1075,15 +1198,20 @@ function renderAllNow(){
   var v=VIEWS.find(function(x){return x.id===VIEW})||VIEWS[0];
   $("title").textContent=v.label; renderTabs(); renderFilters(); renderNotice(); renderFreshness(); renderFocusBar();
   if(VIEW==="focus"){ $("filters").hidden=true; $("csv").hidden=true; renderFocus(); $("foot").innerHTML='<span>Goals, ticks and settings are saved in your OpenWarframe folder.</span>'; return; }
-  if(VIEW==="overview"){ renderOverview(); $("csv").hidden=true; return; }
+  if(VIEW==="overview"){ renderOverview(); $("csv").hidden=true; footer(null, false); return; }
   $("csv").hidden=false;
-  var rows;
+  var rows, table=false;
   if(VIEW==="farm"&&farmSub()==="finish"){ rows=renderFinish(); }
   else if(VIEW==="earn"){ rows=renderEarnings(); $("csv").hidden=true; }
   else if(VIEW==="rewards"){ rows=renderRewards(); $("csv").hidden=true; }
-  else if(VIEW==="live"){ loadLive(false); rows=renderTable(); $("view").insertAdjacentHTML("afterbegin", liveHeader()); }
-  else { rows=renderTable(); if(VIEW==="farm") $("view").insertAdjacentHTML("afterbegin", nowCard()); }
-  $("foot").innerHTML='<span>'+rows.length+' shown</span><span>Profile '+new Date(DATA.meta.snapshot).toLocaleString()+'</span><span>'+(DATA.meta.inventory?"Inventory loaded "+new Date(DATA.meta.inventory.loaded).toLocaleString():"No inventory loaded")+'</span><span>Click a row for details. Click a column to sort.</span>';
+  else if(VIEW==="live"){ loadLive(false); rows=renderTable(); table=true; $("view").insertAdjacentHTML("afterbegin", liveHeader()); }
+  else { rows=renderTable(); table=true; if(VIEW==="farm") $("view").insertAdjacentHTML("afterbegin", nowCard()); }
+  footer(table||rows.length?rows:null, table&&rows.length>0);
+}
+// The row hint only where there is a table to click (not Earnings, Reward helper, Finish an item, Focus, Overview).
+function footer(rows, isTable){
+  $("foot").innerHTML=(rows?'<span>'+rows.length+' shown</span>':'')+'<span>Profile '+new Date(DATA.meta.snapshot).toLocaleString()+'</span><span>'+(DATA.meta.inventory?"Inventory loaded "+new Date(DATA.meta.inventory.loaded).toLocaleString():"No inventory loaded")+'</span>'
+    +(isTable?'<span>Click a row for details. Click a column to sort.</span>':'');
 }
 function load(data){
   if(data.error&&data.setup){ renderSetup(data); return; }
@@ -1095,6 +1223,7 @@ function load(data){
     return;
   }
   DATA=data;
+  setupMode(false);
   $("grab").hidden=!caps().grab;
   // the gold button is for the one thing to do next: loading the inventory, until it is loaded
   $("grab").classList.toggle("primary", !data.meta.inventory);
@@ -1104,16 +1233,24 @@ function load(data){
 function checkPrices(){
   var spec=currentSpec();
   var rows=sorted(filtered()).filter(function(r){return r.slug && r.price==null && (spec.key==="relics"||r.spare>0)}).slice(0,80);
-  if(!rows.length){ toast("Prices are already shown for these relics."); return; }
-  toast("Checking warframe.market for "+rows.length+" relics. This takes up to a minute.", 60000);
+  var noun={relics:"relics", sell:"items", mods:"mods"}[spec.key]||"items";
+  if(!rows.length){ toast("Prices are already shown for these "+noun+"."); return; }
+  toast("Checking warframe.market for "+rows.length+" "+noun+". This takes up to a minute.", 60000);
   api("/api/prices",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind:spec.key, ids:rows.map(function(r){return r.id})})})
     .then(function(p){
       (DATA[spec.key]||[]).forEach(function(r){ if(p[r.id]) r.price=p[r.id].typical; });
       SORT[VIEW]={k:"price",dir:-1}; renderAll();
-      toast("Prices loaded for "+Object.keys(p).length+" relics. Sorted by market value. Filter or sort, then check again for more.");
+      toast("Prices loaded for "+Object.keys(p).length+" "+noun+". Sorted by market value. Filter or sort, then check again for more.");
     }).catch(function(){ toast("Could not reach warframe.market."); });
 }
+// Before there is an account, the controls that need one are hidden; a normal load shows them again.
+var SETUP_HIDE=["q","csv","refresh","grab","loadinv","export","updatedata","filters","fbar"];
+function setupMode(on){
+  SETUP_HIDE.forEach(function(id){ var el=$(id); if(el) el.hidden=on; });
+  ["fresh","notice"].forEach(function(c){ var el=document.querySelector("."+c); if(el&&on) el.remove(); });
+}
 function renderSetup(d){
+  setupMode(true);
   if(!d.switching) $("who").textContent="";
   $("title").textContent=d.switching?"Change account":"Get started"; $("csv").hidden=true;
   var h='<div class="setup"><h1>'+(d.switching?'Change account':'Welcome to OpenWarframe')+'</h1><p class="muted">'+esc(d.error)+'</p>';
@@ -1151,7 +1288,7 @@ $("q").oninput=function(){
   clearTimeout(searchTimer);
   searchTimer=setTimeout(function(){  // wait for a pause in typing: every render rebuilds the list
     Q=v.trim().toLowerCase();
-    if(Q && NO_SEARCH[VIEW]){ goView("all"); try{ history.replaceState(null,"","#all"); }catch(e){} toast("Searching All items."); }
+    if(Q && NO_SEARCH[VIEW]){ goView("all"); setHash("all", true); toast("Searching All items."); }
     renderAll();
   }, 150);
 };
@@ -1225,16 +1362,39 @@ try{ VIEW=localStorage.getItem("owf-view")||"focus"; }catch(e){}
 // deep links: http://127.0.0.1:<port>/#relics opens that tab
 // #farm/finish also opens a sub-tab (What to farm and Live)
 function hashView(){ var parts=decodeURIComponent((location.hash||"").slice(1)).toLowerCase().split("/"), hit=null; VIEWS.forEach(function(v){ if(v.id.toLowerCase()===parts[0]) hit=v.id; }); if(hit&&parts[1]) F={sub:parts[1]}; return hit; }
-window.addEventListener("hashchange", function(){ var keepF=F; F={}; var hv=hashView(); if(!hv){ F=keepF; return; } var sub=F.sub; goView(hv); if(sub) F.sub=sub; if(DATA) renderAll(); });
+// Back and Forward (pushState entries fire popstate; typed links fire hashchange): follow the address
+function fromHash(){ var keepF=F; F={}; var hv=hashView(); if(!hv){ F=keepF; return; } var sub=F.sub;
+  if(hv===VIEW && (sub||null)===(keepF.sub||null)){ F=keepF; return; }  // already showing it
+  goView(hv); if(sub) F.sub=sub; try{ localStorage.setItem("owf-view",VIEW); }catch(e){} if(DATA) renderAll(); }
+window.addEventListener("hashchange", fromHash);
+window.addEventListener("popstate", fromHash);
+// "/" searches, "?" lists the shortcuts; not while typing or while a dialog is open
+function typing(el){ return !!el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)); }
+window.addEventListener("keydown", function(e){
+  if(e.ctrlKey||e.metaKey||e.altKey||typing(e.target)||document.querySelector("dialog[open]")) return;
+  if(e.key==="/"){ if($("q").hidden) return; e.preventDefault(); $("q").focus(); $("q").select(); }
+  else if(e.key==="?"){ e.preventDefault(); $("keys").showModal(); }
+});
+$("keys-close").onclick=function(){ $("keys").close(); };  // Escape closes it too (native dialog)
+// Narrow sidebar: the button pins it on or off; with no choice made it narrows by itself under 1000 px
+var NARROW=window.matchMedia?window.matchMedia("(max-width:1000px)"):null;
+function applyCompact(){ var pick=(PREFS.settings||{}).compact; var on=pick==null?!!(NARROW&&NARROW.matches):!!pick;
+  document.body.classList.toggle("compact", on);
+  var b=$("compact"); b.setAttribute("aria-pressed", String(on)); b.querySelector(".ab").innerHTML=on?"&raquo;":"&laquo;"; }
+if(NARROW){ if(NARROW.addEventListener) NARROW.addEventListener("change", applyCompact); else if(NARROW.addListener) NARROW.addListener(applyCompact); }
+$("compact").onclick=function(){ PREFS.settings=PREFS.settings||{}; PREFS.settings.compact=!document.body.classList.contains("compact"); savePrefs(); applyCompact(); };
+applyCompact();
 $("view").innerHTML='<div class="empty" id="boot">Loading your account…</div>';
 var bootTimer=setInterval(function(){ if(DATA||!$("boot")){ clearInterval(bootTimer); return; } api("/api/status").then(function(s){ var b=$("boot"); if(b&&s.status) b.textContent=s.status; }).catch(function(){}); }, 1500);
-api("/api/prefs").then(function(p){ PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{});
+var PREFS_LOADED=false;
+api("/api/prefs").then(function(p){ PREFS_LOADED=true; PREFS=Object.assign({goals:[],checks:{},settings:{},skipped:{}}, p||{});
   if((PREFS.settings||{}).start!=="last") VIEW="focus";
   var sub=null, hv=hashView(); if(hv){ sub=F.sub; VIEW=hv; }
   goView(VIEW); if(sub) F.sub=sub;  // filters and sort as you left them
+  setHash(VIEW+(F.sub?"/"+F.sub:""), false);  // so Back can return to the first view too
   Object.keys(PREFS.views||{}).forEach(function(v){ if(PREFS.views[v]&&PREFS.views[v].sort) SORT[v]=PREFS.views[v].sort; });
   VIEW_STATE_SAVED=JSON.stringify(PREFS.views||{});
-  restoreSession(); applySettings(); }).catch(function(){})
+  restoreSession(); applySettings(); applyCompact(); }).catch(function(){})
 .then(function(){ return api("/api/data"); }).then(function(d){ load(d); checkUpdate(); }).catch(function(e){
   var net=e&&e.name==="TypeError"&&/fetch/i.test(e.message||"");
   $("view").innerHTML='<div class="empty">'+(net?"Could not reach the OpenWarframe server. Close this window and open OpenWarframe again.":"Something went wrong showing your data: "+esc(String((e&&e.message)||e)))+'</div>';

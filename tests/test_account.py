@@ -144,7 +144,7 @@ def test_store_and_diff(tmp_path: Path):
 
 def test_profile_url_and_config(tmp_path: Path, monkeypatch):
     assert validate_account_id("ABCDEF0123456789ABCDEF01".lower()) == "abcdef0123456789abcdef01"
-    assert profile_url("a" * 24, "ps4").startswith("http://content-ps4.warframe.com/")
+    assert profile_url("a" * 24, "ps4").startswith("https://content-ps4.warframe.com/")
     monkeypatch.setenv("OPENWARFRAME_HOME", str(tmp_path / "home"))
     s = load_settings()
     assert s.account_id is None

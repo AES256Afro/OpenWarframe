@@ -25,6 +25,24 @@ PRICE_TIMEOUT = 4  # seconds per request: prices are a bonus, the pick must not 
 KEEP_RECORDINGS = 30  # newest reward screens kept when saving them is on
 OCR_LANGUAGE = "en-US"  # the item list is English; reading with the profile language fails
 
+_OCR: tuple[object, bool] | None = None  # (the probe that answered, its answer)
+
+
+def ocr_available() -> bool:
+    """Is system text recognition available? Asked once per process: the answer can't change.
+
+    Probing imports the OCR framework, which is too slow to repeat on every status poll.
+    The cached answer belongs to the probe function that gave it, so a replaced probe
+    (tests) is asked again.
+    """
+    global _OCR
+    from ..live import ocr
+
+    probe = ocr.ocr_available
+    if _OCR is None or _OCR[0] is not probe:
+        _OCR = (probe, bool(probe()))
+    return _OCR[1]
+
 
 def _price_map(slugs: list[str], cache_dir) -> dict[str, float]:
     """Typical sell price per market slug (cached 6 h). Best effort."""
@@ -84,8 +102,6 @@ class RewardWatcher:
 
     # -- control ---------------------------------------------------------------------
     def status(self) -> dict:
-        from ..live.ocr import ocr_available
-
         with self.lock:
             return {
                 "state": self.state,
@@ -97,8 +113,6 @@ class RewardWatcher:
             }
 
     def start(self) -> dict:
-        from ..live.ocr import ocr_available
-
         if not ocr_available():
             with self.lock:
                 self.state, self.message = "error", "Text recognition is not available on this system."

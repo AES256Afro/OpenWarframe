@@ -50,30 +50,71 @@ def _store_to_item(path: str) -> str:
     return path.replace("/Lotus/StoreItems/", "/Lotus/", 1)
 
 
+FACTIONS = {
+    "FC_GRINEER": "Grineer",
+    "FC_CORPUS": "Corpus",
+    "FC_INFESTATION": "Infested",
+    "FC_OROKIN": "Orokin",
+    "FC_CORRUPTED": "Corrupted",
+    "FC_SENTIENT": "Sentient",
+    "FC_NARMER": "Narmer",
+    "FC_MITW": "The Murmur",
+    "FC_MURMUR": "The Murmur",
+    "FC_SCALDRA": "Scaldra",
+    "FC_TECHROT": "Techrot",
+    "FC_STALKER": "Stalker",
+}
+
+
+def faction_name(key: str | None) -> str:
+    """'FC_INFESTATION' -> 'Infested'; unknown keys lose the prefix and are title-cased."""
+    key = str(key or "")
+    return FACTIONS.get(key) or key.removeprefix("FC_").replace("_", " ").title()
+
+
+# (path, mtime_ns, size, tail_bytes) -> parsed result; the log is only re-read when it changes
+_HERE_CACHE: dict[tuple, tuple[dict | None, float]] = {}
+
+
 def you_are_here(log_path: Path | None = None, tail_bytes: int = 768_000) -> dict | None:
-    """Last mission the game loaded, read from the end of EE.log."""
+    """Last mission the game loaded, read from the end of EE.log.
+
+    The answer is kept until the log changes (path, modified time and size), so polling
+    the Live tab doesn't re-read most of a megabyte each time.
+    """
     from ..live.eelog import default_log_path, parse_lines
 
     path = log_path or default_log_path()
     try:
-        size = path.stat().st_size
-        with path.open("rb") as f:
-            f.seek(max(0, size - tail_bytes))
-            text = f.read().decode("utf-8", errors="replace")
-        modified = path.stat().st_mtime
+        st = path.stat()
     except OSError:
         return None
-    lines = text.splitlines()[1:] if size > tail_bytes else text.splitlines()
-    events = [e for e in parse_lines(lines) if e.kind == "mission_loaded"]
-    if not events:
+    key = (str(path), st.st_mtime_ns, st.st_size, tail_bytes)
+    hit = _HERE_CACHE.get(key)
+    if hit is None:
+        size = st.st_size
+        try:
+            with path.open("rb") as f:
+                f.seek(max(0, size - tail_bytes))
+                text = f.read().decode("utf-8", errors="replace")
+        except OSError:
+            return None
+        lines = text.splitlines()[1:] if size > tail_bytes else text.splitlines()
+        events = [e for e in parse_lines(lines) if e.kind == "mission_loaded"]
+        found = None
+        if events:
+            last = events[-1]
+            found = {
+                "node": last.data.get("node"),
+                "mission": _pretty_mission(last.data.get("missionType")),
+                "faction": faction_name(last.data.get("faction") or ""),
+            }
+        _HERE_CACHE.clear()  # one log at a time; never grows
+        hit = _HERE_CACHE[key] = (found, st.st_mtime)
+    found, modified = hit
+    if found is None:
         return None
-    last = events[-1]
-    return {
-        "node": last.data.get("node"),
-        "mission": _pretty_mission(last.data.get("missionType")),
-        "faction": (last.data.get("faction") or "").removeprefix("FC_").title(),
-        "log_age_min": round((time.time() - modified) / 60, 1),
-    }
+    return {**found, "log_age_min": round((time.time() - modified) / 60, 1)}
 
 
 def build_live(
@@ -194,7 +235,12 @@ def build_live(
         if inv.get("Completed"):
             continue
         sides = []
-        for side, key in (("Attacker", "AttackerReward"), ("Defender", "DefenderReward")):
+        attacker_faction = faction_name(inv.get("Faction"))
+        defender_faction = faction_name(inv.get("DefenderFaction"))
+        for side, key, faction in (
+            ("Attacker", "AttackerReward", attacker_faction),
+            ("Defender", "DefenderReward", defender_faction),
+        ):
             reward = inv.get(key) or {}
             parts = reward.get("countedItems", []) if isinstance(reward, dict) else []
             for r in parts:
@@ -206,7 +252,13 @@ def build_live(
                 )
                 needed = bool(items.get(uid) and items[uid]["mastery"] != "Mastered")
                 sides.append(
-                    {"side": side, "name": name, "count": r.get("ItemCount", 1), "flag": valuable or needed}
+                    {
+                        "side": side,
+                        "faction": faction,  # the faction you fight for to earn this reward
+                        "name": name,
+                        "count": r.get("ItemCount", 1),
+                        "flag": valuable or needed,
+                    }
                 )
         goal = inv.get("Goal") or 1
         progress = round(50 + 50 * (inv.get("Count") or 0) / goal)
@@ -216,6 +268,8 @@ def build_live(
                 **place(inv.get("Node", "")),
                 "attacker": (inv.get("Faction") or "").removeprefix("FC_").title(),
                 "defender": (inv.get("DefenderFaction") or "").removeprefix("FC_").title(),
+                "attacker_faction": attacker_faction,
+                "defender_faction": defender_faction,
                 "progress": max(0, min(100, progress)),
                 "rewards": sides,
                 "worth_it": any(s["flag"] for s in sides),

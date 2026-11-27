@@ -17,6 +17,7 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.worksheet import Worksheet
 
 from ..report.model import Report
+from .extras import ExportExtras, diff_rows, rank_test_line
 from .tables import Table
 
 NAVY = "1F3B5A"
@@ -43,7 +44,7 @@ WIDTHS = {
     "part": 26,
     "category": 16,
     "acquisition": 30,
-    "best_sources": 80,
+    "best_sources": 50,
     "where": 34,
     "detail": 46,
     "wiki_url": 14,
@@ -58,6 +59,23 @@ WIDTHS = {
     "version": 30,
     "fetched_at": 26,
 }
+# Column headers spelled the way players write them; anything else is title-cased
+HEADERS = {
+    "mastery_req": "MR",
+    "above_your_mr": "Above your MR",
+    "wiki_url": "Wiki",
+    "unique_name": "ID",
+    "item_unique_name": "Item ID",
+    "xp": "XP",
+    "xp_to_30": "XP to 30",
+    "mastery_xp": "Mastery XP",
+    "market_slug": "warframe.market",
+    "equip_hours": "Hours equipped",
+    "percent_mastered": "% mastered",
+}
+WRAP = {"best_sources", "detail", "description", "acquisition"}
+# True/False columns shown as Yes/No; the formatting rules below match these words
+YES, NO = "Yes", "No"
 HIDDEN = {"unique_name", "item_unique_name", "key", "tag", "node"}
 SHEET_ORDER = [
     "missing_items",
@@ -91,9 +109,36 @@ def _fill(color: str) -> PatternFill:
     return PatternFill("solid", fgColor=color)
 
 
+def header_label(col: str) -> str:
+    return HEADERS.get(col) or col.replace("_", " ").capitalize()
+
+
+_SMALL_WORDS = {"and", "or", "of", "the", "a", "an", "to", "in", "on", "for"}
+
+
+def tidy_caps(text: str) -> str:
+    """'EXTERMINATE' -> 'Exterminate', 'ARCHWING DEFENSE' -> 'Archwing Defense'. Mixed case is kept."""
+    if not isinstance(text, str) or not text.isupper():
+        return text
+    words = text.lower().split(" ")
+    return " ".join(w if i and w in _SMALL_WORDS else w[:1].upper() + w[1:] for i, w in enumerate(words))
+
+
+def _print_setup(ws: Worksheet, header_row: int | None = 1) -> None:
+    """Landscape A4, fit to one page wide, the header row repeated on every printed page."""
+    ws.page_setup.orientation = "landscape"
+    ws.page_setup.paperSize = ws.PAPERSIZE_A4
+    ws.page_setup.fitToWidth = 1
+    ws.page_setup.fitToHeight = 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    if header_row:
+        ws.print_title_rows = f"{header_row}:{header_row}"
+    ws.print_options.horizontalCentered = True
+
+
 def _write_table(ws: Worksheet, t: Table, *, start_row: int = 1) -> int:
     for ci, col in enumerate(t.columns, start=1):
-        c = ws.cell(row=start_row, column=ci, value=col.replace("_", " ").title())
+        c = ws.cell(row=start_row, column=ci, value=header_label(col))
         c.fill, c.font, c.border = HEADER_FILL, HEADER_FONT, BOX
         c.alignment = Alignment(vertical="center")
         letter = get_column_letter(ci)
@@ -105,17 +150,22 @@ def _write_table(ws: Worksheet, t: Table, *, start_row: int = 1) -> int:
             v = row.get(col)
             if isinstance(v, list | dict):
                 v = str(v)
+            elif isinstance(v, bool):
+                v = YES if v else NO
+            elif col == "mission_type":
+                v = tidy_caps(v)
             cell = ws.cell(row=ri, column=ci, value=_v(v))
             if col == "wiki_url" and v:
                 cell.hyperlink = v
                 cell.value = "wiki"
                 cell.font = Font(color="0563C1", underline="single")
-            elif col in ("best_sources", "detail", "description", "acquisition"):
-                cell.alignment = Alignment(wrap_text=False, vertical="top")
+            elif col in WRAP:
+                cell.alignment = Alignment(wrap_text=True, vertical="top")
     last = start_row + len(t.rows)
     ws.freeze_panes = ws.cell(row=start_row + 1, column=2)
     if t.rows:
         ws.auto_filter.ref = f"A{start_row}:{get_column_letter(len(t.columns))}{last}"
+    _print_setup(ws, start_row)
     return last
 
 
@@ -123,7 +173,7 @@ def _col(t: Table, name: str) -> str:
     return get_column_letter(t.columns.index(name) + 1)
 
 
-def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> None:
+def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table], extras: ExportExtras) -> None:
     ws = wb.active
     ws.title = "Summary"
     ws.sheet_view.showGridLines = False
@@ -140,18 +190,22 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> No
     ws["B3"] = sub
     ws["B3"].font = SUB_FONT
 
-    kpis = [
+    # plain counts are stored as numbers; "x / y" pairs stay text
+    kpis: list[tuple[int | str, str]] = [
         (f"{h.items_mastered} / {h.items_total}", "Items mastered"),
-        (str(h.items_leveling), "Owned, not rank 30"),
-        (str(h.items_missing), "Never leveled"),
+        (h.items_leveling, "Owned, not rank 30"),
+        (h.items_missing, "Never leveled"),
         (f"{h.starchart_done} / {h.starchart_total}", "Star chart"),
         (f"{h.steel_path_done} / {h.starchart_total}", "Steel Path"),
-        (str(h.syndicates_maxed), "Syndicates maxed"),
+        (h.syndicates_maxed, "Syndicates maxed"),
     ]
     for i, (value, label) in enumerate(kpis):
         col = 2 + i * 2
         v = ws.cell(row=5, column=col, value=value)
         v.font = KPI_VALUE
+        v.alignment = Alignment(horizontal="left")
+        if isinstance(value, int):
+            v.number_format = "#,##0"
         lab = ws.cell(row=6, column=col, value=label)
         lab.font = KPI_LABEL
         for r in (5, 6):
@@ -213,28 +267,55 @@ def _summary_sheet(wb: Workbook, report: Report, tables: dict[str, Table]) -> No
     row = last + 3
     m = report.mastery
     ws.cell(row=row, column=2, value="Mastery XP").font = Font(bold=True, color=GOLD, size=12)
+    test = rank_test_line(report)
     lines = [
         f"Items + intrinsics: {m.visible_total:,} (items {m.from_items:,} + intrinsics {m.from_intrinsics:,})",
         f"Estimated total: {m.estimated_total:,} (estimate; adds star chart {m.from_starchart:,}, "
         f"Steel Path {m.from_steel_path:,}, junctions {m.from_junctions:,})",
-        f"Rank {m.rank} needs {m.rank_threshold:,}; rank {m.rank + 1} needs {m.next_rank_threshold:,}",
+        test
+        or f"Rank {m.rank} needs {m.rank_threshold:,}; rank {m.rank + 1} needs {m.next_rank_threshold:,}",
         m.note,
     ] + report.notes
     for i, line in enumerate(lines, start=1):
         c = ws.cell(row=row + i, column=2, value=_v(line))
-        c.font = Font(color=MUTED if i > 3 else INK, size=10)
+        c.font = Font(color=MUTED if i > 3 else INK, size=10, bold=bool(test) and i == 3)
     ws.cell(
         row=row + len(lines) + 2,
         column=2,
         value="Sheets: "
         + ", ".join(t.title for t in tables.values() if t.name not in ("summary", "categories")),
     ).font = SUB_FONT
+    _print_setup(ws, None)
 
 
-def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
+def _changes_sheet(wb: Workbook, extras: ExportExtras) -> None:
+    """'Since last sync': what changed from the previous snapshot, when there is one."""
+    rows = diff_rows(extras.diff)
+    if not rows:
+        return
+    d = extras.diff
+    ws = wb.create_sheet("Since last sync", 1)
+    ws["A1"] = "Since last sync"
+    ws["A1"].font = TITLE_FONT
+    ws["A2"] = f"{d.before:%Y-%m-%d %H:%M} to {d.after:%Y-%m-%d %H:%M} UTC"
+    ws["A2"].font = SUB_FONT
+    for ci, head in enumerate(("What", "Detail"), start=1):
+        c = ws.cell(row=4, column=ci, value=head)
+        c.fill, c.font, c.border = HEADER_FILL, HEADER_FONT, BOX
+    for ri, (what, detail) in enumerate(rows, start=5):
+        ws.cell(row=ri, column=1, value=_v(what))
+        ws.cell(row=ri, column=2, value=_v(detail))
+    ws.column_dimensions["A"].width = 20
+    ws.column_dimensions["B"].width = 60
+    ws.freeze_panes = "A5"
+    _print_setup(ws, 4)
+
+
+def write_xlsx(report: Report, tables: list[Table], path: Path, extras: ExportExtras | None = None) -> Path:
+    extras = extras or ExportExtras()
     by_name = {t.name: t for t in tables}
     wb = Workbook()
-    _summary_sheet(wb, report, by_name)
+    _summary_sheet(wb, report, by_name, extras)
     for name in SHEET_ORDER:
         t = by_name[name]
         ws = wb.create_sheet(t.title[:31])
@@ -265,32 +346,34 @@ def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
             above = _col(t, "above_your_mr")
             ws.conditional_formatting.add(
                 f"A{first}:A{last}",
-                FormulaRule(formula=[f"${above}{first}=TRUE"], font=Font(color="9AA0AE", italic=True)),
+                FormulaRule(formula=[f'${above}{first}="{YES}"'], font=Font(color="9AA0AE", italic=True)),
             )
         if name == "missing_sources" and t.rows:
             col = _col(t, "farmable")
             ws.conditional_formatting.add(
                 f"{col}{first}:{col}{last}",
                 CellIsRule(
-                    operator="equal", formula=["TRUE"], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG)
+                    operator="equal", formula=[f'"{YES}"'], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG)
                 ),
             )
             ws.conditional_formatting.add(
                 f"{col}{first}:{col}{last}",
-                CellIsRule(operator="equal", formula=["FALSE"], fill=_fill(RED_BG), font=Font(color=RED_FG)),
+                CellIsRule(
+                    operator="equal", formula=[f'"{NO}"'], fill=_fill(RED_BG), font=Font(color=RED_FG)
+                ),
             )
         if name == "owned_items" and t.rows:
             col = _col(t, "mastered")
             ws.conditional_formatting.add(
                 f"{col}{first}:{col}{last}",
                 CellIsRule(
-                    operator="equal", formula=["TRUE"], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG)
+                    operator="equal", formula=[f'"{YES}"'], fill=_fill(GREEN_BG), font=Font(color=GREEN_FG)
                 ),
             )
             ws.conditional_formatting.add(
                 f"{col}{first}:{col}{last}",
                 CellIsRule(
-                    operator="equal", formula=["FALSE"], fill=_fill(AMBER_BG), font=Font(color=AMBER_FG)
+                    operator="equal", formula=[f'"{NO}"'], fill=_fill(AMBER_BG), font=Font(color=AMBER_FG)
                 ),
             )
             for c in ("xp", "xp_to_30", "mastery_xp"):
@@ -306,15 +389,10 @@ def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
                 ws.conditional_formatting.add(
                     f"{letter}{first}:{letter}{last}",
                     CellIsRule(
-                        operator="equal", formula=["TRUE"], fill=_fill(yes_bg), font=Font(color=yes_fg)
+                        operator="equal", formula=[f'"{YES}"'], fill=_fill(yes_bg), font=Font(color=yes_fg)
                     ),
                 )
-                ws.conditional_formatting.add(
-                    f"{letter}{first}:{letter}{last}",
-                    CellIsRule(
-                        operator="equal", formula=["FALSE"], fill=_fill(RED_BG), font=Font(color=RED_FG)
-                    ),
-                )
+                # "not yet" stays plain: a red sea of unplayed nodes reads as failure
         if name == "syndicates" and t.rows:
             letter = _col(t, "rank")
             ws.conditional_formatting.add(
@@ -337,6 +415,7 @@ def write_xlsx(report: Report, tables: list[Table], path: Path) -> Path:
                 letter = _col(t, c)
                 for r in range(first, last + 1):
                     ws[f"{letter}{r}"].number_format = "#,##0"
+    _changes_sheet(wb, extras)
     wb.properties.title = "OpenWarframe account export"
     wb.properties.creator = "OpenWarframe"
     _no_formulas(wb)

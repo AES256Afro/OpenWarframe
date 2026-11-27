@@ -29,6 +29,7 @@ log = logging.getLogger(__name__)
 
 APP_NAME = "OpenWarframe"
 USER_AGENT = f"OpenWarframe/{__version__} (+https://github.com/AES256Afro/OpenWarframe)"
+EXPORT_PREFS = ("budget", "pdf", "copy_to")  # `export --remember` keeps these in [export]
 
 
 @dataclass
@@ -66,6 +67,28 @@ class Settings:
     @property
     def config_path(self) -> Path:
         return self.home / "config.toml"
+
+    @property
+    def export_prefs(self) -> dict:
+        """Saved `export` choices (``[export]`` in config.toml), only the keys and types we use."""
+        raw = self.extra.get("export")
+        if not isinstance(raw, dict):
+            return {}
+        out: dict = {}
+        if raw.get("budget") in ("compact", "full"):
+            out["budget"] = raw["budget"]
+        if isinstance(raw.get("pdf"), bool):
+            out["pdf"] = raw["pdf"]
+        if isinstance(raw.get("copy_to"), str):
+            out["copy_to"] = raw["copy_to"]
+        return out
+
+    def remember_export(self, **choices) -> None:
+        """Keep ``budget``, ``pdf`` and ``copy_to`` as defaults for `export` (save_settings writes them)."""
+        current = self.extra.get("export")
+        table = dict(current) if isinstance(current, dict) else {}
+        table.update({k: v for k, v in choices.items() if k in EXPORT_PREFS})
+        self.extra["export"] = table
 
     def ensure_dirs(self) -> None:
         for d in (self.home, self.cache_dir, self.snapshots_dir, self.exports_dir):

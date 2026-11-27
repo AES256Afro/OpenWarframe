@@ -9,6 +9,7 @@ closed. Otherwise, or with OPENWARFRAME_BROWSER_WINDOW set, it opens in a Chrome
 from __future__ import annotations
 
 import contextlib
+import gzip
 import json
 import logging
 import os
@@ -22,6 +23,7 @@ from datetime import UTC, datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from importlib import resources
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 from ..config import Settings, load_settings
 from ..fsutil import atomic_write_text
@@ -31,6 +33,9 @@ log = logging.getLogger(__name__)
 # windows to about once a minute, so the server waits well past that before stopping.
 IDLE_SECONDS = 150
 PRICE_MAX_AGE = 6 * 3600  # market prices are re-checked after six hours, even in a long session
+LIVE_MAX_AGE = 45  # seconds the Live tab's answer is reused (sooner when EE.log changes)
+GZIP_MIN = 1024  # smaller responses are sent as they are
+MAX_NAME_IDS = 500  # /api/names answers at most this many ids per request
 PROFILE_REFRESH_HOURS = 24  # the profile is fetched again on open once it is this old
 RELEASES_API = "https://api.github.com/repos/AES256Afro/OpenWarframe/releases/latest"
 MAX_BODY = 64 << 20
@@ -71,6 +76,8 @@ class AppState:
         )
         self.prefs_lock = threading.Lock()
         self.windows = None  # NativeWindows when the app has its own window
+        self._live: tuple[tuple, float, dict] | None = None  # (key, time.monotonic(), answer)
+        self._snaps: tuple[tuple, Path | None] | None = None  # (folder stamp, newest snapshot)
 
     @property
     def inventory_path(self) -> Path:
@@ -87,14 +94,31 @@ class AppState:
             except OSError:
                 return None
 
-        snaps = sorted(s.snapshots_dir.glob("*.json")) if s.snapshots_dir.exists() else []
-        latest = snaps[-1] if snaps else None
+        latest = self._latest_snapshot()
         return (
             latest.name if latest else None,
             stamp(latest) if latest else None,
             stamp(self.inventory_path),
             stamp(s.codex_path),
         )
+
+    def _latest_snapshot(self) -> Path | None:
+        """Newest snapshot file; the folder is only listed again when it changes.
+
+        /api/version is polled, and listing a folder of hundreds of snapshots each time
+        is wasted work. Adding or removing a file changes the folder's modified time.
+        """
+        d = self.settings.snapshots_dir
+        try:
+            st = d.stat()
+            stamp = (str(d), st.st_mtime_ns, st.st_size, st.st_ino)
+        except OSError:
+            self._snaps = None
+            return None
+        if self._snaps is None or self._snaps[0] != stamp:
+            snaps = sorted(d.glob("*.json"))
+            self._snaps = (stamp, snaps[-1] if snaps else None)
+        return self._snaps[1]
 
     def ensure_codex(self) -> str | None:
         """Build or update the game database when it is missing or older than this code.
@@ -196,6 +220,7 @@ class AppState:
         else:
             rows_ = data.get(kind, [])
         slugs = {r["id"]: r.get("slug") for r in rows_ if r.get("id")}
+        bases = self._price_bases({s for s in slugs.values() if s})
         client = CachedClient(self.settings.cache_dir)
         out: dict[str, dict] = {}
         try:
@@ -207,7 +232,7 @@ class AppState:
                     out[rid] = self.prices[rid]
                     continue
                 try:
-                    price = top_prices(client, slug)
+                    price = top_prices(client, slug, **bases.get(slug, {}))
                 except Exception as exc:  # noqa: BLE001
                     log.warning("price for %s failed: %s", slug, exc)
                     status = getattr(getattr(exc, "response", None), "status_code", None)
@@ -226,6 +251,43 @@ class AppState:
                 r["price"] = self.prices[r["id"]]["typical"]
         return out
 
+    def _price_bases(self, slugs: set[str]) -> dict[str, dict]:
+        """slug -> top_prices filter: mods and arcanes at rank 0, relics Intact."""
+        import sqlite3
+
+        from ..sources.static.market import price_basis
+
+        if not slugs or not self.settings.codex_path.exists():
+            return {}
+        out: dict[str, dict] = {}
+        try:
+            conn = sqlite3.connect(f"file:{self.settings.codex_path.as_posix()}?mode=ro", uri=True)
+            try:
+                for slug, tags in conn.execute("SELECT slug, tags FROM market_item"):
+                    if slug in slugs:
+                        try:
+                            out[slug] = price_basis(json.loads(tags or "[]"))
+                        except ValueError:
+                            continue
+            finally:
+                conn.close()
+        except sqlite3.Error as exc:
+            log.warning("could not read market tags: %s", exc)
+        return out
+
+    def names(self, ids: list[str]) -> dict[str, str]:
+        """Display names for uniqueNames (goals saved by id), from the game database."""
+        from ..codex import Codex
+
+        ids = [i for i in dict.fromkeys(ids) if i][:MAX_NAME_IDS]
+        if not ids or not self.settings.codex_path.exists():
+            return {}
+        codex = Codex(self.settings.codex_path)
+        try:
+            return {i: codex.display_name(i) for i in ids}
+        finally:
+            codex.close()
+
     def capabilities(self) -> dict:
         """What this computer and account can do, so the page never offers the impossible.
 
@@ -234,9 +296,9 @@ class AppState:
         helper). ``grab``: reading the inventory from the running game works here (Windows and
         a PC account). ``ocr``: text recognition for the reward helper.
         """
-        from ..live.ocr import ocr_available
         from ..sources.account import session
         from ..sources.account.profile import PLATFORM_LABELS
+        from .rewards import ocr_available
 
         game_here = (self.settings.platform or "pc") == "pc"
         return {
@@ -251,12 +313,11 @@ class AppState:
     def profile_age_hours(self) -> float | None:
         """How old the newest profile snapshot is, from its file name (UTC), or None."""
         checked = self.profile_checked()
-        d = self.settings.snapshots_dir
-        snaps = sorted(d.glob("*.json")) if d.exists() else []
+        latest = self._latest_snapshot()
         taken = None
-        if snaps:
+        if latest:
             try:
-                taken = datetime.strptime(snaps[-1].stem, "%Y-%m-%dT%H%M%SZ").replace(tzinfo=UTC)
+                taken = datetime.strptime(latest.stem, "%Y-%m-%dT%H%M%SZ").replace(tzinfo=UTC)
             except ValueError:
                 taken = None
         newest = max((t for t in (taken, checked) if t is not None), default=None)
@@ -322,24 +383,29 @@ class AppState:
         from ..account.sync import reparse
         from ..codex import Codex
         from ..exports import run_exports
+        from ..exports.extras import export_folder, gather_extras
         from ..inventory import load_inventory
         from ..report import build_report
 
         req = json.loads(body.decode("utf-8") or "{}")
         formats = [str(f) for f in req.get("formats") or ["xlsx", "dashboard", "guide", "json", "csv"]]
         s = self.settings
-        snap = SnapshotStore(s.snapshots_dir).load("latest")
         inv = None
         if s.inventory_path.exists():
             with contextlib.suppress(Exception):
                 inv = load_inventory(s.inventory_path)
-        codex = Codex(s.codex_path)
-        try:
-            report = build_report(reparse(snap, codex), codex, inventory=inv)
-        finally:
-            codex.close()
-        folder = s.exports_dir / datetime.now().strftime("%Y-%m-%d_%H%M")
-        results = run_exports(report, folder, formats, guide_pdf=bool(req.get("pdf", True)), guide_docx=True)
+        store = SnapshotStore(s.snapshots_dir)
+        snap = store.load("latest")
+        with Codex(s.codex_path) as codex:
+            parsed = reparse(snap, codex)
+            report = build_report(parsed, codex, inventory=inv)
+            extras = gather_extras(s, store, parsed, codex)
+        folder = export_folder(s, snap, share=False)
+        results = run_exports(
+            report, folder, formats, guide_pdf=bool(req.get("pdf", True)), guide_docx=True, extras=extras
+        )
+        with contextlib.suppress(OSError):
+            atomic_write_text(s.exports_dir / "LATEST.txt", str(folder.resolve()) + "\n")
         return {
             "folder": str(folder),
             "files": [{"format": r.format, "path": str(r.path), "detail": r.detail} for r in results],
@@ -422,22 +488,38 @@ class AppState:
         migrate_to_account_folders(self.settings)
         return self.build(force=True)
 
-    def live(self) -> dict:
-        """World state matched against the account (cached about a minute)."""
+    def live(self, force: bool = False) -> dict:
+        """World state matched against the account (cached about LIVE_MAX_AGE seconds).
+
+        Built again sooner when the account data or the game log changes, so "you are
+        here" follows the game without a minute's delay.
+        """
         from ..codex import Codex
         from ..http import CachedClient
+        from ..live.eelog import default_log_path
         from .live import build_live
 
         data = self.build()
         if "error" in data:
             return data
+        try:
+            st = default_log_path().stat()
+            log_stamp = (st.st_mtime_ns, st.st_size)
+        except (OSError, RuntimeError):
+            log_stamp = None
+        key = (id(data), self.cache_fp, log_stamp)
+        cached = self._live
+        if not force and cached and cached[0] == key and time.monotonic() - cached[1] < LIVE_MAX_AGE:
+            return cached[2]
         codex = Codex(self.settings.codex_path)
         client = CachedClient(self.settings.cache_dir)
         try:
-            return build_live(codex.conn, data, client)
+            answer = build_live(codex.conn, data, client)
         finally:
             client.close()
             codex.close()
+        self._live = (key, time.monotonic(), answer)
+        return answer
 
     @property
     def prefs_path(self) -> Path:
@@ -506,6 +588,19 @@ class AppState:
         return self.build(force=True)
 
 
+def _accepts_gzip(header: str | None) -> bool:
+    """Accept-Encoding lists gzip, and not with q=0."""
+    for part in (header or "").lower().split(","):
+        name, _, params = part.strip().partition(";")
+        if name.strip() in ("gzip", "*"):
+            q = params.strip().removeprefix("q=")
+            try:
+                return float(q) > 0 if params.strip().startswith("q=") else True
+            except ValueError:
+                return True
+    return False
+
+
 def _version_tuple(v: str) -> tuple[int, ...]:
     """'v0.5.1' -> (0, 5, 1); anything unreadable sorts as oldest."""
     parts = re.findall(r"\d+", v)
@@ -522,9 +617,15 @@ def make_handler(state: AppState):
             log.debug(fmt, *args)
 
         def _send(self, code: int, body: bytes, ctype: str) -> None:
+            gz = len(body) > GZIP_MIN and _accepts_gzip(self.headers.get("Accept-Encoding"))
+            if gz:
+                body = gzip.compress(body, compresslevel=5)
             self.send_response(code)
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Length", str(len(body)))
+            if gz:
+                self.send_header("Content-Encoding", "gzip")
+            self.send_header("Vary", "Accept-Encoding")
             self.send_header("Cache-Control", "no-store")
             for k, v in SECURITY_HEADERS.items():
                 self.send_header(k, v)
@@ -572,9 +673,9 @@ def make_handler(state: AppState):
                     )
             elif self.path == "/api/status":
                 self._json({"status": state.status})
-            elif self.path == "/api/live":
+            elif self.path.split("?", 1)[0] == "/api/live":
                 try:
-                    self._json(state.live())
+                    self._json(state.live(force="force=1" in self.path))
                 except Exception as exc:  # noqa: BLE001 - network trouble is shown in the app
                     self._json({"error": f"Could not load the world state: {exc}"})
             elif self.path == "/api/prefs":
@@ -589,6 +690,17 @@ def make_handler(state: AppState):
                 self._json({"version": repr(state._fingerprint())})
             elif self.path == "/api/ping":
                 self._json({"ok": True})
+            elif urlsplit(self.path).path == "/api/names":
+                # ?ids=a,b,c (each id URL-encoded) -> {id: display name}
+                if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}"):
+                    self._json({"error": "forbidden"}, 403)
+                    return
+                query = parse_qs(urlsplit(self.path).query)
+                ids = [i.strip() for v in query.get("ids", []) for i in v.split(",")]
+                try:
+                    self._json(state.names(ids))
+                except Exception as exc:  # noqa: BLE001
+                    self._json({"error": f"Could not look up names: {exc}"})
             else:
                 self._send(404, b"not found", "text/plain")
 

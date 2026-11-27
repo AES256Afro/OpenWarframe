@@ -16,6 +16,7 @@ and require an explicit "yes" before the first use.
 from __future__ import annotations
 
 import ctypes
+import os
 import re
 import subprocess
 import sys
@@ -97,12 +98,17 @@ def pick_session(found: Counter, expected_account: str | None = None) -> Session
 # -- Windows process access ---------------------------------------------------------------
 
 
+def tasklist_path() -> str:
+    """tasklist.exe by full path, so a program named tasklist in the working folder is never run."""
+    return os.path.join(os.environ.get("SYSTEMROOT", r"C:\Windows"), "System32", "tasklist.exe")
+
+
 def find_game_pid() -> int | None:
     if sys.platform != "win32":
         return None
     for name in PROCESS_NAMES:
-        out = subprocess.run(  # noqa: S603, S607
-            ["tasklist", "/FI", f"IMAGENAME eq {name}", "/FO", "CSV", "/NH"],
+        out = subprocess.run(  # noqa: S603
+            [tasklist_path(), "/FI", f"IMAGENAME eq {name}", "/FO", "CSV", "/NH"],
             capture_output=True,
             text=True,
             check=False,

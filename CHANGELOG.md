@@ -3,6 +3,32 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Trading.** The Sell list has a Best column (Baro or market) and links each part to its
+  warframe.market page. Mods and arcanes are priced unranked and relics as Intact, and the
+  Earnings totals say they are estimates.
+- **Readable names.** Vendors show their in-game names (Fisher Hai-Luk, Nightwave:
+  Intermission 10) with Credits, Platinum and Standing costs; finished goals show item names.
+- **Live.** Invasions say which side to fight for ("Side with Grineer: 3× Detonite
+  Injector"), and the mission score is explained.
+- **Getting around.** Overview cards open their view, Back and Forward move between views,
+  `/` searches and `?` lists the shortcuts. "Show me" opens the item's Finish card. A narrow
+  sidebar for small windows.
+- **Goals.** Add a goal from any item's details, reorder them, and mark them done.
+- **Exports.** Readable workbook headers, Yes/No instead of TRUE/FALSE, no red for "not yet",
+  print-ready pages, A4 everywhere with page numbers in Word files, one look across the PDFs,
+  and no Google Fonts (exports work offline). The brief, workbook and dashboard say when a
+  rank test is ready and show what changed since the last sync; the brief lists your goals
+  and standing left today. The compact brief's JSON is about a quarter of the size.
+- **CLI.** Export folders use local time, `exports/LATEST.txt` points at the newest one,
+  `export --open` opens it and `--remember` keeps your choices. The guide no longer
+  overwrites the personal copy when shared, and prints its file paths last.
+- **Faster.** The app's data is sent compressed, and the game log, live data and snapshot
+  folder are only read again when they change. Old cache files are cleaned up.
+- **Safer.** Console profiles are fetched over HTTPS. Windows shortcuts work in folders with
+  an apostrophe, and `tasklist` runs from System32.
+
 ## 0.6.2
 
 - **Log file.** The app and the CLI write `logs/openwarframe.log` in the data folder (four

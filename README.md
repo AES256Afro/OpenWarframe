@@ -123,6 +123,8 @@ Prime gear you haven't mastered and the relics holding parts you need first.
 When the relic reward screen opens, the app reads the reward names from your screen with
 Windows' built-in text recognition. It then ranks them: parts you need first, then vaulted parts,
 then market price, then ducats. A small window can stay on top of the game to show the pick.
+If a screen is missed, press Ctrl+Alt+F9 (Windows, configurable) or click **Read the screen now**
+to read it on demand.
 
 ![Reward helper](docs/screenshots/rewards.png)
 

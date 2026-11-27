@@ -99,6 +99,8 @@ class RewardWatcher:
         self.last: dict | None = None
         self.history: deque[dict] = deque(maxlen=12)
         self.save_recordings = save_recordings
+        self._capturing = False  # a "read now" is running
+        self._ctx: tuple | None = None  # (data stamp, catalog, needs) for "read now"
 
     # -- control ---------------------------------------------------------------------
     def status(self) -> dict:
@@ -198,7 +200,7 @@ class RewardWatcher:
         result["pick"] = result["ranked"][0] if result["ranked"] else None
         if not prices_now:
             self._publish(result)
-        if source == "game" and self.save_recordings:
+        if source in ("game", "hotkey", "button") and self.save_recordings:
             try:
                 d = save_recording(self.settings.home, image, analysis, event=event)
                 result["saved_to"] = str(d)
@@ -290,6 +292,51 @@ class RewardWatcher:
                 self._say(stop, "watching", msg)
         except Exception as exc:  # noqa: BLE001
             self._say(stop, "error", f"Watching stopped: {exc}")
+
+    def capture_now(self, source: str = "button") -> dict:
+        """Read the game screen right now, without waiting for the game log (hotkey or button).
+
+        For reward screens the log missed, a second look, or a game whose log lives where we
+        can't find it. Runs in its own thread; the result shows up in the status as usual.
+        """
+        if not ocr_available():
+            with self.lock:
+                self.message = "Text recognition is not available on this system."
+            return self.status()
+        with self.lock:
+            if self._capturing:
+                return self.status()
+            self._capturing = True
+            self.message = "Reading the screen…"
+        threading.Thread(
+            target=self._capture_once, args=(source,), name="reward-capture", daemon=True
+        ).start()
+        return self.status()
+
+    def _capture_once(self, source: str) -> None:
+        from ..live import ocr
+
+        try:
+            stamp = self._data_stamp()
+            if self._ctx is None or self._ctx[0] != stamp:
+                self._ctx = (stamp, *self._context())
+            _, catalog, needs = self._ctx
+            win = ocr.find_game_window()
+            if win is None:
+                msg = "The game window was not found. Is Warframe running (borderless or windowed)?"
+            else:
+                result = self._analyze(ocr.capture(win), catalog, needs, source=source)
+                msg = (
+                    "Read the screen you asked for."
+                    if result["ranked"]
+                    else "No reward names found on screen."
+                )
+        except Exception as exc:  # noqa: BLE001 - say what went wrong, never crash the app
+            log.warning("read now failed: %s", exc)
+            msg = f"Could not read the screen ({exc})."
+        with self.lock:
+            self._capturing = False
+            self.message = msg
 
     def demo(self, names: list[str] | None = None, players: int = 4) -> dict:
         """Run the whole pipeline on a drawn sample screen, to check OCR works here."""

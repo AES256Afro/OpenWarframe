@@ -43,6 +43,7 @@ MAX_BODY = 64 << 20
 SERVER_SETTINGS = (
     "reward_watch",
     "save_recordings",
+    "capture_hotkey",
 )  # changed by their own endpoints, not the page  # an inventory file is a few MB; anything this big is not one of ours
 
 # The page only ever talks to this server. These headers stop other sites from framing it
@@ -77,6 +78,9 @@ class AppState:
         self.rewards = RewardWatcher(
             settings, save_recordings=bool(self.get_prefs().get("settings", {}).get("save_recordings"))
         )
+        from .hotkey import GlobalHotkey
+
+        self.hotkey = GlobalHotkey()
         self.prefs_lock = threading.Lock()
         self.windows = None  # NativeWindows when the app has its own window
         self._live: tuple[tuple, float, dict] | None = None  # (key, time.monotonic(), answer)
@@ -330,6 +334,22 @@ class AppState:
             if sys.platform.startswith("linux")
             else "other",
         }
+
+    def apply_hotkey(self) -> dict:
+        """Register the "read the reward screen now" key from the settings (default Ctrl+Alt+F9).
+
+        Only where the reward helper can work: a PC account with text recognition here.
+        """
+        from .hotkey import DEFAULT
+
+        spec = self.get_prefs().get("settings", {}).get("capture_hotkey", DEFAULT)
+        caps = self.capabilities()
+        if not (caps["game_here"] and caps["ocr"]):
+            spec = None
+        return self.hotkey.start(spec, lambda: self.rewards.capture_now("hotkey"))
+
+    def reward_status(self) -> dict:
+        return {**self.rewards.status(), "hotkey": self.hotkey.describe()}
 
     # -- freshness -------------------------------------------------------------------
     def profile_age_hours(self) -> float | None:
@@ -774,7 +794,7 @@ def make_handler(state: AppState):
             elif self.path == "/api/prefs":
                 self._json(state.get_prefs())
             elif self.path == "/api/reward":
-                self._json(state.rewards.status())
+                self._json(state.reward_status())
             elif self.path == "/mini":
                 self._send(200, _page("static/mini.html"), "text/html; charset=utf-8")
             elif self.path == "/api/update":
@@ -852,6 +872,16 @@ def make_handler(state: AppState):
                     on = bool(req.get("on"))
                     state.save_prefs(json.dumps({"settings": {"save_recordings": on}}).encode())
                     self._json(state.rewards.set_recording(on))
+                elif self.path == "/api/reward/capture":
+                    state.rewards.capture_now("button")
+                    self._json(state.reward_status())
+                elif self.path == "/api/reward/hotkey":
+                    req = json.loads(body.decode("utf-8") or "{}")
+                    key = req.get("key")
+                    key = str(key)[:40] if key else ""
+                    state.save_prefs(json.dumps({"settings": {"capture_hotkey": key}}).encode())
+                    state.apply_hotkey()
+                    self._json(state.reward_status())
                 elif self.path == "/api/reward/demo":
                     self._json(state.rewards.demo())
                 elif self.path == "/api/reward/popout":
@@ -997,6 +1027,8 @@ def run_app(
         threading.Thread(target=state.refresh_on_open, daemon=True).start()  # warm up, refresh old data
     if state.get_prefs().get("settings", {}).get("reward_watch"):
         state.rewards.start()
+    if open_window:
+        state.apply_hotkey()
     threading.Thread(target=server.serve_forever, name="app-server", daemon=True).start()
     try:
         if open_window and _use_native(native):

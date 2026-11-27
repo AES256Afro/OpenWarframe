@@ -21,7 +21,12 @@ function renderRewards(){
   var h='<div class="focus">';
   h+='<div class="big"><div class="eyebrow" style="font:600 11px var(--mono);letter-spacing:.14em;color:var(--gold)">RELIC REWARD HELPER</div>';
   h+='<div class="what">'+(on?'Watching for fissure reward screens':'Not watching')+'</div><div class="why">'+esc(d.message||'When the reward screen opens, the helper reads the four names off your screen and picks the best one for your account.')+'</div>';
-  h+='<div class="acts"><button class="btn primary" type="button" id="rw-toggle">'+(on?'Stop watching':'Start watching')+'</button><button class="btn" type="button" id="rw-pop">Open pop-out window</button><button class="btn" type="button" id="rw-demo">Try with a sample screen</button></div>';
+  h+='<div class="acts"><button class="btn primary" type="button" id="rw-toggle">'+(on?'Stop watching':'Start watching')+'</button><button class="btn" type="button" id="rw-now">Read the screen now</button><button class="btn" type="button" id="rw-pop">Open pop-out window</button><button class="btn" type="button" id="rw-demo">Try with a sample screen</button></div>';
+  var hk=d.hotkey||{}, keys=["Ctrl+Alt+F9","Ctrl+Shift+F9","Alt+F9","Ctrl+Alt+R","F9"];
+  if(hk.supported){
+    var cur=hk.key||"";
+    h+='<div class="why"><label>Read-now key <select id="rw-key"><option value=""'+(cur?'':' selected')+'>Off</option>'+keys.map(function(k){return '<option'+(k===cur?' selected':'')+'>'+esc(k)+'</option>'}).join('')+'</select></label> <span class="muted">'+esc(hk.message||'')+' Works while the game has focus; the game never sees that key.</span></div>';
+  } else if(d.ocr) h+='<div class="why muted">On this system there is no system-wide key; use <b>Read the screen now</b> (also in the pop-out window).</div>';
   if(!d.ocr) h+='<div class="why"><b>Text recognition is not available here.</b> The helper needs Windows 10 or 11 with an English OCR language pack, or macOS 10.15 or newer.</div>';
   h+='</div>';
   if(d.last){
@@ -38,6 +43,7 @@ function renderRewards(){
      '<li>Run Warframe in <b>borderless</b> or windowed mode. Exclusive fullscreen can make screenshots come back black.</li>'+
      '<li>The pick order: parts you need for something you have not mastered, then vaulted parts, then market price, then ducats.</li>'+
      '<li>The pop-out window stays on top of the game, so you can see the pick without alt-tabbing.</li>'+
+     '<li>If a screen was missed, or the game log isn\'t found, press the read-now key (Windows) or click <b>Read the screen now</b> while the reward screen is up.</li>'+
      '<li>It only reads the game log and the screen, never game memory.</li>'+
      '<li><b>Still being tuned.</b> If it misreads names, turn on saving screens below and send a few of them along with a bug report.</li></ul>'+
      '<label class="tick opt" style="margin-top:10px"><input type="checkbox" id="rw-save"'+(d.save_recordings?' checked':'')+'><span class="t">Save each reward screen to help fix misreads<small>Keeps the newest 30 in your data folder (live/recordings). A saved screen shows your squadmates\' names, so look at it before you share it.</small></span><span></span></label></div>';
@@ -46,6 +52,8 @@ function renderRewards(){
   $("view").innerHTML=h;
   $("rw-toggle").onclick=function(){ api("/api/reward/watch",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:!on})}).then(function(x){ REWARD=x; PREFS.settings=PREFS.settings||{}; PREFS.settings.reward_watch=!on; renderAll(); toast(on?"Stopped watching.":"Watching. Load into a fissure and the pick appears here and in the pop-out."); }).catch(unreachable); };
   $("rw-save").onchange=function(){ var on=this.checked; api("/api/reward/recordings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({on:on})}).then(function(x){ REWARD=x; PREFS.settings=PREFS.settings||{}; PREFS.settings.save_recordings=on; renderAll(); toast(on?"Reward screens will be saved (newest 30 kept).":"Reward screens will not be saved."); }).catch(function(){ toast("Could not reach OpenWarframe. Is the app still running?"); }); };
+  $("rw-now").onclick=function(){ api("/api/reward/capture",{method:"POST"}).then(function(x){ REWARD=x; renderAll(); }).catch(unreachable); };
+  var rk=$("rw-key"); if(rk) rk.onchange=function(){ api("/api/reward/hotkey",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({key:this.value})}).then(function(x){ REWARD=x; renderAll(); toast((x.hotkey||{}).message||"Saved."); }).catch(unreachable); };
   $("rw-pop").onclick=function(){ api("/api/reward/popout",{method:"POST"}).then(function(){ toast("Pop-out window opening. It stays on top of the game."); }).catch(unreachable); };
   $("rw-demo").onclick=function(){ toast("Drawing a sample reward screen and reading it…",20000); api("/api/reward/demo",{method:"POST"}).then(function(x){ if(x.error){ toast(x.error,8000); return; } api("/api/reward").then(function(dd){ REWARD=dd; renderAll(); toast("Sample read. Compare the names."); }); }).catch(unreachable); };
   return [];

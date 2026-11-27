@@ -86,4 +86,9 @@ reward boxes and `result.json` are what matter.
   ranking, so the reason shows platinum next to ducats.
 - **Try with a sample screen:** draws a reward screen, reads it with Windows OCR and ranks
   it, to confirm OCR works on a given PC. Sample screens are never saved.
+- **Read now:** reads the game window once, without waiting for the game log. On Windows a
+  system-wide key does it while the game has focus (`RegisterHotKey`; default Ctrl+Alt+F9,
+  changeable or off in the Reward helper view; the game doesn't receive that key). On every
+  system the **Read the screen now** button in the Reward helper view and the pop-out does the
+  same. Use it when the log missed a screen or isn't found.
 - Real reward screens are saved to `live/recordings` while tuning continues (see above).

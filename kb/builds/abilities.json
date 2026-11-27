@@ -1,0 +1,5819 @@
+{
+ "source": "Warframe Wiki (https://wiki.warframe.com), ability pages and Module:Ability/data",
+ "license": "CC BY-NC-SA 3.0; facts extracted (which stats an ability scales with), see docs/LEGAL.md",
+ "last_verified": "2026-11-27",
+ "abilities": [
+  {
+   "frame": "Amesha",
+   "ability": "Watchful Swarm",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/SupportDronesAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Amesha",
+   "ability": "Benevolent Decoy",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/SupportAnchorsAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Amesha",
+   "ability": "Warding Grace",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/SupportWardAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Amesha",
+   "ability": "Vengeful Rush",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/SupportEnergyAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Ash",
+   "ability": "Shuriken",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Ninja/Abilities/GlaiveAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-27"
+  },
+  {
+   "frame": "Ash",
+   "ability": "Smoke Screen",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Ninja/Abilities/SmokeScreenAbility",
+   "energy": 35.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-27"
+  },
+  {
+   "frame": "Ash",
+   "ability": "Teleport",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Ninja/Abilities/TeleportToAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-27"
+  },
+  {
+   "frame": "Ash",
+   "ability": "Blade Storm",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Ninja/Abilities/NinjaStormAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-27"
+  },
+  {
+   "frame": "Atlas",
+   "ability": "Landslide",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Brawler/Abilities/BrawlerPunchAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Atlas",
+   "ability": "Tectonics",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Brawler/Abilities/BrawlerBarrierAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Atlas",
+   "ability": "Petrify",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Brawler/Abilities/BrawlerGazeAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-03"
+  },
+  {
+   "frame": "Atlas",
+   "ability": "Rumblers",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Brawler/Abilities/BrawlerSummonAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Atomicycle",
+   "ability": "Atomi-Boost",
+   "key": 1,
+   "unique_name": "/Lotus/Types/Vehicles/Motorcycle/MotorcycleNitroAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2025-02-03"
+  },
+  {
+   "frame": "Atomicycle",
+   "ability": "Atomi-Barrage",
+   "key": 2,
+   "unique_name": "/Lotus/Types/Vehicles/Motorcycle/MotorcycleMarkAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2025-11-12"
+  },
+  {
+   "frame": "Atomicycle",
+   "ability": "Atomi-Shadow",
+   "key": 3,
+   "unique_name": "/Lotus/Types/Vehicles/Motorcycle/MotorcycleStealthDismountAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2025-01-17"
+  },
+  {
+   "frame": "Atomicycle",
+   "ability": "Atomi-Bomb",
+   "key": 4,
+   "unique_name": "/Lotus/Types/Vehicles/Motorcycle/MotorcycleLaunchDismountAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2025-01-17"
+  },
+  {
+   "frame": "Banshee",
+   "ability": "Sonic Boom",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Banshee/Abilities/PushAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Banshee",
+   "ability": "Sonar",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Banshee/Abilities/SonarAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Banshee",
+   "ability": "Silence",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Banshee/Abilities/SilenceAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Banshee",
+   "ability": "Sound Quake",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Banshee/Abilities/SonicEarthQuakeAbility",
+   "energy": 75.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Baruuk",
+   "ability": "Elude",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Pacifist/Abilities/PacifistDodgeAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Baruuk",
+   "ability": "Lull",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Pacifist/Abilities/PacifistWaveAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Baruuk",
+   "ability": "Desolate Hands",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Pacifist/Abilities/PacifistDisarmAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Baruuk",
+   "ability": "Serene Storm",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Pacifist/Abilities/PacifistFistAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Bonewidow",
+   "ability": "Meathook",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/EntratiMech/Abilities/EntratiMechGrabAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Bonewidow",
+   "ability": "Shield Maiden",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/EntratiMech/Abilities/EntratiMechRiotShieldAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Bonewidow",
+   "ability": "Firing Line",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/EntratiMech/Abilities/EntratiMechRepulseAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Bonewidow",
+   "ability": "Exalted Ironbride",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/EntratiMech/Abilities/EntratiMechSwordAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Caliban",
+   "ability": "Razor Gyre",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Sentient/Abilities/SentientWhirlwindAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Caliban",
+   "ability": "Sentient Wrath",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Sentient/Abilities/SentientStompAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Caliban",
+   "ability": "Lethal Progeny",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Sentient/Abilities/SentientSummonAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Caliban",
+   "ability": "Fusion Strike",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Sentient/Abilities/SentientBlastAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Chroma",
+   "ability": "Spectral Scream",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Dragon/Abilities/DragonBreathAbility",
+   "energy": 10.0,
+   "channeled": true,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-11-13"
+  },
+  {
+   "frame": "Chroma",
+   "ability": "Elemental Ward",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Dragon/Abilities/DragonLuckAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Chroma",
+   "ability": "Vex Armor",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Dragon/Abilities/DragonScalesAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Chroma",
+   "ability": "Effigy",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Dragon/Abilities/DragonPeltAbility",
+   "energy": 50.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Citrine",
+   "ability": "Fractured Blast",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Geode/Abilities/GeodeShardsAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-04"
+  },
+  {
+   "frame": "Citrine",
+   "ability": "Preserving Shell",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Geode/Abilities/GeodeShellAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-04"
+  },
+  {
+   "frame": "Citrine",
+   "ability": "Prismatic Gem",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Geode/Abilities/GeodeCrystalAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Citrine",
+   "ability": "Crystallize",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Geode/Abilities/GeodeGrowthsAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-26"
+  },
+  {
+   "frame": "Cyte-09",
+   "ability": "Seek",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Frumentarius/Abilities/FrumentariusScanAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Cyte-09",
+   "ability": "Resupply",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Frumentarius/Abilities/FrumentariusAmmoAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-11-04"
+  },
+  {
+   "frame": "Cyte-09",
+   "ability": "Evade",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Frumentarius/Abilities/FrumentariusCloakAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Cyte-09",
+   "ability": "Neutralize",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Frumentarius/Abilities/FrumentariusSniperAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Dagath",
+   "ability": "Wyrd Scythes",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Dagath/Abilities/DagathVolleyAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Dagath",
+   "ability": "Doom",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Dagath/Abilities/DagathCurseAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Dagath",
+   "ability": "Grave Spirit",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Dagath/Abilities/DagathApparitionAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Dagath",
+   "ability": "Rakhali's Cavalry",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Dagath/Abilities/DagathHorseAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Dante",
+   "ability": "Noctua",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Pagemaster/Abilities/PagemasterBookAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Dante",
+   "ability": "Light Verse",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Pagemaster/Abilities/PagemasterLifeAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Dante",
+   "ability": "Dark Verse",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Pagemaster/Abilities/PagemasterDeathAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Dante",
+   "ability": "Final Verse",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Pagemaster/Abilities/PagemasterFinalChapterAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-20"
+  },
+  {
+   "frame": "Drifter",
+   "ability": "Restorative",
+   "key": 1,
+   "unique_name": "/Lotus/Types/Friendly/PlayerControllable/Abilities/DrifterHealAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2023-06-01"
+  },
+  {
+   "frame": "Drifter",
+   "ability": "Summon Kaithe",
+   "key": 1,
+   "unique_name": "/Lotus/Types/Friendly/PlayerControllable/Abilities/DrifterKaitheAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-01-17"
+  },
+  {
+   "frame": "Drifter",
+   "ability": "Guiding Hand",
+   "key": 2,
+   "unique_name": "/Lotus/Types/Friendly/PlayerControllable/Abilities/DrifterRadarAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-08-26"
+  },
+  {
+   "frame": "Drifter",
+   "ability": "Smoke Screen (Drifter)",
+   "key": 2,
+   "unique_name": "/Lotus/Types/Friendly/PlayerControllable/Abilities/DrifterTossAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2023-06-01"
+  },
+  {
+   "frame": "Drifter",
+   "ability": "Restorative (Duviri)",
+   "key": 3,
+   "unique_name": "/Lotus/Types/Friendly/PlayerControllable/Abilities/DrifterHealAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2023-06-01"
+  },
+  {
+   "frame": "Drifter",
+   "ability": "Target Radar",
+   "key": 3,
+   "unique_name": "/Lotus/Types/Friendly/PlayerControllable/Abilities/DrifterRadarAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2023-06-01"
+  },
+  {
+   "frame": "Drifter",
+   "ability": "Smoke Screen (Duviri)",
+   "key": 4,
+   "unique_name": "/Lotus/Types/Friendly/PlayerControllable/Abilities/DrifterTossAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2023-10-25"
+  },
+  {
+   "frame": "Elytron",
+   "ability": "Bloomer",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/TnTAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Elytron",
+   "ability": "Core Vent",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/ExhaustTrailAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Ember",
+   "ability": "Fireball",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Ember/Abilities/FireBallAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Ember",
+   "ability": "Accelerant",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/DrenchTwoAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Ember",
+   "ability": "Immolation",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Ember/Abilities/EmberImmolationAbility",
+   "energy": 50.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-11-07"
+  },
+  {
+   "frame": "Ember",
+   "ability": "Overheat",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/FireSkinAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2022-12-08"
+  },
+  {
+   "frame": "Ember",
+   "ability": "Fire Blast",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Ember/Abilities/FireBlastAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Ember",
+   "ability": "Inferno",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Ember/Abilities/EmberInfernoAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Ember",
+   "ability": "World On Fire",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/WorldOnFireAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Equinox",
+   "ability": "Metamorphosis",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/YinYang/Abilities/YinYangSwitchAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Equinox",
+   "ability": "Rest & Rage",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/YinYang/Abilities/YinYangTargetAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Equinox",
+   "ability": "Pacify & Provoke",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/YinYang/Abilities/YinYangAuraAbility",
+   "energy": 10.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Equinox",
+   "ability": "Mend & Maim",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/YinYang/Abilities/YinYangBurstAbility",
+   "energy": 50.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Excalibur",
+   "ability": "Slash Dash",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Excalibur/Abilities/SlashDashNewAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-11-26"
+  },
+  {
+   "frame": "Excalibur",
+   "ability": "Radial Blind",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Excalibur/Abilities/RadialBlindAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-12"
+  },
+  {
+   "frame": "Excalibur",
+   "ability": "Radial Javelin",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Excalibur/Abilities/RadialJavelinAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Excalibur",
+   "ability": "Super Jump",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/SuperJumpAbility",
+   "energy": 10.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2022-12-08"
+  },
+  {
+   "frame": "Excalibur",
+   "ability": "Exalted Blade",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Excalibur/Abilities/SwordOfDoomAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-12"
+  },
+  {
+   "frame": "Excalibur Umbra",
+   "ability": "Radial Howl",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Excalibur/Abilities/UmbraRadialRoarAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Follie",
+   "ability": "Forced Perspective",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Inkblot/Abilities/InkFieldAbility",
+   "energy": 15.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Follie",
+   "ability": "Shadowgraph",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Inkblot/Abilities/InkSketchAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Follie",
+   "ability": "Self Portrait",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Inkblot/Abilities/InkCloneAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Follie",
+   "ability": "Plein Air",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Inkblot/Abilities/InkBalloonAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Frost",
+   "ability": "Freeze",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Frost/Abilities/IcicleAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Frost",
+   "ability": "Ice Wave",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Frost/Abilities/IceSpikeAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Frost",
+   "ability": "Snow Globe",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Frost/Abilities/IceShieldAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Frost",
+   "ability": "Avalanche",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Frost/Abilities/AvalancheAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Gara",
+   "ability": "Shattered Lash",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Glass/Abilities/GlassShankAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Gara",
+   "ability": "Splinter Storm",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Glass/Abilities/GlassShatterAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Gara",
+   "ability": "Spectrorage",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Glass/Abilities/GlassFragmentAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Gara",
+   "ability": "Mass Vitrify",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Glass/Abilities/GlassRingAbility",
+   "energy": 75.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Garuda",
+   "ability": "Dread Mirror",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Garuda/Abilities/GarudaShieldAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Garuda",
+   "ability": "Blood Altar",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Garuda/Abilities/GarudaSiphonAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Garuda",
+   "ability": "Bloodletting",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Garuda/Abilities/GarudaBloodAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Garuda",
+   "ability": "Seeking Talons",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Garuda/Abilities/GarudaUnstoppableAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Gauss",
+   "ability": "Mach Rush",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Runner/Abilities/RunnerRushAbility",
+   "energy": 15.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Gauss",
+   "ability": "Kinetic Plating",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Runner/Abilities/RunnerPlatingAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Gauss",
+   "ability": "Thermal Sunder",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Runner/Abilities/RunnerTransferAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Gauss",
+   "ability": "Redline",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Runner/Abilities/RunnerRedlineAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-11-20"
+  },
+  {
+   "frame": "Grendel",
+   "ability": "Feast",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Devourer/Abilities/DevourerDevourAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Grendel",
+   "ability": "Nourish",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Devourer/Abilities/DevourerConsumeAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Grendel",
+   "ability": "Pulverize",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Devourer/Abilities/DevourerBowlAbility",
+   "energy": 0.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Grendel",
+   "ability": "Regurgitate",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Devourer/Abilities/DevourerRegurgitateAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Gyre",
+   "ability": "Arcsphere",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Gyre/Abilities/GyrePulseAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Gyre",
+   "ability": "Coil Horizon",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Gyre/Abilities/GyreSphereAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Gyre",
+   "ability": "Cathode Grace",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Gyre/Abilities/GyreEnergizedAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Gyre",
+   "ability": "Rotorswell",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Gyre/Abilities/GyreOverchargedAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Harrow",
+   "ability": "Condemn",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Priest/Abilities/PriestCondemnAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Harrow",
+   "ability": "Penance",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Priest/Abilities/PriestPenanceAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Harrow",
+   "ability": "Thurible",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Priest/Abilities/PriestRavageAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Harrow",
+   "ability": "Covenant",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Priest/Abilities/PriestPactAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Empower",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthStrengthAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-05-20"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Energized Munitions",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthEfficiencyAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-11-11"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Expedite Suffering",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthStatusAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-05-20"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Golden Instinct",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthTreasureAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-07"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Hideous Resistance",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthProcBlockAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-05-20"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Infested Mobility",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthSpeedAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-05-20"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Marked For Death",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthStunAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-05-20"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Master's Summons",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthCompanionAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-05-20"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Parasitic Armor",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthShieldArmorAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-05-21"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Perspicacity",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthHackAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-11-17"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Rebuild Shields",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthShieldsAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-05-20"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Sickening Pulse",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthMaxStatusAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-08-20"
+  },
+  {
+   "frame": "Helminth",
+   "ability": "Voracious Metastasis",
+   "key": 0,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/HelminthEnergyShareAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-14"
+  },
+  {
+   "frame": "Hildryn",
+   "ability": "Balefire",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/IronFrame/Abilities/IronFrameBlastAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Hildryn",
+   "ability": "Pillage",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/IronFrame/Abilities/IronFrameStripAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-10"
+  },
+  {
+   "frame": "Hildryn",
+   "ability": "Haven",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/IronFrame/Abilities/IronFrameAuraAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Hildryn",
+   "ability": "Aegis Storm",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/IronFrame/Abilities/IronFrameEruptionAbility",
+   "energy": 0.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Hydroid",
+   "ability": "Tempest Barrage",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Pirate/Abilities/CannonBarrageAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Hydroid",
+   "ability": "Tidal Surge",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Pirate/Abilities/TidalWaveAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Hydroid",
+   "ability": "Plunder",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Pirate/Abilities/PirateArmourAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Hydroid",
+   "ability": "Undertow",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/LiquifyAbility",
+   "energy": 0.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Hydroid",
+   "ability": "Tentacle Swarm",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Pirate/Abilities/KrakenAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Inaros",
+   "ability": "Desiccation",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Sandman/Abilities/SandmanBlastAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Inaros",
+   "ability": "Devour",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/SandmanDevourAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Inaros",
+   "ability": "Sandstorm",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Sandman/Abilities/SandmanStormAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Inaros",
+   "ability": "Scarab Shell",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Sandman/Abilities/SandmanArmorAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Inaros",
+   "ability": "Scarab Swarm",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Sandman/Abilities/SandmanSwarmAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Itzal",
+   "ability": "Arch Line",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/GrappleHookAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Itzal",
+   "ability": "Blink",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/BlinkAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2022-12-11"
+  },
+  {
+   "frame": "Itzal",
+   "ability": "Penumbra",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/CloakingAbility",
+   "energy": 15.0,
+   "channeled": true,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Itzal",
+   "ability": "Cosmic Crush",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/GravitationalInstabilityAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Itzal",
+   "ability": "Fighter Escort",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/DistractionDronesAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Ivara",
+   "ability": "Quiver",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Ranger/Abilities/RangerQuiverAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Ivara",
+   "ability": "Navigator",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Ranger/Abilities/RangerControlAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Ivara",
+   "ability": "Prowl",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Ranger/Abilities/RangerStealAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Ivara",
+   "ability": "Artemis Bow",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Ranger/Abilities/RangerBowAbility",
+   "energy": 50.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Jade",
+   "ability": "Light's Judgment",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Choir/Abilities/ChoirPoolAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-01"
+  },
+  {
+   "frame": "Jade",
+   "ability": "Symphony of Mercy",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Choir/Abilities/ChoirChorusAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Jade",
+   "ability": "Ophanim Eyes",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Choir/Abilities/ChoirEyesAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Jade",
+   "ability": "Glory on High",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Choir/Abilities/ChoirEruptAbility",
+   "energy": 0.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Kaithe",
+   "ability": "Hoof Stomp",
+   "key": 3,
+   "unique_name": "",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2025-01-11"
+  },
+  {
+   "frame": "Kaithe",
+   "ability": "Steadfast Dismount",
+   "key": 4,
+   "unique_name": "",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-01-17"
+  },
+  {
+   "frame": "Khora",
+   "ability": "Whipclaw",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Khora/Abilities/KhoraCrackAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Khora",
+   "ability": "Ensnare",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Khora/Abilities/KhoraTwirlAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Khora",
+   "ability": "Venari",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Khora/Abilities/KhoraKavatAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Khora",
+   "ability": "Strangledome",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Khora/Abilities/KhoraCageAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Koumei",
+   "ability": "Kumihimo",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Koumei/Abilities/KoumeiStringsAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Koumei",
+   "ability": "Omikuji",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Koumei/Abilities/KoumeiFortuneAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Koumei",
+   "ability": "Omamori",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Koumei/Abilities/KoumeiBlockAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-11-10"
+  },
+  {
+   "frame": "Koumei",
+   "ability": "Bunraku",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Koumei/Abilities/KoumeiPuppetAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Kullervo",
+   "ability": "Wrathful Advance",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/PaxDuviricus/Abilities/PaxTeleportAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Kullervo",
+   "ability": "Recompense",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PaxDuviricus/Abilities/PaxBladesAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Kullervo",
+   "ability": "Collective Curse",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/PaxDuviricus/Abilities/PaxLinkAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Kullervo",
+   "ability": "Storm of Ukko",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/PaxDuviricus/Abilities/PaxFieldAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Lavos",
+   "ability": "Ophidian Bite",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Alchemist/Abilities/AlchemistSerpentAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Lavos",
+   "ability": "Vial Rush",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Alchemist/Abilities/AlchemistVialAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Lavos",
+   "ability": "Transmutation Probe",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Alchemist/Abilities/AlchemistTransmuteAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Lavos",
+   "ability": "Catalyze",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Alchemist/Abilities/AlchemistDistillAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-13"
+  },
+  {
+   "frame": "Limbo",
+   "ability": "Banish",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Magician/Abilities/BanishAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Limbo",
+   "ability": "Rift Walk",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/EnterTheRiftAbility",
+   "energy": 15.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2022-12-08"
+  },
+  {
+   "frame": "Limbo",
+   "ability": "Stasis",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Magician/Abilities/MagicianStasisAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Limbo",
+   "ability": "Rift Surge",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Magician/Abilities/VolatileAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Limbo",
+   "ability": "Cataclysm",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Magician/Abilities/TearInSpaceAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Loki",
+   "ability": "Decoy",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Loki/Abilities/DecoyAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Loki",
+   "ability": "Invisibility",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Loki/Abilities/InvisibilityAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-11-11"
+  },
+  {
+   "frame": "Loki",
+   "ability": "Switch Teleport",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Loki/Abilities/SwitchTeleportAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Loki",
+   "ability": "Radial Disarm",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Loki/Abilities/RadialDisarmAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mag",
+   "ability": "Pull",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Mag/Abilities/PullAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mag",
+   "ability": "Magnetize",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Mag/Abilities/BulletAttractorAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mag",
+   "ability": "Polarize",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Mag/Abilities/ShieldRegenAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mag",
+   "ability": "Crush",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Mag/Abilities/CrushAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mesa",
+   "ability": "Ballistic Battery",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Cowgirl/Abilities/BallisticBatteryAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mesa",
+   "ability": "Shooting Gallery",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Cowgirl/Abilities/RussianRouletteAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mesa",
+   "ability": "Shatter Shield",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Cowgirl/Abilities/RicochetArmorAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mesa",
+   "ability": "Peacemaker",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Cowgirl/Abilities/GunFuAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mirage",
+   "ability": "Hall of Mirrors",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Harlequin/Abilities/IllusionAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mirage",
+   "ability": "Sleight of Hand",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Harlequin/Abilities/HarlequinObjectChangeAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mirage",
+   "ability": "Eclipse",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Harlequin/Abilities/LightAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Mirage",
+   "ability": "Prism",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Harlequin/Abilities/Prism",
+   "energy": 50.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Narin",
+   "ability": "Neote",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Duelist/Abilities/DuelistThrustAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Narin",
+   "ability": "Naraemagi",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Duelist/Abilities/DuelistRiposteAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Narin",
+   "ability": "Hakchum",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Duelist/Abilities/DuelistLeapAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Narin",
+   "ability": "Nurinarim",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Duelist/Abilities/DuelistBladeDanceAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Nekros",
+   "ability": "Soul Punch",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Necro/Abilities/SoulPunchAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-11-08"
+  },
+  {
+   "frame": "Nekros",
+   "ability": "Terrify",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Necro/Abilities/TerrorTotemAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nekros",
+   "ability": "Desecrate",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Necro/Abilities/SearchTheDeadAbility",
+   "energy": 10.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nekros",
+   "ability": "Shadows of the Dead",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Necro/Abilities/CloneTheDeadAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Nezha",
+   "ability": "Fire Walker",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Nezha/Abilities/NezhaTrailAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nezha",
+   "ability": "Blazing Chakram",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Nezha/Abilities/NezhaRingAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-11-20"
+  },
+  {
+   "frame": "Nezha",
+   "ability": "Warding Halo",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Nezha/Abilities/NezhaSashAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nezha",
+   "ability": "Divine Spears",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Nezha/Abilities/NezhaSpearAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nidus",
+   "ability": "Virulence",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Infestation/Abilities/InfestRuptureAbility",
+   "energy": 40.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-10"
+  },
+  {
+   "frame": "Nidus",
+   "ability": "Larva",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Infestation/Abilities/InfestTendrilsAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-10"
+  },
+  {
+   "frame": "Nidus",
+   "ability": "Parasitic Link",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Infestation/Abilities/InfestLinkAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-09"
+  },
+  {
+   "frame": "Nidus",
+   "ability": "Ravenous",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Infestation/Abilities/InfestPodsAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-10"
+  },
+  {
+   "frame": "Nokko",
+   "ability": "Stinkbrain",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Nokko/Abilities/NokkoToxicShroomAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Nokko",
+   "ability": "Brightbonnet",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Nokko/Abilities/NokkoPowerShroomAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Nokko",
+   "ability": "Reroot",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Nokko/Abilities/NokkoShrinkAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Nokko",
+   "ability": "Sporespring",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Nokko/Abilities/NokkoLaunchAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Nova",
+   "ability": "Null Star",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/AntiMatter/Abilities/NullStarAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nova",
+   "ability": "Antimatter Drop",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/AntiMatter/Abilities/AntiMatterDrop",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nova",
+   "ability": "Wormhole",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/AntiMatter/Abilities/WormHoleAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nova",
+   "ability": "Molecular Prime",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/AntiMatter/Abilities/MolecularPrimeAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nyx",
+   "ability": "Mind Control",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Jade/Abilities/MindControlAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nyx",
+   "ability": "Psychic Bolts",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Jade/Abilities/DaggerAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nyx",
+   "ability": "Chaos",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Jade/Abilities/ChaosAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Nyx",
+   "ability": "Absorb",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Jade/Abilities/SelfBulletAttractorAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Oberon",
+   "ability": "Smite",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Paladin/Abilities/SmiteAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-11-12"
+  },
+  {
+   "frame": "Oberon",
+   "ability": "Hallowed Ground",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Paladin/Abilities/StairwayToHeavenAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Oberon",
+   "ability": "Renewal",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Paladin/Abilities/RegenerationAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-08"
+  },
+  {
+   "frame": "Oberon",
+   "ability": "Reckoning",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Paladin/Abilities/ReckoningAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Octavia",
+   "ability": "Mallet",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Bard/Abilities/BardMusicAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Octavia",
+   "ability": "Resonator",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Bard/Abilities/BardCharmAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Octavia",
+   "ability": "Metronome",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Bard/Abilities/BardJamAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Odonata",
+   "ability": "Energy Shell",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/FireShieldAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Odonata",
+   "ability": "Disarray",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/FlareCounterMeasureAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Odonata",
+   "ability": "Seeking Fire",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/MissileVolleyAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Odonata",
+   "ability": "Repel",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Archwing/ArchwingAbilities/EMPPushAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Oraxia",
+   "ability": "Mercy's Kiss",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Oraxia/Abilities/OraxiaLungeAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Oraxia",
+   "ability": "Webbed Embrace",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Oraxia/Abilities/OraxiaEntangleAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Oraxia",
+   "ability": "Widow's Brood",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Oraxia/Abilities/OraxiaSpidersAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-08"
+  },
+  {
+   "frame": "Oraxia",
+   "ability": "Silken Stride",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Oraxia/Abilities/OraxiaClimbAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Orion",
+   "ability": "Gravitic Slash",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/Abilities/OrionScytheAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Orion",
+   "ability": "Astral Shell",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/Abilities/OrionBuffAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Orion",
+   "ability": "Event Horizon",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/Abilities/OrionVortexAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Protea",
+   "ability": "Grenade Fan",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Odalisk/Abilities/OdaliskFanAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-10"
+  },
+  {
+   "frame": "Protea",
+   "ability": "Blaze Artillery",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Odalisk/Abilities/OdaliskBFGAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Protea",
+   "ability": "Dispensary",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Odalisk/Abilities/OdaliskDispensaryAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-11-26"
+  },
+  {
+   "frame": "Protea",
+   "ability": "Temporal Anchor",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Odalisk/Abilities/OdaliskAnchorAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-10"
+  },
+  {
+   "frame": "Qorvex",
+   "ability": "Chyrinka Pillar",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/ConcreteFrame/Abilities/ConcretePillarAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Qorvex",
+   "ability": "Containment Wall",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/ConcreteFrame/Abilities/ConcreteWallAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Qorvex",
+   "ability": "Disometric Guard",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/ConcreteFrame/Abilities/ConcreteAuraAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Qorvex",
+   "ability": "Crucible Blast",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/ConcreteFrame/Abilities/ConcreteLaserAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Revenant",
+   "ability": "Enthrall",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Revenant/Abilities/RevenantMarkAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Revenant",
+   "ability": "Mesmer Skin",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Revenant/Abilities/RevenantSentientAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Revenant",
+   "ability": "Reave",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Revenant/Abilities/RevenantAfflictionAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Revenant",
+   "ability": "Danse Macabre",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Revenant/Abilities/RevenantRebornAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Rhino",
+   "ability": "Rhino Charge",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Rhino/Abilities/RhinoChargeAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Rhino",
+   "ability": "Iron Skin",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Rhino/Abilities/IronSkinAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Rhino",
+   "ability": "Radial Blast",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/RadialBlastAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2022-12-08"
+  },
+  {
+   "frame": "Rhino",
+   "ability": "Roar",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Rhino/Abilities/RhinoRoarAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Rhino",
+   "ability": "Rhino Stomp",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Rhino/Abilities/RhinoStompAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Saryn",
+   "ability": "Spores",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Saryn/Abilities/PoisonAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Saryn",
+   "ability": "Molt",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Saryn/Abilities/ShedAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Saryn",
+   "ability": "Toxic Lash",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Saryn/Abilities/WeaponPoisonAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Saryn",
+   "ability": "Miasma",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Saryn/Abilities/ExplosiveDissolveAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Sevagoth",
+   "ability": "Reap",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Wraith/Abilities/WraithReapAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-14"
+  },
+  {
+   "frame": "Sevagoth",
+   "ability": "Sow",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Wraith/Abilities/WraithSowAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-14"
+  },
+  {
+   "frame": "Sevagoth",
+   "ability": "Gloom",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Wraith/Abilities/WraithGloomAbility",
+   "energy": 50.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Sevagoth",
+   "ability": "Exalted Shadow",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Wraith/Abilities/WraithReaperAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Sevagoth's Shadow",
+   "ability": "Embrace",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/ReaperGraspAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-08"
+  },
+  {
+   "frame": "Sevagoth's Shadow",
+   "ability": "Consume",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/ReaperHarvestAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-08"
+  },
+  {
+   "frame": "Sevagoth's Shadow",
+   "ability": "Death's Harvest",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/ReaperWailAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-08"
+  },
+  {
+   "frame": "Sevagoth's Shadow",
+   "ability": "Reunite",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/ReaperWraithAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-12"
+  },
+  {
+   "frame": "Sirius",
+   "ability": "Coronal Ejection",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/Abilities/SiriusScytheAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Sirius",
+   "ability": "Jade Stars",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/Abilities/SiriusBuffAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Sirius",
+   "ability": "Light's Sanctuary",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/Abilities/SiriusFieldAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-21"
+  },
+  {
+   "frame": "Sirius & Orion",
+   "ability": "Celestial Clash",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/Abilities/SiriusOrionUltimateAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-03"
+  },
+  {
+   "frame": "Stalker",
+   "ability": "Teleport (Stalker)",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/StalkerTeleportToAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-08-25"
+  },
+  {
+   "frame": "Stalker",
+   "ability": "Marked",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/StalkerStunAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": false,
+   "duration": false,
+   "range": true,
+   "page_edited": "2023-12-29"
+  },
+  {
+   "frame": "Stalker",
+   "ability": "Smoke Screen (Stalker)",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/StalkerSmokeScreenAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2025-07-17"
+  },
+  {
+   "frame": "Stalker",
+   "ability": "Punishment",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/StalkerAbsorbAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-01-17"
+  },
+  {
+   "frame": "Styanax",
+   "ability": "Axios Javelin",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Hoplite/Abilities/HopliteImpaleAbility",
+   "energy": 15.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Styanax",
+   "ability": "Tharros Strike",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Hoplite/Abilities/HopliteBashAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Styanax",
+   "ability": "Rally Point",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Hoplite/Abilities/HopliteRallyAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Styanax",
+   "ability": "Final Stand",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Hoplite/Abilities/HopliteArmyAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Temple",
+   "ability": "Pyrotechnics",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Temple/Abilities/TempleShredAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-16"
+  },
+  {
+   "frame": "Temple",
+   "ability": "Overdrive",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Temple/Abilities/TempleSpeakersAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Temple",
+   "ability": "Ripper's Wail",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Temple/Abilities/TempleSoloAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Temple",
+   "ability": "Exalted Solo",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Temple/Abilities/TempleGuitarAbility",
+   "energy": 0.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Titania",
+   "ability": "Spellbind",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Fairy/Abilities/FairyDustAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Titania",
+   "ability": "Tribute",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Fairy/Abilities/FairySoulAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Titania",
+   "ability": "Lantern",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Fairy/Abilities/FairyLightAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Titania",
+   "ability": "Razorwing",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Fairy/Abilities/FairyFlightAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-31"
+  },
+  {
+   "frame": "Trinity",
+   "ability": "Well of Life",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Trinity/Abilities/WellOfLifeAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Trinity",
+   "ability": "Energy Vampire",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Trinity/Abilities/EnergyVampireAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Trinity",
+   "ability": "Link",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Trinity/Abilities/LinkAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Trinity",
+   "ability": "Blessing",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Trinity/Abilities/BlessingAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Uriel",
+   "ability": "Infernalis",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/DemonFrame/Abilities/DemonFrameFireBallAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-10"
+  },
+  {
+   "frame": "Uriel",
+   "ability": "Remedium",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/DemonFrameHealAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-17"
+  },
+  {
+   "frame": "Uriel",
+   "ability": "Demonium",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/DemonFrame/Abilities/DemonFrameCloneAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-25"
+  },
+  {
+   "frame": "Uriel",
+   "ability": "Brimstone",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/DemonFrame/Abilities/DemonFrameBrimstoneAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-24"
+  },
+  {
+   "frame": "Valkyr",
+   "ability": "Rip Line",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Berserker/Abilities/GrappleHookAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Valkyr",
+   "ability": "Warcry",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Berserker/Abilities/BerserkerScreamAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Valkyr",
+   "ability": "Paralysis",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Berserker/Abilities/ShieldBashAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Valkyr",
+   "ability": "Hysteria",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Berserker/Abilities/LastStandAbility",
+   "energy": 0.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Vauban",
+   "ability": "Tesla",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/ZapTrapAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2022-12-08"
+  },
+  {
+   "frame": "Vauban",
+   "ability": "Tesla Nervos",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Trapper/Abilities/ZapTrapAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-20"
+  },
+  {
+   "frame": "Vauban",
+   "ability": "Minelayer",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Trapper/Abilities/TrapperMultinadeAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-22"
+  },
+  {
+   "frame": "Vauban",
+   "ability": "Photon Strike",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Trapper/Abilities/TrapperStrikeAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-20"
+  },
+  {
+   "frame": "Vauban",
+   "ability": "Bastille",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Trapper/Abilities/LevTrapAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-20"
+  },
+  {
+   "frame": "Vauban",
+   "ability": "Vortex",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/BlackHoleTrapAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2022-12-08"
+  },
+  {
+   "frame": "Voidrig",
+   "ability": "Necraweb",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/EntratiMech/Abilities/EntratiMechOilGrenadeAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Voidrig",
+   "ability": "Storm Shroud",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/EntratiMech/Abilities/EntratiMechShockingIronAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Voidrig",
+   "ability": "Gravemines",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/EntratiMech/Abilities/EntratiMechMinefieldAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Voidrig",
+   "ability": "Guard Mode",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/EntratiMech/Abilities/EntratiMechTurretModeAbility",
+   "energy": 50.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-26"
+  },
+  {
+   "frame": "Volt",
+   "ability": "Shock",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Volt/Abilities/ShockAbility",
+   "energy": 15.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Volt",
+   "ability": "Speed",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Volt/Abilities/SpeedAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Volt",
+   "ability": "Electric Shield",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Volt/Abilities/ShieldAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-11-09"
+  },
+  {
+   "frame": "Volt",
+   "ability": "Discharge",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Volt/Abilities/OverLoadAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Voruna",
+   "ability": "Shroud of Dynar",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Werewolf/Abilities/WerewolfShroudAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Voruna",
+   "ability": "Fangs of Raksh",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Werewolf/Abilities/WerewolfBiteAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Voruna",
+   "ability": "Lycath's Hunt",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Werewolf/Abilities/WerewolfLeapAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Voruna",
+   "ability": "Ulfrun's Descent",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Werewolf/Abilities/WerewolfHowlAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Wisp",
+   "ability": "Reservoirs",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Wisp/Abilities/WispReservoirAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Wisp",
+   "ability": "Wil-O-Wisp",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Wisp/Abilities/WispLightAbility",
+   "energy": 35.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Wisp",
+   "ability": "Breach Surge",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Wisp/Abilities/WispHarnessAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Wisp",
+   "ability": "Sol Gate",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Wisp/Abilities/WispSunAbility",
+   "energy": 25.0,
+   "channeled": true,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Wukong",
+   "ability": "Celestial Twin",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/MonkeyKing/Abilities/MonkeyHairAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Wukong",
+   "ability": "Iron Jab",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/MonkeyPokeAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2022-12-08"
+  },
+  {
+   "frame": "Wukong",
+   "ability": "Cloud Walker",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/MonkeyKing/Abilities/MonkeyCloudAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Wukong",
+   "ability": "Defy",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/MonkeyKing/Abilities/MonkeyDeathNewAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Wukong",
+   "ability": "Primal Fury",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/MonkeyKing/Abilities/MonkeyStaffAbility",
+   "energy": 10.0,
+   "channeled": true,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Xaku",
+   "ability": "Xata's Whisper",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/BrokenFrame/Abilities/BrokenRotAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Xaku",
+   "ability": "Grasp of Lohk",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/BrokenFrame/Abilities/BrokenGraspAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Xaku",
+   "ability": "The Lost",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/BrokenFrame/Abilities/BrokenEmbraceAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Xaku",
+   "ability": "The Vast Untime",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/BrokenFrame/Abilities/BrokenDestructAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Yareli",
+   "ability": "Sea Snares",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Yareli/Abilities/YareliBubbleAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Yareli",
+   "ability": "Merulina",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Yareli/Abilities/YareliBoardAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": false,
+   "page_edited": "2026-10-27"
+  },
+  {
+   "frame": "Yareli",
+   "ability": "Aquablades",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Yareli/Abilities/YareliDisksAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-06"
+  },
+  {
+   "frame": "Yareli",
+   "ability": "Riptide",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Yareli/Abilities/YareliSpoutAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Zephyr",
+   "ability": "Tail Wind",
+   "key": 1,
+   "unique_name": "/Lotus/Powersuits/Tengu/Abilities/TailWindAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Zephyr",
+   "ability": "Airburst",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/Tengu/Abilities/TenguBurstAbility",
+   "energy": 50.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Zephyr",
+   "ability": "Dive Bomb",
+   "key": 2,
+   "unique_name": "/Lotus/Powersuits/PowersuitAbilities/DiveBombAbility",
+   "energy": 25.0,
+   "channeled": false,
+   "strength": true,
+   "duration": false,
+   "range": true,
+   "page_edited": "2022-12-08"
+  },
+  {
+   "frame": "Zephyr",
+   "ability": "Turbulence",
+   "key": 3,
+   "unique_name": "/Lotus/Powersuits/Tengu/Abilities/TurbulenceAbility",
+   "energy": 75.0,
+   "channeled": false,
+   "strength": false,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-10-25"
+  },
+  {
+   "frame": "Zephyr",
+   "ability": "Tornado",
+   "key": 4,
+   "unique_name": "/Lotus/Powersuits/Tengu/Abilities/TornadoAbility",
+   "energy": 100.0,
+   "channeled": false,
+   "strength": true,
+   "duration": true,
+   "range": true,
+   "page_edited": "2026-11-20"
+  }
+ ],
+ "frames": [
+  {
+   "frame": "Amesha",
+   "unique_name": "/Lotus/Powersuits/Archwing/SupportJetPack/SupportJetPack",
+   "abilities": [
+    "Watchful Swarm",
+    "Benevolent Decoy",
+    "Warding Grace",
+    "Vengeful Rush"
+   ],
+   "health": 650.0,
+   "shield": 220.0,
+   "armor": 195.0,
+   "energy": 220.0
+  },
+  {
+   "frame": "Elytron",
+   "unique_name": "/Lotus/Powersuits/Archwing/DemolitionJetPack/DemolitionJetPack",
+   "abilities": [
+    "Bloomer",
+    "Core Vent",
+    "Thumper",
+    "Warhead"
+   ],
+   "health": 765.0,
+   "shield": 745.0,
+   "armor": 145.0,
+   "energy": 120.0
+  },
+  {
+   "frame": "Itzal",
+   "unique_name": "/Lotus/Powersuits/Archwing/StealthJetPack/StealthJetPack",
+   "abilities": [
+    "Arch Line",
+    "Penumbra",
+    "Cosmic Crush",
+    "Fighter Escort"
+   ],
+   "health": 200.0,
+   "shield": 220.0,
+   "armor": 50.0,
+   "energy": 220.0
+  },
+  {
+   "frame": "Odonata",
+   "unique_name": "/Lotus/Powersuits/Archwing/StandardJetPack/StandardJetPack",
+   "abilities": [
+    "Energy Shell",
+    "Disarray",
+    "Seeking Fire",
+    "Repel"
+   ],
+   "health": 425.0,
+   "shield": 430.0,
+   "armor": 100.0,
+   "energy": 85.0
+  },
+  {
+   "frame": "Odonata Prime",
+   "unique_name": "/Lotus/Powersuits/Archwing/PrimeJetPack/PrimeJetPack",
+   "abilities": [
+    "Energy Shell",
+    "Disarray",
+    "Seeking Fire",
+    "Repel"
+   ],
+   "health": 650.0,
+   "shield": 640.0,
+   "armor": 100.0,
+   "energy": 85.0
+  },
+  {
+   "frame": "Bonewidow",
+   "unique_name": "/Lotus/Powersuits/EntratiMech/ThanoTech",
+   "abilities": [
+    "Meathook",
+    "Shield Maiden",
+    "Firing Line",
+    "Exalted Ironbride"
+   ],
+   "health": 1880.0,
+   "shield": 430.0,
+   "armor": 480.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Voidrig",
+   "unique_name": "/Lotus/Powersuits/EntratiMech/NechroTech",
+   "abilities": [
+    "Necraweb",
+    "Storm Shroud",
+    "Gravemines",
+    "Guard Mode"
+   ],
+   "health": 1400.0,
+   "shield": 850.0,
+   "armor": 385.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Ash",
+   "unique_name": "/Lotus/Powersuits/Ninja/Ninja",
+   "abilities": [
+    "Shuriken",
+    "Smoke Screen",
+    "Teleport",
+    "Blade Storm"
+   ],
+   "health": 455.0,
+   "shield": 270.0,
+   "armor": 105.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Ash Prime",
+   "unique_name": "/Lotus/Powersuits/Ninja/AshPrime",
+   "abilities": [
+    "Shuriken",
+    "Smoke Screen",
+    "Teleport",
+    "Blade Storm"
+   ],
+   "health": 455.0,
+   "shield": 365.0,
+   "armor": 185.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Atlas",
+   "unique_name": "/Lotus/Powersuits/Brawler/Brawler",
+   "abilities": [
+    "Landslide",
+    "Tectonics",
+    "Petrify",
+    "Rumblers"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 475.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Atlas Prime",
+   "unique_name": "/Lotus/Powersuits/Brawler/AtlasPrime",
+   "abilities": [
+    "Landslide",
+    "Tectonics",
+    "Petrify",
+    "Rumblers"
+   ],
+   "health": 550.0,
+   "shield": 455.0,
+   "armor": 500.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Banshee",
+   "unique_name": "/Lotus/Powersuits/Banshee/Banshee",
+   "abilities": [
+    "Sonic Boom",
+    "Sonar",
+    "Silence",
+    "Sound Quake"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 105.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Banshee Prime",
+   "unique_name": "/Lotus/Powersuits/Banshee/BansheePrime",
+   "abilities": [
+    "Sonic Boom",
+    "Sonar",
+    "Silence",
+    "Sound Quake"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 135.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Baruuk",
+   "unique_name": "/Lotus/Powersuits/Pacifist/Pacifist",
+   "abilities": [
+    "Elude",
+    "Lull",
+    "Desolate Hands",
+    "Serene Storm"
+   ],
+   "health": 180.0,
+   "shield": 270.0,
+   "armor": 185.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Baruuk Prime",
+   "unique_name": "/Lotus/Powersuits/Pacifist/BaruukPrime",
+   "abilities": [
+    "Elude",
+    "Lull",
+    "Desolate Hands",
+    "Serene Storm"
+   ],
+   "health": 180.0,
+   "shield": 365.0,
+   "armor": 240.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Caliban",
+   "unique_name": "/Lotus/Powersuits/Sentient/Sentient",
+   "abilities": [
+    "Razor Gyre",
+    "Sentient Wrath",
+    "Lethal Progeny",
+    "Fusion Strike"
+   ],
+   "health": 270.0,
+   "shield": 550.0,
+   "armor": 290.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Caliban Prime",
+   "unique_name": "/Lotus/Powersuits/Sentient/CalibanPrime",
+   "abilities": [
+    "Razor Gyre",
+    "Sentient Wrath",
+    "Lethal Progeny",
+    "Fusion Strike"
+   ],
+   "health": 270.0,
+   "shield": 640.0,
+   "armor": 290.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Chroma",
+   "unique_name": "/Lotus/Powersuits/Dragon/Dragon",
+   "abilities": [
+    "Spectral Scream",
+    "Elemental Ward",
+    "Vex Armor",
+    "Effigy"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 370.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Chroma Prime",
+   "unique_name": "/Lotus/Powersuits/Dragon/ChromaPrime",
+   "abilities": [
+    "Spectral Scream",
+    "Elemental Ward",
+    "Vex Armor",
+    "Effigy"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 450.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Citrine",
+   "unique_name": "/Lotus/Powersuits/Geode/Geode",
+   "abilities": [
+    "Fractured Blast",
+    "Preserving Shell",
+    "Prismatic Gem",
+    "Crystallize"
+   ],
+   "health": 400.0,
+   "shield": 270.0,
+   "armor": 265.0,
+   "energy": 130.0
+  },
+  {
+   "frame": "Citrine Prime",
+   "unique_name": "/Lotus/Powersuits/Geode/CitrinePrime",
+   "abilities": [
+    "Fractured Blast",
+    "Preserving Shell",
+    "Prismatic Gem",
+    "Crystallize"
+   ],
+   "health": 400.0,
+   "shield": 270.0,
+   "armor": 325.0,
+   "energy": 150.0
+  },
+  {
+   "frame": "Cyte-09",
+   "unique_name": "/Lotus/Powersuits/Frumentarius/Frumentarius",
+   "abilities": [
+    "Seek",
+    "Resupply",
+    "Evade",
+    "Neutralize"
+   ],
+   "health": 225.0,
+   "shield": 135.0,
+   "armor": 150.0,
+   "energy": 180.0
+  },
+  {
+   "frame": "Dagath",
+   "unique_name": "/Lotus/Powersuits/Dagath/Dagath",
+   "abilities": [
+    "Wyrd Scythes",
+    "Doom",
+    "Grave Spirit",
+    "Rakhali's Cavalry"
+   ],
+   "health": 566.0,
+   "shield": 150.0,
+   "armor": 125.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Dante",
+   "unique_name": "/Lotus/Powersuits/Pagemaster/Pagemaster",
+   "abilities": [
+    "Noctua",
+    "Light Verse",
+    "Dark Verse",
+    "Final Verse"
+   ],
+   "health": 300.0,
+   "shield": 150.0,
+   "armor": 145.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Ember",
+   "unique_name": "/Lotus/Powersuits/Ember/Ember",
+   "abilities": [
+    "Fireball",
+    "Immolation",
+    "Fire Blast",
+    "Inferno"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 135.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Ember Prime",
+   "unique_name": "/Lotus/Powersuits/Ember/EmberPrime",
+   "abilities": [
+    "Fireball",
+    "Immolation",
+    "Fire Blast",
+    "Inferno"
+   ],
+   "health": 270.0,
+   "shield": 365.0,
+   "armor": 160.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Equinox",
+   "unique_name": "/Lotus/Powersuits/YinYang/YinYang",
+   "abilities": [
+    "Metamorphosis",
+    "Rest & Rage",
+    "Pacify & Provoke",
+    "Mend & Maim"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 135.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Equinox Prime",
+   "unique_name": "/Lotus/Powersuits/YinYang/EquinoxPrime",
+   "abilities": [
+    "Metamorphosis",
+    "Rest & Rage",
+    "Pacify & Provoke",
+    "Mend & Maim"
+   ],
+   "health": 365.0,
+   "shield": 270.0,
+   "armor": 160.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Excalibur",
+   "unique_name": "/Lotus/Powersuits/Excalibur/Excalibur",
+   "abilities": [
+    "Slash Dash",
+    "Radial Blind",
+    "Radial Javelin",
+    "Exalted Blade"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 240.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Excalibur Prime",
+   "unique_name": "/Lotus/Powersuits/Excalibur/ExcaliburPrime",
+   "abilities": [
+    "Slash Dash",
+    "Radial Blind",
+    "Radial Javelin",
+    "Exalted Blade"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 315.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Excalibur Umbra",
+   "unique_name": "/Lotus/Powersuits/Excalibur/ExcaliburUmbra",
+   "abilities": [
+    "Slash Dash",
+    "Radial Howl",
+    "Radial Javelin",
+    "Exalted Blade"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 315.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Excalibur Umbra Prime",
+   "unique_name": "/Lotus/Powersuits/Excalibur/DarkExcalibur",
+   "abilities": [
+    "Slash Dash",
+    "Radial Blind",
+    "Radial Javelin",
+    "Exalted Blade"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 315.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Follie",
+   "unique_name": "/Lotus/Powersuits/Inkblot/Inkblot",
+   "abilities": [
+    "Forced Perspective",
+    "Shadowgraph",
+    "Self Portrait",
+    "Plein Air"
+   ],
+   "health": 485.0,
+   "shield": 225.0,
+   "armor": 325.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Frost",
+   "unique_name": "/Lotus/Powersuits/Frost/Frost",
+   "abilities": [
+    "Freeze",
+    "Ice Wave",
+    "Snow Globe",
+    "Avalanche"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 315.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Frost Prime",
+   "unique_name": "/Lotus/Powersuits/Frost/FrostPrime",
+   "abilities": [
+    "Freeze",
+    "Ice Wave",
+    "Snow Globe",
+    "Avalanche"
+   ],
+   "health": 270.0,
+   "shield": 550.0,
+   "armor": 315.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Gara",
+   "unique_name": "/Lotus/Powersuits/Glass/Glass",
+   "abilities": [
+    "Shattered Lash",
+    "Splinter Storm",
+    "Spectrorage",
+    "Mass Vitrify"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 160.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Gara Prime",
+   "unique_name": "/Lotus/Powersuits/Glass/GaraPrime",
+   "abilities": [
+    "Shattered Lash",
+    "Splinter Storm",
+    "Spectrorage",
+    "Mass Vitrify"
+   ],
+   "health": 345.0,
+   "shield": 270.0,
+   "armor": 200.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Garuda",
+   "unique_name": "/Lotus/Powersuits/Garuda/Garuda",
+   "abilities": [
+    "Dread Mirror",
+    "Blood Altar",
+    "Bloodletting",
+    "Seeking Talons"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 315.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Garuda Prime",
+   "unique_name": "/Lotus/Powersuits/Garuda/GarudaPrime",
+   "abilities": [
+    "Dread Mirror",
+    "Blood Altar",
+    "Bloodletting",
+    "Seeking Talons"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 420.0,
+   "energy": 220.0
+  },
+  {
+   "frame": "Gauss",
+   "unique_name": "/Lotus/Powersuits/Runner/Runner",
+   "abilities": [
+    "Mach Rush",
+    "Kinetic Plating",
+    "Thermal Sunder",
+    "Redline"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 185.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Grendel",
+   "unique_name": "/Lotus/Powersuits/Devourer/Devourer",
+   "abilities": [
+    "Feast",
+    "Nourish",
+    "Pulverize",
+    "Regurgitate"
+   ],
+   "health": 1095.0,
+   "shield": 95.0,
+   "armor": 370.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Gyre",
+   "unique_name": "/Lotus/Powersuits/Gyre/Gyre",
+   "abilities": [
+    "Arcsphere",
+    "Coil Horizon",
+    "Cathode Grace",
+    "Rotorswell"
+   ],
+   "health": 270.0,
+   "shield": 550.0,
+   "armor": 105.0,
+   "energy": 190.0
+  },
+  {
+   "frame": "Harrow",
+   "unique_name": "/Lotus/Powersuits/Priest/Priest",
+   "abilities": [
+    "Condemn",
+    "Penance",
+    "Thurible",
+    "Covenant"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 185.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Harrow Prime",
+   "unique_name": "/Lotus/Powersuits/Priest/HarrowPrime",
+   "abilities": [
+    "Condemn",
+    "Penance",
+    "Thurible",
+    "Covenant"
+   ],
+   "health": 270.0,
+   "shield": 640.0,
+   "armor": 185.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Hildryn",
+   "unique_name": "/Lotus/Powersuits/IronFrame/IronFrame",
+   "abilities": [
+    "Balefire",
+    "Pillage",
+    "Haven",
+    "Aegis Storm"
+   ],
+   "health": 180.0,
+   "shield": 1280.0,
+   "armor": 315.0,
+   "energy": 0.0
+  },
+  {
+   "frame": "Hildryn Prime",
+   "unique_name": "/Lotus/Powersuits/IronFrame/IronFramePrime",
+   "abilities": [
+    "Balefire",
+    "Pillage",
+    "Haven",
+    "Aegis Storm"
+   ],
+   "health": 270.0,
+   "shield": 1380.0,
+   "armor": 315.0,
+   "energy": 0.0
+  },
+  {
+   "frame": "Hydroid",
+   "unique_name": "/Lotus/Powersuits/Pirate/Pirate",
+   "abilities": [
+    "Tempest Barrage",
+    "Tidal Surge",
+    "Plunder",
+    "Tentacle Swarm"
+   ],
+   "health": 365.0,
+   "shield": 270.0,
+   "armor": 240.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Hydroid Prime",
+   "unique_name": "/Lotus/Powersuits/Pirate/HydroidPrime",
+   "abilities": [
+    "Tempest Barrage",
+    "Tidal Surge",
+    "Plunder",
+    "Tentacle Swarm"
+   ],
+   "health": 550.0,
+   "shield": 270.0,
+   "armor": 290.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Inaros",
+   "unique_name": "/Lotus/Powersuits/Sandman/Sandman",
+   "abilities": [
+    "Desiccation",
+    "Sandstorm",
+    "Scarab Shell",
+    "Scarab Swarm"
+   ],
+   "health": 2110.0,
+   "shield": 0.0,
+   "armor": 240.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Inaros Prime",
+   "unique_name": "/Lotus/Powersuits/Sandman/InarosPrime",
+   "abilities": [
+    "Desiccation",
+    "Sandstorm",
+    "Scarab Shell",
+    "Scarab Swarm"
+   ],
+   "health": 2215.0,
+   "shield": 0.0,
+   "armor": 240.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Ivara",
+   "unique_name": "/Lotus/Powersuits/Ranger/Ranger",
+   "abilities": [
+    "Quiver",
+    "Navigator",
+    "Prowl",
+    "Artemis Bow"
+   ],
+   "health": 180.0,
+   "shield": 270.0,
+   "armor": 105.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Ivara Prime",
+   "unique_name": "/Lotus/Powersuits/Ranger/IvaraPrime",
+   "abilities": [
+    "Quiver",
+    "Navigator",
+    "Prowl",
+    "Artemis Bow"
+   ],
+   "health": 180.0,
+   "shield": 455.0,
+   "armor": 135.0,
+   "energy": 250.0
+  },
+  {
+   "frame": "Jade",
+   "unique_name": "/Lotus/Powersuits/Choir/Choir",
+   "abilities": [
+    "Light's Judgment",
+    "Symphony of Mercy",
+    "Ophanim Eyes",
+    "Glory on High"
+   ],
+   "health": 365.0,
+   "shield": 450.0,
+   "armor": 135.0,
+   "energy": 150.0
+  },
+  {
+   "frame": "Khora",
+   "unique_name": "/Lotus/Powersuits/Khora/Khora",
+   "abilities": [
+    "Whipclaw",
+    "Ensnare",
+    "Venari",
+    "Strangledome"
+   ],
+   "health": 365.0,
+   "shield": 270.0,
+   "armor": 290.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Khora Prime",
+   "unique_name": "/Lotus/Powersuits/Khora/KhoraPrime",
+   "abilities": [
+    "Whipclaw",
+    "Ensnare",
+    "Venari",
+    "Strangledome"
+   ],
+   "health": 365.0,
+   "shield": 365.0,
+   "armor": 345.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Koumei",
+   "unique_name": "/Lotus/Powersuits/Koumei/Koumei",
+   "abilities": [
+    "Kumihimo",
+    "Omikuji",
+    "Omamori",
+    "Bunraku"
+   ],
+   "health": 344.0,
+   "shield": 122.0,
+   "armor": 444.0,
+   "energy": 122.0
+  },
+  {
+   "frame": "Kullervo",
+   "unique_name": "/Lotus/Powersuits/PaxDuviricus/PaxDuviricus",
+   "abilities": [
+    "Wrathful Advance",
+    "Recompense",
+    "Collective Curse",
+    "Storm of Ukko"
+   ],
+   "health": 1005.0,
+   "shield": 0.0,
+   "armor": 550.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Lavos",
+   "unique_name": "/Lotus/Powersuits/Alchemist/Alchemist",
+   "abilities": [
+    "Ophidian Bite",
+    "Vial Rush",
+    "Transmutation Probe",
+    "Catalyze"
+   ],
+   "health": 540.0,
+   "shield": 270.0,
+   "armor": 575.0,
+   "energy": 0.0
+  },
+  {
+   "frame": "Lavos Prime",
+   "unique_name": "/Lotus/Powersuits/Alchemist/LavosPrime",
+   "abilities": [
+    "Ophidian Bite",
+    "Vial Rush",
+    "Transmutation Probe",
+    "Catalyze"
+   ],
+   "health": 600.0,
+   "shield": 310.0,
+   "armor": 575.0,
+   "energy": 0.0
+  },
+  {
+   "frame": "Limbo",
+   "unique_name": "/Lotus/Powersuits/Magician/Magician",
+   "abilities": [
+    "Banish",
+    "Stasis",
+    "Rift Surge",
+    "Cataclysm"
+   ],
+   "health": 270.0,
+   "shield": 180.0,
+   "armor": 105.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Limbo Prime",
+   "unique_name": "/Lotus/Powersuits/Magician/LimboPrime",
+   "abilities": [
+    "Banish",
+    "Stasis",
+    "Rift Surge",
+    "Cataclysm"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 135.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Loki",
+   "unique_name": "/Lotus/Powersuits/Loki/Loki",
+   "abilities": [
+    "Decoy",
+    "Invisibility",
+    "Switch Teleport",
+    "Radial Disarm"
+   ],
+   "health": 180.0,
+   "shield": 180.0,
+   "armor": 105.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Loki Prime",
+   "unique_name": "/Lotus/Powersuits/Loki/LokiPrime",
+   "abilities": [
+    "Decoy",
+    "Invisibility",
+    "Switch Teleport",
+    "Radial Disarm"
+   ],
+   "health": 180.0,
+   "shield": 180.0,
+   "armor": 135.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Mag",
+   "unique_name": "/Lotus/Powersuits/Mag/Mag",
+   "abilities": [
+    "Pull",
+    "Magnetize",
+    "Polarize",
+    "Crush"
+   ],
+   "health": 180.0,
+   "shield": 455.0,
+   "armor": 105.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Mag Prime",
+   "unique_name": "/Lotus/Powersuits/Mag/MagPrime",
+   "abilities": [
+    "Pull",
+    "Magnetize",
+    "Polarize",
+    "Crush"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 135.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Mesa",
+   "unique_name": "/Lotus/Powersuits/Cowgirl/Cowgirl",
+   "abilities": [
+    "Ballistic Battery",
+    "Shooting Gallery",
+    "Shatter Shield",
+    "Peacemaker"
+   ],
+   "health": 365.0,
+   "shield": 180.0,
+   "armor": 105.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Mesa Prime",
+   "unique_name": "/Lotus/Powersuits/Cowgirl/MesaPrime",
+   "abilities": [
+    "Ballistic Battery",
+    "Shooting Gallery",
+    "Shatter Shield",
+    "Peacemaker"
+   ],
+   "health": 400.0,
+   "shield": 180.0,
+   "armor": 135.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Mirage",
+   "unique_name": "/Lotus/Powersuits/Harlequin/Harlequin",
+   "abilities": [
+    "Hall of Mirrors",
+    "Sleight of Hand",
+    "Eclipse",
+    "Prism"
+   ],
+   "health": 200.0,
+   "shield": 200.0,
+   "armor": 105.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Mirage Prime",
+   "unique_name": "/Lotus/Powersuits/Harlequin/MiragePrime",
+   "abilities": [
+    "Hall of Mirrors",
+    "Sleight of Hand",
+    "Eclipse",
+    "Prism"
+   ],
+   "health": 200.0,
+   "shield": 310.0,
+   "armor": 185.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Narin",
+   "unique_name": "/Lotus/Powersuits/Duelist/Duelist",
+   "abilities": [
+    "Neote",
+    "Naraemagi",
+    "Hakchum",
+    "Nurinarim"
+   ],
+   "health": 270.0,
+   "shield": 550.0,
+   "armor": 165.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Nekros",
+   "unique_name": "/Lotus/Powersuits/Necro/Necro",
+   "abilities": [
+    "Soul Punch",
+    "Terrify",
+    "Desecrate",
+    "Shadows of the Dead"
+   ],
+   "health": 270.0,
+   "shield": 235.0,
+   "armor": 105.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Nekros Prime",
+   "unique_name": "/Lotus/Powersuits/Necro/NekrosPrime",
+   "abilities": [
+    "Soul Punch",
+    "Terrify",
+    "Desecrate",
+    "Shadows of the Dead"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 135.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Nezha",
+   "unique_name": "/Lotus/Powersuits/Nezha/Nezha",
+   "abilities": [
+    "Fire Walker",
+    "Blazing Chakram",
+    "Warding Halo",
+    "Divine Spears"
+   ],
+   "health": 365.0,
+   "shield": 135.0,
+   "armor": 200.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Nezha Prime",
+   "unique_name": "/Lotus/Powersuits/Nezha/NezhaPrime",
+   "abilities": [
+    "Fire Walker",
+    "Blazing Chakram",
+    "Warding Halo",
+    "Divine Spears"
+   ],
+   "health": 365.0,
+   "shield": 135.0,
+   "armor": 265.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Nidus",
+   "unique_name": "/Lotus/Powersuits/Infestation/Infestation",
+   "abilities": [
+    "Virulence",
+    "Larva",
+    "Parasitic Link",
+    "Ravenous"
+   ],
+   "health": 675.0,
+   "shield": 0.0,
+   "armor": 350.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Nidus Prime",
+   "unique_name": "/Lotus/Powersuits/Infestation/InfestationPrime",
+   "abilities": [
+    "Virulence",
+    "Larva",
+    "Parasitic Link",
+    "Ravenous"
+   ],
+   "health": 825.0,
+   "shield": 0.0,
+   "armor": 425.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Nokko",
+   "unique_name": "/Lotus/Powersuits/Nokko/Nokko",
+   "abilities": [
+    "Stinkbrain",
+    "Brightbonnet",
+    "Reroot",
+    "Sporespring"
+   ],
+   "health": 150.0,
+   "shield": 300.0,
+   "armor": 135.0,
+   "energy": 130.0
+  },
+  {
+   "frame": "Nova",
+   "unique_name": "/Lotus/Powersuits/AntiMatter/Anti",
+   "abilities": [
+    "Null Star",
+    "Antimatter Drop",
+    "Wormhole",
+    "Molecular Prime"
+   ],
+   "health": 270.0,
+   "shield": 180.0,
+   "armor": 105.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Nova Prime",
+   "unique_name": "/Lotus/Powersuits/AntiMatter/NovaPrime",
+   "abilities": [
+    "Null Star",
+    "Antimatter Drop",
+    "Wormhole",
+    "Molecular Prime"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 135.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Nyx",
+   "unique_name": "/Lotus/Powersuits/Jade/Jade",
+   "abilities": [
+    "Mind Control",
+    "Psychic Bolts",
+    "Chaos",
+    "Absorb"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 105.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Nyx Prime",
+   "unique_name": "/Lotus/Powersuits/Jade/NyxPrime",
+   "abilities": [
+    "Mind Control",
+    "Psychic Bolts",
+    "Chaos",
+    "Absorb"
+   ],
+   "health": 270.0,
+   "shield": 365.0,
+   "armor": 135.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Oberon",
+   "unique_name": "/Lotus/Powersuits/Paladin/Paladin",
+   "abilities": [
+    "Smite",
+    "Hallowed Ground",
+    "Renewal",
+    "Reckoning"
+   ],
+   "health": 365.0,
+   "shield": 270.0,
+   "armor": 385.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Oberon Prime",
+   "unique_name": "/Lotus/Powersuits/Paladin/PaladinPrime",
+   "abilities": [
+    "Smite",
+    "Hallowed Ground",
+    "Renewal",
+    "Reckoning"
+   ],
+   "health": 365.0,
+   "shield": 270.0,
+   "armor": 450.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Octavia",
+   "unique_name": "/Lotus/Powersuits/Bard/Bard",
+   "abilities": [
+    "Mallet",
+    "Resonator",
+    "Metronome",
+    "Amp"
+   ],
+   "health": 270.0,
+   "shield": 180.0,
+   "armor": 160.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Octavia Prime",
+   "unique_name": "/Lotus/Powersuits/Bard/OctaviaPrime",
+   "abilities": [
+    "Mallet",
+    "Resonator",
+    "Metronome",
+    "Amp"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 160.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Oraxia",
+   "unique_name": "/Lotus/Powersuits/Oraxia/Oraxia",
+   "abilities": [
+    "Mercy's Kiss",
+    "Webbed Embrace",
+    "Widow's Brood",
+    "Silken Stride"
+   ],
+   "health": 575.0,
+   "shield": 125.0,
+   "armor": 125.0,
+   "energy": 150.0
+  },
+  {
+   "frame": "Orion",
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/OrionSuit",
+   "abilities": [
+    "Gravitic Slash",
+    "Astral Shell",
+    "Event Horizon",
+    "Celestial Clash"
+   ],
+   "health": 350.0,
+   "shield": 270.0,
+   "armor": 300.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Protea",
+   "unique_name": "/Lotus/Powersuits/Odalisk/Odalisk",
+   "abilities": [
+    "Grenade Fan",
+    "Blaze Artillery",
+    "Dispensary",
+    "Temporal Anchor"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 135.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Protea Prime",
+   "unique_name": "/Lotus/Powersuits/Odalisk/ProteaPrime",
+   "abilities": [
+    "Grenade Fan",
+    "Blaze Artillery",
+    "Dispensary",
+    "Temporal Anchor"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 185.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Qorvex",
+   "unique_name": "/Lotus/Powersuits/ConcreteFrame/ConcreteFrame",
+   "abilities": [
+    "Chyrinka Pillar",
+    "Containment Wall",
+    "Disometric Guard",
+    "Crucible Blast"
+   ],
+   "health": 600.0,
+   "shield": 200.0,
+   "armor": 875.0,
+   "energy": 150.0
+  },
+  {
+   "frame": "Revenant",
+   "unique_name": "/Lotus/Powersuits/Revenant/Revenant",
+   "abilities": [
+    "Enthrall",
+    "Mesmer Skin",
+    "Reave",
+    "Danse Macabre"
+   ],
+   "health": 270.0,
+   "shield": 635.0,
+   "armor": 135.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Revenant Prime",
+   "unique_name": "/Lotus/Powersuits/Revenant/RevenantPrime",
+   "abilities": [
+    "Enthrall",
+    "Mesmer Skin",
+    "Reave",
+    "Danse Macabre"
+   ],
+   "health": 270.0,
+   "shield": 825.0,
+   "armor": 135.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Rhino",
+   "unique_name": "/Lotus/Powersuits/Rhino/Rhino",
+   "abilities": [
+    "Rhino Charge",
+    "Iron Skin",
+    "Roar",
+    "Rhino Stomp"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 240.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Rhino Prime",
+   "unique_name": "/Lotus/Powersuits/Rhino/RhinoPrime",
+   "abilities": [
+    "Rhino Charge",
+    "Iron Skin",
+    "Roar",
+    "Rhino Stomp"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 290.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Saryn",
+   "unique_name": "/Lotus/Powersuits/Saryn/Saryn",
+   "abilities": [
+    "Spores",
+    "Molt",
+    "Toxic Lash",
+    "Miasma"
+   ],
+   "health": 365.0,
+   "shield": 270.0,
+   "armor": 240.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Saryn Prime",
+   "unique_name": "/Lotus/Powersuits/Saryn/SarynPrime",
+   "abilities": [
+    "Spores",
+    "Molt",
+    "Toxic Lash",
+    "Miasma"
+   ],
+   "health": 365.0,
+   "shield": 270.0,
+   "armor": 315.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Sevagoth",
+   "unique_name": "/Lotus/Powersuits/Wraith/Wraith",
+   "abilities": [
+    "Reap",
+    "Sow",
+    "Gloom",
+    "Exalted Shadow"
+   ],
+   "health": 270.0,
+   "shield": 235.0,
+   "armor": 160.0,
+   "energy": 140.0
+  },
+  {
+   "frame": "Sevagoth's Shadow",
+   "unique_name": "/Lotus/Powersuits/Wraith/Reaper",
+   "abilities": [
+    "Embrace",
+    "Consume",
+    "Death's Harvest",
+    "Reunite"
+   ],
+   "health": 270.0,
+   "shield": 135.0,
+   "armor": 475.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Sevagoth Prime",
+   "unique_name": "/Lotus/Powersuits/Wraith/SevagothPrime",
+   "abilities": [
+    "Reap",
+    "Sow",
+    "Gloom",
+    "Exalted Shadow"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 185.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Sevagoth Prime's Shadow",
+   "unique_name": "/Lotus/Powersuits/Wraith/SevagothShadowPrime",
+   "abilities": [
+    "Embrace",
+    "Consume",
+    "Death's Harvest",
+    "Reunite"
+   ],
+   "health": 270.0,
+   "shield": 135.0,
+   "armor": 475.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Sirius",
+   "unique_name": "/Lotus/Powersuits/SiriusOrion/SiriusSuit",
+   "abilities": [
+    "Coronal Ejection",
+    "Jade Stars",
+    "Light's Sanctuary",
+    "Celestial Clash"
+   ],
+   "health": 475.0,
+   "shield": 355.0,
+   "armor": 160.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Stalker",
+   "unique_name": "/Lotus/Powersuits/Stalker/Stalker",
+   "abilities": [
+    "Teleport (Stalker)",
+    "Marked",
+    "Smoke Screen (Stalker)",
+    "Punishment"
+   ],
+   "health": 455.0,
+   "shield": 180.0,
+   "armor": 135.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Styanax",
+   "unique_name": "/Lotus/Powersuits/Hoplite/Hoplite",
+   "abilities": [
+    "Axios Javelin",
+    "Tharros Strike",
+    "Rally Point",
+    "Final Stand"
+   ],
+   "health": 270.0,
+   "shield": 825.0,
+   "armor": 265.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Styanax Prime",
+   "unique_name": "/Lotus/Powersuits/Hoplite/StyanaxPrime",
+   "abilities": [
+    "Axios Javelin",
+    "Tharros Strike",
+    "Rally Point",
+    "Final Stand"
+   ],
+   "health": 270.0,
+   "shield": 925.0,
+   "armor": 265.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Temple",
+   "unique_name": "/Lotus/Powersuits/Temple/Temple",
+   "abilities": [
+    "Pyrotechnics",
+    "Overdrive",
+    "Ripper's Wail",
+    "Exalted Solo"
+   ],
+   "health": 405.0,
+   "shield": 225.0,
+   "armor": 325.0,
+   "energy": 165.0
+  },
+  {
+   "frame": "Titania",
+   "unique_name": "/Lotus/Powersuits/Fairy/Fairy",
+   "abilities": [
+    "Spellbind",
+    "Tribute",
+    "Lantern",
+    "Razorwing"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 105.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Titania Prime",
+   "unique_name": "/Lotus/Powersuits/Fairy/TitaniaPrime",
+   "abilities": [
+    "Spellbind",
+    "Tribute",
+    "Lantern",
+    "Razorwing"
+   ],
+   "health": 365.0,
+   "shield": 270.0,
+   "armor": 135.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Trinity",
+   "unique_name": "/Lotus/Powersuits/Trinity/Trinity",
+   "abilities": [
+    "Well of Life",
+    "Energy Vampire",
+    "Link",
+    "Blessing"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 105.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Trinity Prime",
+   "unique_name": "/Lotus/Powersuits/Trinity/TrinityPrime",
+   "abilities": [
+    "Well of Life",
+    "Energy Vampire",
+    "Link",
+    "Blessing"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 135.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Uriel",
+   "unique_name": "/Lotus/Powersuits/DemonFrame/DemonFrame",
+   "abilities": [
+    "Infernalis",
+    "Remedium",
+    "Demonium",
+    "Brimstone"
+   ],
+   "health": 566.0,
+   "shield": 566.0,
+   "armor": 105.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Valkyr",
+   "unique_name": "/Lotus/Powersuits/Berserker/Berserker",
+   "abilities": [
+    "Rip Line",
+    "Warcry",
+    "Paralysis",
+    "Hysteria"
+   ],
+   "health": 650.0,
+   "shield": 135.0,
+   "armor": 855.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Valkyr Prime",
+   "unique_name": "/Lotus/Powersuits/Berserker/ValkyrPrime",
+   "abilities": [
+    "Rip Line",
+    "Warcry",
+    "Paralysis",
+    "Hysteria"
+   ],
+   "health": 650.0,
+   "shield": 135.0,
+   "armor": 1000.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Vauban",
+   "unique_name": "/Lotus/Powersuits/Trapper/Trapper",
+   "abilities": [
+    "Tesla Nervos",
+    "Minelayer",
+    "Photon Strike",
+    "Bastille"
+   ],
+   "health": 270.0,
+   "shield": 180.0,
+   "armor": 160.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Vauban Prime",
+   "unique_name": "/Lotus/Powersuits/Trapper/TrapperPrime",
+   "abilities": [
+    "Tesla Nervos",
+    "Minelayer",
+    "Photon Strike",
+    "Bastille"
+   ],
+   "health": 270.0,
+   "shield": 270.0,
+   "armor": 210.0,
+   "energy": 175.0
+  },
+  {
+   "frame": "Volt",
+   "unique_name": "/Lotus/Powersuits/Volt/Volt",
+   "abilities": [
+    "Shock",
+    "Speed",
+    "Electric Shield",
+    "Discharge"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 105.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Volt Prime",
+   "unique_name": "/Lotus/Powersuits/Volt/VoltPrime",
+   "abilities": [
+    "Shock",
+    "Speed",
+    "Electric Shield",
+    "Discharge"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 135.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Voruna",
+   "unique_name": "/Lotus/Powersuits/Werewolf/Werewolf",
+   "abilities": [
+    "Shroud of Dynar",
+    "Fangs of Raksh",
+    "Lycath's Hunt",
+    "Ulfrun's Descent"
+   ],
+   "health": 455.0,
+   "shield": 270.0,
+   "armor": 200.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Voruna Prime",
+   "unique_name": "/Lotus/Powersuits/Werewolf/VorunaPrime",
+   "abilities": [
+    "Shroud of Dynar",
+    "Fangs of Raksh",
+    "Lycath's Hunt",
+    "Ulfrun's Descent"
+   ],
+   "health": 455.0,
+   "shield": 270.0,
+   "armor": 265.0,
+   "energy": 130.0
+  },
+  {
+   "frame": "Wisp",
+   "unique_name": "/Lotus/Powersuits/Wisp/Wisp",
+   "abilities": [
+    "Reservoirs",
+    "Wil-O-Wisp",
+    "Breach Surge",
+    "Sol Gate"
+   ],
+   "health": 270.0,
+   "shield": 180.0,
+   "armor": 185.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Wukong",
+   "unique_name": "/Lotus/Powersuits/MonkeyKing/MonkeyKing",
+   "abilities": [
+    "Celestial Twin",
+    "Cloud Walker",
+    "Defy",
+    "Primal Fury"
+   ],
+   "health": 455.0,
+   "shield": 270.0,
+   "armor": 265.0,
+   "energy": 130.0
+  },
+  {
+   "frame": "Wukong Prime",
+   "unique_name": "/Lotus/Powersuits/MonkeyKing/WukongPrime",
+   "abilities": [
+    "Celestial Twin",
+    "Cloud Walker",
+    "Defy",
+    "Primal Fury"
+   ],
+   "health": 455.0,
+   "shield": 345.0,
+   "armor": 290.0,
+   "energy": 145.0
+  },
+  {
+   "frame": "Xaku",
+   "unique_name": "/Lotus/Powersuits/BrokenFrame/BrokenFrame",
+   "abilities": [
+    "Xata's Whisper",
+    "Grasp of Lohk",
+    "The Lost",
+    "The Vast Untime"
+   ],
+   "health": 269.0,
+   "shield": 239.0,
+   "armor": 146.0,
+   "energy": 160.0
+  },
+  {
+   "frame": "Xaku Prime",
+   "unique_name": "/Lotus/Powersuits/BrokenFrame/XakuPrime",
+   "abilities": [
+    "Xata's Whisper",
+    "Grasp of Lohk",
+    "The Lost",
+    "The Vast Untime"
+   ],
+   "health": 269.0,
+   "shield": 263.0,
+   "armor": 167.0,
+   "energy": 181.0
+  },
+  {
+   "frame": "Yareli",
+   "unique_name": "/Lotus/Powersuits/Yareli/Yareli",
+   "abilities": [
+    "Sea Snares",
+    "Merulina",
+    "Aquablades",
+    "Riptide"
+   ],
+   "health": 270.0,
+   "shield": 455.0,
+   "armor": 105.0,
+   "energy": 200.0
+  },
+  {
+   "frame": "Yareli Prime",
+   "unique_name": "/Lotus/Powersuits/Yareli/YareliPrime",
+   "abilities": [
+    "Sea Snares",
+    "Merulina",
+    "Aquablades",
+    "Riptide"
+   ],
+   "health": 270.0,
+   "shield": 550.0,
+   "armor": 105.0,
+   "energy": 215.0
+  },
+  {
+   "frame": "Zephyr",
+   "unique_name": "/Lotus/Powersuits/Tengu/Tengu",
+   "abilities": [
+    "Tail Wind",
+    "Airburst",
+    "Turbulence",
+    "Tornado"
+   ],
+   "health": 455.0,
+   "shield": 455.0,
+   "armor": 105.0,
+   "energy": 100.0
+  },
+  {
+   "frame": "Zephyr Prime",
+   "unique_name": "/Lotus/Powersuits/Tengu/ZephyrPrime",
+   "abilities": [
+    "Tail Wind",
+    "Airburst",
+    "Turbulence",
+    "Tornado"
+   ],
+   "health": 455.0,
+   "shield": 455.0,
+   "armor": 135.0,
+   "energy": 175.0
+  }
+ ]
+}

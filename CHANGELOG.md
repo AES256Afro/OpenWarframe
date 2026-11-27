@@ -3,6 +3,17 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Warframe builds.** Open a Warframe and click **Suggest a build**: the app balances Ability
+  Strength, Duration, Range, Efficiency and survivability by how many of the abilities you use
+  scale with each stat, then picks the mods (yours, if you like). Which stats each ability uses
+  comes from the Warframe Wiki's ability pages, bundled with the app (127 frames). Untick the
+  abilities you don't cast and build again. See [docs/BUILDS.md](docs/BUILDS.md).
+- **Licensing fix:** the Warframe Wiki is CC BY-NC-SA 3.0, not CC BY-SA, and its terms don't allow
+  automated access. The docs and knowledge-base entries now say so, and the app never contacts the
+  wiki (see [docs/LEGAL.md](docs/LEGAL.md)).
+
 ## 0.16.0
 
 - **Builds count shields.** Builds are now scored by the time to kill one reference enemy:

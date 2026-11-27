@@ -28,7 +28,7 @@ steps:
     done_if: "snapshot.inventory.InfestedFoundry.unlocked"
 applies_if: "snapshot.mastery_rank >= 8 and not snapshot.inventory.InfestedFoundry.unlocked"
 sources:
-  - { title: "Helminth - WARFRAME Wiki", url: "https://wiki.warframe.com/w/Helminth", license: "CC BY-SA" }
+  - { title: "Helminth - WARFRAME Wiki", url: "https://wiki.warframe.com/w/Helminth", license: "CC BY-NC-SA 3.0" }
 last_verified: 2026-10-16
 ```
 

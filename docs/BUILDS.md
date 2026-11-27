@@ -1,4 +1,4 @@
-# Weapon builds
+# Builds
 
 Open a primary or secondary gun in any list, pick a target and click **Suggest a build**. The app
 works out the 8 mods that give the most damage, from the game data and the damage formulas
@@ -103,3 +103,31 @@ many Forma that takes.
 The app shows per-shot damage, sustained DPS, crit, status, multishot and fire rate. Put the same
 mods on the weapon in the game's Arsenal and compare the numbers there; differences point at
 something the model doesn't cover. Reports with the weapon and mods are welcome.
+
+## Warframe builds
+
+Open a Warframe and click **Suggest a build**. A frame's abilities don't share one formula, so
+this doesn't calculate kills. It balances the stats the abilities you use scale with:
+
+- **Which stats an ability uses** comes from `kb/builds/abilities.json`: for each ability, whether
+  it has Strength, Duration and Range values, its energy cost and whether it's channeled, taken
+  from the Warframe Wiki's ability pages and `Module:Ability/data` (checked 2026-11-27; 127
+  frames, 336 abilities). Frame health, shields, armor and energy at rank 30 come from
+  `Module:Warframes/data`. The wiki is CC BY-NC-SA 3.0 and isn't contacted by the app; see
+  docs/LEGAL.md.
+- **Weights:** a stat counts once for each of your chosen abilities that uses it. Efficiency
+  counts every ability that costs energy; a channeled ability counts twice for Efficiency and
+  Duration. After the first build, untick the abilities you don't cast.
+- **Score:** weight x ln(stat) for Strength, Duration and Range; weight x -ln(energy cost) for
+  Efficiency (capped at 175%, cost floor 25%); and survivability x ln(effective health gain),
+  with effective health = health x (armor + 300) / 300 + shields (wiki Armor: Tenno damage
+  reduction = armor / (armor + 300)). Survivability: not needed, some (default) or a lot.
+- **Search:** like guns, plus swaps of two mods at once, because a mod with a cost (Blind Rage,
+  Overextended) often only pays off next to the mod that covers it. A slot stays empty when
+  every remaining mod would make the build worse. Builds fit 60 capacity (Orokin Reactor).
+
+The limit: the data says that an ability uses a stat, not how much it gains from it, so a
+damage ability and a buff count the same. Picking the abilities you actually cast is how to
+steer it. Not filled yet: the Aura and Exilus slots, augment mods, Archon Shards, arcanes and
+set bonuses (Umbral); conditional effects aren't counted.
+

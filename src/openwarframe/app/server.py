@@ -447,6 +447,34 @@ class AppState:
                     b["upgrade"]["name"] = tr.by_name(b["upgrade"]["name"])
         return b
 
+    def frame_build_for(
+        self, uid: str, *, abilities: list[int] | None, survivability: str, owned_only: bool
+    ) -> dict:
+        """A suggested mod build for one Warframe (builds.frames)."""
+        from ..builds.frames import NotAFrame, suggest_frame
+        from ..codex import Codex
+        from ..inventory import load_inventory
+
+        if not uid or not self.settings.codex_path.exists():
+            return {"error": "No game data yet."}
+        owned = None
+        if owned_only and self.inventory_path.exists():
+            with contextlib.suppress(Exception):
+                inv = load_inventory(self.inventory_path)
+                owned = {u: max(m.get("ranks") or [0]) for u, m in inv.mods.items()}
+        with Codex(self.settings.codex_path) as codex:
+            try:
+                b = suggest_frame(
+                    codex.conn, uid, abilities=abilities, survivability=survivability, owned=owned
+                )
+            except NotAFrame as exc:
+                return {"error": str(exc)}
+            tr = self._translator(codex.conn)
+            if tr:
+                for m in b["mods"]:
+                    m["name"] = tr.by_id(m["id"], m["name"])
+        return b
+
     def set_names_lang(self, lang: str) -> dict:
         """Show item names in ``lang`` in the app and exports. Downloads its names once."""
         from ..codex.languages import LANGUAGES, load_names
@@ -931,6 +959,24 @@ def make_handler(state: AppState):
                     self._json({"error": f"Could not load the world state: {exc}"})
             elif self.path == "/api/prefs":
                 self._json(state.get_prefs())
+            elif urlsplit(self.path).path == "/api/frame-build":
+                if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}"):
+                    self._json({"error": "forbidden"}, 403)
+                    return
+                q = parse_qs(urlsplit(self.path).query)
+                keys = [int(k) for k in (q.get("abilities") or [""])[0].split(",") if k.strip().isdigit()]
+                try:
+                    self._json(
+                        state.frame_build_for(
+                            (q.get("id") or [""])[0],
+                            abilities=keys or None,
+                            survivability=(q.get("surv") or ["some"])[0],
+                            owned_only=(q.get("owned") or ["0"])[0] == "1",
+                        )
+                    )
+                except Exception as exc:  # noqa: BLE001 - shown in the item details
+                    log.exception("frame build failed")
+                    self._json({"error": f"Could not work out a build: {exc}"})
             elif urlsplit(self.path).path == "/api/build":
                 if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}"):
                     self._json({"error": "forbidden"}, 403)

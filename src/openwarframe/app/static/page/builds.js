@@ -52,3 +52,51 @@ function onBuildEvent(e){
 }
 $("view").addEventListener("click", onBuildEvent, true);
 $("view").addEventListener("change", onBuildEvent);
+// ---- Warframe builds: balance the stats the abilities you use scale with -----------------------
+var FBUILD={}, FOPTS={surv:"some", abilities:{}};
+function isFrame(r){ return r.category==="Warframe"; }
+// abilities ticked for a frame: every one from the last build unless you untick it
+function fChosen(id){
+  var last=FBUILD["last:"+id], sel=FOPTS.abilities[id]||{};
+  if(!last||!last.abilities) return [];
+  return last.abilities.filter(function(a){ return sel[a.key]!==false; }).map(function(a){ return String(a.key); });
+}
+function fKey(id){ return id+"|"+FOPTS.surv+"|"+(fChosen(id).join(",")||"all")+"|"+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0); }
+function frameBuildPanel(r){
+  var inv=!!DATA.meta.inventory, last=FBUILD["last:"+r.id], b=FBUILD[fKey(r.id)]||FBUILD["shown:"+r.id];
+  var h='<div class="buildbox"><h3>Suggested build</h3><div class="buildopts">';
+  if(last&&last.abilities) h+='<span>Abilities I use:</span>'+last.abilities.map(function(a){ var on=(FOPTS.abilities[r.id]||{})[a.key]; on=on==null?true:on;
+    return '<label><input type="checkbox" data-fab="'+esc(r.id)+'" value="'+a.key+'"'+(on?' checked':'')+'> '+esc(a.name)+'</label>'; }).join('');
+  h+='<label>Survivability <select data-fopt="surv"><option value="none"'+(FOPTS.surv==="none"?' selected':'')+'>Not needed</option><option value="some"'+(FOPTS.surv==="some"?' selected':'')+'>Some</option><option value="tanky"'+(FOPTS.surv==="tanky"?' selected':'')+'>A lot</option></select></label>'
+    +(inv?'<label><input type="checkbox" data-bopt="owned"'+(BUILD_OPTS.owned?' checked':'')+'> Only mods I own</label>':'')
+    +'<button class="btn" type="button" data-fbuild="'+esc(r.id)+'">'+(b?'Build again':'Suggest a build')+'</button></div>';
+  h+='<div class="buildout">'+(b?frameBuildHtml(b):'')+'</div></div>';
+  return h;
+}
+function frameBuildHtml(b){
+  if(b.error) return '<p class="muted">'+esc(b.error)+'</p>';
+  var s=b.stats, h='';
+  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li><b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
+  h+='<div class="buildstats"><span>Strength <b>'+pct(s.strength)+'</b></span><span>Duration <b>'+pct(s.duration)+'</b></span><span>Range <b>'+pct(s.range)+'</b></span><span>Efficiency <b>'+pct(s.efficiency)+'</b></span></div>';
+  h+='<div class="buildstats"><span>Health <b>'+num(s.health)+'</b></span><span>Shields <b>'+num(s.shields)+'</b></span><span>Armor <b>'+num(s.armor)+'</b> ('+pct(s.damage_reduction)+' less damage)</span><span>Effective health <b>'+num(s.effective_health)+'</b></span><span>Energy <b>'+num(s.energy)+'</b></span></div>';
+  h+='<p class="muted">Uses: '+b.abilities.filter(function(a){return a.used}).map(function(a){ var u=[]; if(a.strength) u.push("Strength"); if(a.duration) u.push("Duration"); if(a.range) u.push("Range"); return esc(a.name)+' ('+(u.join(", ")||"no scaling")+(a.channeled?", channeled":"")+')'; }).join(' · ')+'</p>';
+  if(b.upgrade) h+='<p>Best mod you don\'t have: <b>'+esc(b.upgrade.name)+'</b></p>';
+  h+='<ul class="muted buildnotes">'+b.notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul>';
+  return h;
+}
+function runFrameBuild(id){
+  var keys=fChosen(id);
+  if(FBUILD["last:"+id] && !keys.length){ toast("Tick at least one ability you use."); return; }
+  var q="/api/frame-build?id="+encodeURIComponent(id)+"&surv="+encodeURIComponent(FOPTS.surv)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+(keys.length?"&abilities="+keys.join(","):"");
+  var k=fKey(id);
+  api(q).then(function(b){ FBUILD[k]=b; FBUILD["shown:"+id]=b; if(!b.error) FBUILD["last:"+id]=b; redrawTable(); }).catch(function(){ FBUILD[k]={error:"Could not work that out. Is OpenWarframe still running?"}; redrawTable(); });
+}
+function onFrameBuildEvent(e){
+  var t=e.target; if(!t.closest) return;
+  var fo=t.closest("[data-fopt]"); if(fo&&e.type==="change"){ FOPTS[fo.dataset.fopt]=fo.value; return; }
+  var ab=t.closest("[data-fab]"); if(ab&&e.type==="change"){ var id=ab.dataset.fab; FOPTS.abilities[id]=FOPTS.abilities[id]||{}; FOPTS.abilities[id][ab.value]=ab.checked; return; }
+  var b=t.closest("[data-fbuild]"); if(b&&e.type==="click"){ e.stopPropagation(); runFrameBuild(b.dataset.fbuild); }
+}
+$("view").addEventListener("click", onFrameBuildEvent, true);
+$("view").addEventListener("change", onFrameBuildEvent);
+

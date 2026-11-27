@@ -12,7 +12,7 @@ This is a working checklist, not legal advice.
 | Digital Extremes' trademarks | Say we are a fan project, not made by or affiliated with DE; don't use DE logos or game art as our branding | README "Credits and license", the app footer, this file | Done |
 | DE game data | Public Export, drop tables and world state are DE's; we read them, cache them locally and don't redistribute them | Each user's app downloads its own copy into their data folder (`codex update`); nothing from DE is committed or bundled | Done |
 | Community data (MIT) | Credit warframe-public-export-plus and the WFCD projects | `docs/DATA_SOURCES.md` | Done |
-| Warframe Wiki (CC BY-SA) | Attribute any fact taken from the wiki, with a link and the license; share-alike applies to the text we adapt | Every `kb/` entry that uses the wiki has a `sources:` link with `license: CC BY-SA`; item rows link back to their wiki page | Done; keep it for every new `kb/` entry |
+| Warframe Wiki (CC BY-NC-SA 3.0, run by Weird Gloop) | Non-commercial use only, attribution, share-alike for adapted content; no automated access without Weird Gloop's consent (weirdgloop.org/terms; robots.txt blocks the API) | The app never contacts the wiki. Facts (which stats each ability scales with, frame stats) are extracted once from saved page sources into `kb/builds/abilities.json`, which carries the source, license and check date; `kb/` entries link their wiki pages with `license: CC BY-NC-SA 3.0`. OpenWarframe is free with no ads or paid features, so the non-commercial term is met; selling it or adding paid features would need this re-checked | Done; re-check before any paid distribution |
 | warframe.market | Follow their terms and rate limits; identify ourselves | Descriptive User-Agent, cached requests, one request per second, back-off on 429 | Done |
 | browse.wf | Credit requested | `docs/DATA_SOURCES.md` | Done |
 | Terms of Service: reading the running game | DE's terms forbid "unauthorized third-party software"; tolerated tools have still been caught in ban sweeps. Say so plainly, ask before the first use, never write to the game, never automate input | Consent screen and CLI prompt name the suspension or ban risk; reading is opt-in, Windows only, read-only; `docs/ACCOUNT_DATA_ACCESS.md` quotes DE's policy | Done |
@@ -28,5 +28,5 @@ This is a working checklist, not legal advice.
   it has terms beyond MIT.
 - **A new dependency:** check its license is compatible with MIT distribution (no GPL in the
   bundled app); `third_party_notices.py` picks it up on the next build.
-- **Wiki-derived text:** link the page and mark `license: CC BY-SA` in the `kb/` entry.
+- **Wiki-derived facts:** link the page and mark `license: CC BY-NC-SA 3.0` in the `kb/` entry; never add code that fetches the wiki at runtime.
 - **Anything that touches the running game:** read-only, opt-in, explained in the consent text.

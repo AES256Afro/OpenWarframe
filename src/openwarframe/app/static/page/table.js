@@ -22,7 +22,7 @@ function detailHtml(spec, r){
   if(spec.key!=="items") return '<span class="muted">'+(r.slug?tradeName(r.slug):'Not tradeable')+'</span>';
   var goal=r.mastery==="Mastered"?'':'<p><button class="btn" type="button" data-goal="'+esc(r.id)+'">'+(isGoal(r.id)?'Remove goal':'Add to goals')+'</button></p>';
   var lead=r.mastery!=="Never leveled"?'<p class="muted">You leveled this before. Here is how to get it again.</p>':'';
-  return lead+'<div class="howto" data-howto="'+esc(r.id)+'">'+(HOWTO[r.id]?howtoHtml(HOWTO[r.id]):'<span class="muted">Looking up how to get this…</span>')+'</div>'+goal+(isGun(r)?buildPanel(r):'');
+  return lead+'<div class="howto" data-howto="'+esc(r.id)+'">'+(HOWTO[r.id]?howtoHtml(HOWTO[r.id]):'<span class="muted">Looking up how to get this…</span>')+'</div>'+goal+(isGun(r)?buildPanel(r):isFrame(r)?frameBuildPanel(r):'');
 }
 // ---- how to get an item: asked when its details open, then kept for the session ----
 var HOWTO={}, HOWTO_ASKED={};

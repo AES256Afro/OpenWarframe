@@ -68,8 +68,10 @@ Check (-not (Test-Path (Join-Path $app 'unins001.exe'))) 'one uninstaller, not a
 Step 'Self-update path: silent install with /RELAUNCH=1 starts the app again'
 Get-Process OpenWarframe -ErrorAction SilentlyContinue | Stop-Process -Force
 $log = Join-Path $logDir 'relaunch.log'
-$p = Start-Process -FilePath $Setup -Wait -PassThru -ArgumentList @(
+# not -Wait: in PowerShell 7 that also waits for the app the setup starts, which never exits
+$p = Start-Process -FilePath $Setup -PassThru -ArgumentList @(
     '/SILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS', '/RELAUNCH=1', "/LOG=`"$log`"")
+Check ($p.WaitForExit(180000)) 'setup /RELAUNCH=1 finished within 3 minutes'
 Check ($p.ExitCode -eq 0) "setup /RELAUNCH=1 exited $($p.ExitCode)"
 $deadline = (Get-Date).AddSeconds(30)
 while (-not (Get-Process OpenWarframe -ErrorAction SilentlyContinue) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 1 }

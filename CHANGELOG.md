@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.14.0
 
 - **Suggested weapon builds.** Open a primary or secondary gun and click **Suggest a build**: the
   app picks the 8 mods with the most sustained damage against the enemy you choose, worked out

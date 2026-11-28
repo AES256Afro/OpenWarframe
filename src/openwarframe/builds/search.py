@@ -11,13 +11,24 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 
+from .arcanes import HEAVY_ONLY, STATUS_TRIGGERED, WEAPON_SCORED, load_weapon_arcanes, weapon_effect
 from .damage import Result, Totals, add_up, best_order
 from .enemy import Enemy, enemy_for
-from .mods import GunMod, ModEffect, fits, load_gun_mods
+from .mods import ELEMENTS, GunMod, ModEffect, fits, load_gun_mods
 from .weapons import Gun, load_gun
 
-SLOTS = 8
+SLOTS = 8  # general slots
+EXILUS_SLOTS = 1  # one more, for an exilus-capable mod only (isUtility)
+
+
+def _slots_ok(picks) -> bool:
+    """At most 8 general mods plus one exilus-capable mod."""
+    return len(picks) <= SLOTS + EXILUS_SLOTS and sum(1 for p in picks if not p.mod.utility) <= SLOTS
+
+
 CAPACITY = 60  # with an Orokin Catalyst / Orokin Reactor equivalent
+# melee: a stance in a slot of matching polarity adds 10 capacity (5 otherwise), like an aura
+STANCE_CAPACITY = 10
 # pairs the game won't equip together beyond "same mod, other variant" (wiki infoboxes)
 CONFLICTS = {
     frozenset(("Berserker Fury", "Fury")),
@@ -59,6 +70,12 @@ def _score(
         t.sums["combo"] = gun.combo
         t.sums["extra_status"] = gun.extra_status
         t.sums["gladiator"] = sum(1 for p in picks if p.mod.name.startswith("Gladiator "))
+        t.sums["heavy"] = 1.0 if gun.heavy else 0.0
+    for k, v in gun.arcane.items():  # the weapon arcane: its element goes after the mods'
+        if k in ELEMENTS:
+            t.elements.append((k, v))
+        else:
+            t.sums[k] = t.sums.get(k, 0.0) + v
     r, order = best_order(gun, t, target, enemy)
     return r.effective_dps, r, order
 
@@ -69,15 +86,16 @@ def forma_needed(picks: list[Pick]) -> int | None:
     A slot whose polarity matches the mod halves its drain (rounded up). Polarize the
     costliest mods first.
     """
+    cap = CAPACITY + (STANCE_CAPACITY if any(p.mod.slot == "MELEE" for p in picks) else 0)
     drains = sorted((p.mod.drain(p.rank) for p in picks), reverse=True)
     total = sum(drains)
     n = 0
     for d in drains:
-        if total <= CAPACITY:
+        if total <= cap:
             return n
         total -= d - (d + 1) // 2
         n += 1
-    return n if total <= CAPACITY else None
+    return n if total <= cap else None
 
 
 def _fits_capacity(picks: list[Pick]) -> bool:
@@ -107,11 +125,15 @@ def search(
     gun: Gun, pool: list[Pick], target: str | None, stacks: bool, enemy: Enemy | None = None
 ) -> list[Pick]:
     chosen: list[Pick] = []
-    while len(chosen) < SLOTS:
+    while len(chosen) < SLOTS + EXILUS_SLOTS:
         base = _score(gun, chosen, target, stacks, enemy)[0] if chosen else 0.0
         best, gain = None, 0.0
         for p in pool:
-            if any(clash(p.mod, c.mod) for c in chosen) or not _fits_capacity([*chosen, p]):
+            if (
+                any(clash(p.mod, c.mod) for c in chosen)
+                or not _fits_capacity([*chosen, p])
+                or not _slots_ok([*chosen, p])
+            ):
                 continue
             s = _score(gun, [*chosen, p], target, stacks, enemy)[0]
             if s - base > gain + 1e-9:
@@ -125,7 +147,7 @@ def search(
         improved = False
         cur = _score(gun, chosen, target, stacks, enemy)[0]
         for trial in _neighbours(chosen, pool, elemental):
-            if not _fits_capacity(trial) or _clashes(trial):
+            if not _slots_ok(trial) or not _fits_capacity(trial) or _clashes(trial):
                 continue
             s = _score(gun, trial, target, stacks, enemy)[0]
             if s > cur * (1 + 1e-6):
@@ -168,7 +190,7 @@ def _neighbours(chosen: list[Pick], pool: list[Pick], elemental: list[Pick]):
     Two at once matters: a combined element (Corrosive = Toxin + Electricity) only pays off
     when both halves are in, and either half alone can score worse than what it replaces.
     """
-    room = len(chosen) < SLOTS
+    room = len(chosen) < SLOTS + EXILUS_SLOTS
     for p in pool:
         if p in chosen:
             continue
@@ -184,7 +206,7 @@ def _neighbours(chosen: list[Pick], pool: list[Pick], elemental: list[Pick]):
     ]
     n = len(chosen)
     for a, b in pairs:
-        free = SLOTS - n
+        free = SLOTS + EXILUS_SLOTS - n
         if free >= 2:
             yield [*chosen, a, b]
         if free >= 1:
@@ -228,12 +250,18 @@ def suggest(
     stripped: bool = False,
     combo: float = 12.0,
     extra_status: float = 0.0,
+    attack: str = "normal",
+    arcane: str | None = None,
 ) -> dict:
     """The suggested build for one gun or melee weapon, ready for the app.
 
     Melee: ``combo`` is the combo multiplier (1 to 12) that Blood Rush, Weeping Wounds and the
     Gladiator set read; ``extra_status`` counts status types other sources (abilities, your guns,
-    the squad) keep on the target, for Condition Overload.
+    the squad) keep on the target, for Condition Overload. ``attack``: "heavy" judges one heavy
+    attack at that combo instead of normal hits.
+
+    ``arcane``: the weapon arcane's name; None picks the best of the ones that can be scored,
+    "none" leaves the slot empty.
 
     ``level``: none (no armor), normal (level 35) or sp (Steel Path, level 135); ``stripped``:
     the enemy's armor is already gone (abilities, squad).
@@ -242,13 +270,24 @@ def suggest(
     if gun.slot == "MELEE":
         gun.combo = max(1.0, min(13.0, float(combo)))
         gun.extra_status = max(0.0, min(16.0, float(extra_status)))
+        gun.heavy = attack == "heavy" and gun.heavy_mult > 0
     mods = load_gun_mods(conn)
     target = None if target in (None, "", "none") else target
     enemy = enemy_for(target, level, stripped)
     pool = candidates(gun, mods, owned)
     chosen = search(gun, pool, target, stacks, enemy)
+    arcanes = load_weapon_arcanes(conn, gun.slot, gun.holster)
+    picked = _pick_arcane(gun, arcanes, arcane, chosen, target, stacks, enemy)
+    if picked and gun.arcane:
+        chosen = search(gun, pool, target, stacks, enemy)  # the arcane can change the best mods
+        if not _arcane_triggers(picked, _score(gun, chosen, target, stacks, enemy)[1]):
+            gun.arcane = {}
+            chosen = search(gun, pool, target, stacks, enemy)
+            picked = None if arcane is None else picked
     score, result, order = _score(gun, chosen, target, stacks, enemy)
+    saved, gun.arcane = gun.arcane, {}
     unmodded = _score(gun, [], target, stacks, enemy)[1]
+    gun.arcane = saved
     # put elemental mods in the order that gives the best combination, others first
     el_picks = [p for p in chosen if any(k in p.effect.stats for k in _ELEMENT_KEYS)]
     others = [p for p in chosen if p not in el_picks]
@@ -266,10 +305,14 @@ def suggest(
             if p.mod.unique_name in owned:
                 continue
             # into a free slot, or in place of one of the mods you have
-            options = [chosen] if len(chosen) < SLOTS else []
+            options = [chosen] if len(chosen) < SLOTS + EXILUS_SLOTS else []
             options += [chosen[:i] + chosen[i + 1 :] for i in range(len(chosen))]
             for rest in options:
-                if any(clash(p.mod, c.mod) for c in rest) or not _fits_capacity([*rest, p]):
+                if (
+                    any(clash(p.mod, c.mod) for c in rest)
+                    or not _fits_capacity([*rest, p])
+                    or not _slots_ok([*rest, p])
+                ):
                     continue
                 s = _score(gun, [*rest, p], target, stacks, enemy)[0]
                 if s > score * 1.001 and (gain_best is None or s > gain_best[1]):
@@ -277,8 +320,22 @@ def suggest(
         if gain_best:
             upgrade = {"name": gain_best[0].mod.name, "gain": f"+{round((gain_best[1] / score - 1) * 100)}%"}
     drain = sum(p.mod.drain(p.rank) for p in chosen)
+    utility = [p for p in ordered if p.mod.utility]
+    exilus = min(utility, key=lambda p: p.mod.drain(p.rank)) if utility else None
     forma = forma_needed(chosen) or 0
-    if enemy.level is None:
+    cap = CAPACITY + (STANCE_CAPACITY if gun.slot == "MELEE" else 0)
+    if gun.heavy:
+        ranked = "Ranked by the damage of one heavy attack, direct hit plus its status damage over time" + (
+            ""
+            if enemy.level is None
+            else f", to a level {enemy.level} {enemy.unit}"
+            + (
+                f" ({round(enemy.armor):,} armor{', already stripped' if enemy.stripped else ''})"
+                if enemy.armor
+                else ""
+            )
+        )
+    elif enemy.level is None:
         ranked = "Ranked by damage per second against a target without armor or shields"
     else:
         pools = [f"{round(enemy.health):,} health"]
@@ -294,8 +351,9 @@ def suggest(
     notes = [
         ranked + ".",
         "Not counted: shield regeneration and the Magnetic shield-break burst, headshots and weak points, "
-        "Rivens, arcanes, Incarnon forms; Heat is counted per proc, though in long fights its stacks keep growing.",
-        f"Mod drain {drain} against {CAPACITY} capacity with an Orokin Catalyst"
+        "Rivens, Incarnon forms; Heat is counted per proc, though in long fights its stacks keep growing.",
+        f"Mod drain {drain} against {cap} capacity with an Orokin Catalyst"
+        + (" and a stance in a matching slot" if gun.slot == "MELEE" else "")
         + (
             f": polarize {forma} slot{'s' if forma != 1 else ''} with Forma to match the costliest mods."
             if forma
@@ -312,9 +370,23 @@ def suggest(
                 if any("per_status_damage" in p.effect.stats for p in chosen)
                 else ""
             )
-            + ". Damage per second uses the weapon's attack speed; real hits per second depend on the stance, "
-            "so compare builds of this weapon rather than with guns. Heavy attacks, the stance slot's extra "
-            "capacity and the Exilus slot aren't counted."
+            + (
+                f". A heavy attack deals x{gun.heavy_mult:g} this weapon's normal damage, times the combo "
+                f"multiplier, and spends the combo; the time to build it again isn't counted. Wind-up "
+                f"{result.windup:.2f} s (attack speed doesn't change it)."
+                if gun.heavy
+                else ". Damage per second uses the weapon's attack speed; real hits per second depend on the "
+                "stance, so compare builds of this weapon rather than with guns."
+            )
+        )
+    if picked is not None:
+        notes.append(
+            f"Arcane: {picked.name}"
+            + (
+                (" at full stacks." if "tack" in picked.text() or "up to" in picked.text() else ".")
+                if gun.arcane
+                else " is shown but not counted: its effect depends on things the model doesn't track."
+            )
         )
     if stacks and any(p.effect.stacks for p in chosen):
         notes.append("On-kill stacks are counted at their maximum, as in steady fighting.")
@@ -333,6 +405,7 @@ def suggest(
                 "max_rank": p.mod.max_rank,
                 "drain": p.mod.drain(p.rank),
                 "owned": p.owned,
+                "exilus": p is exilus,
                 "why": _why(p),
             }
             for p in ordered
@@ -342,6 +415,19 @@ def suggest(
         "elements": sorted(((k, v) for k, v in result.by_type.items()), key=lambda kv: -kv[1]),
         "upgrade": upgrade,
         "forma": forma,
+        "attack": "heavy" if gun.heavy else "normal",
+        "can_heavy": gun.heavy_mult > 0,
+        "arcane": (
+            {
+                "id": picked.unique_name,
+                "name": picked.name,
+                "text": picked.text(),
+                "counted": bool(gun.arcane),
+            }
+            if picked
+            else None
+        ),
+        "arcane_options": [{"name": a.name, "scored": a.name in WEAPON_SCORED} for a in arcanes],
         "notes": notes,
     }
 
@@ -371,3 +457,38 @@ def _picks_in_element_order(el_picks: list[Pick], t: Totals, order: list[int]) -
                 left.remove(p)
                 break
     return out + left
+
+
+def _arcane_triggers(a, result: Result) -> bool:
+    """Status-triggered arcanes (Primary Blight: Toxin) need that element in the build itself."""
+    el = STATUS_TRIGGERED.get(a.name)
+    return el is None or result.by_type.get(el, 0.0) > 0
+
+
+def _pick_arcane(gun: Gun, arcanes, wanted: str | None, chosen, target, stacks, enemy):
+    """Set ``gun.arcane`` and return the arcane: the one named, or the best scored one."""
+    gun.arcane = {}
+    if wanted == "none" or not arcanes:
+        return None
+    if wanted:
+        for a in arcanes:
+            if a.name == wanted or a.unique_name == wanted:
+                gun.arcane = weapon_effect(a) if a.name in WEAPON_SCORED or weapon_effect(a) else {}
+                if a.name in HEAVY_ONLY and not gun.heavy:
+                    gun.arcane = {}
+                return a
+        return None
+    base = _score(gun, chosen, target, stacks, enemy)[0]
+    best, best_s = None, base * 1.001
+    for a in arcanes:
+        if a.name not in WEAPON_SCORED or (a.name in HEAVY_ONLY and not gun.heavy):
+            continue
+        eff = weapon_effect(a)
+        if not eff:
+            continue
+        gun.arcane = eff
+        sc, r, _ = _score(gun, chosen, target, stacks, enemy)
+        if sc > best_s and _arcane_triggers(a, r):
+            best, best_s = a, sc
+    gun.arcane = weapon_effect(best) if best else {}
+    return best

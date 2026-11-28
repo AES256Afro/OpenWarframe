@@ -15,7 +15,8 @@ Sustained DPS = per shot x fire rate x mag / (fire rate x reload + mag).
 
 Against an enemy (see ``_against``): armor and its stripping by Corrosive and Heat, Viral,
 Cold and the damage over time of Slash, Heat, Toxin, Electricity and Gas.
-Not modelled: shields, headshots and weak points, Riven mods, arcanes, Incarnon forms.
+Melee heavy attacks (``heavy`` in the sums) are judged one attack at a time; see ``evaluate``.
+Not modelled: headshots and weak points, Riven mods, Incarnon forms.
 """
 
 from __future__ import annotations
@@ -79,12 +80,20 @@ NUMERIC = (
     "combo_crit",
     "combo_status",
     "per_status_damage",
+    # heavy attacks: Killing Blow, the doubled part of True Steel, wind-up mods; Melee Doughty
+    "heavy_damage",
+    "heavy_crit_chance",
+    "windup_speed",
+    "heavy_efficiency",
+    "doughty",
     # context set by the search, not by mods: combo multiplier, Gladiator mods equipped,
     # status types other sources keep on the target
     "combo",
     "gladiator",
     "extra_status",
+    "heavy",
 )
+DOUGHTY_CAP = 50.0  # wiki Melee_Doughty: bonus critical multiplier at most +50x
 # how long each status lasts (s), for "how many status types are on the target"
 STATUS_DURATION = {"corrosive": 8.0}
 STATUS_TYPES = (
@@ -194,6 +203,8 @@ class Result:
     time_to_kill: float = 0.0  # seconds for one reference enemy (0: not judged on one)
     effective_dps: float = 0.0  # (shields + health) / time to kill; the score
     status_types: float = 0.0  # status types on the target, for Condition Overload
+    heavy: bool = False  # per-shot and per-second numbers are for one heavy attack
+    windup: float = 0.0  # heavy attack wind-up after mods, seconds
 
     def as_dict(self) -> dict:
         # infinity (nothing gets through) isn't valid JSON: say "unknown" instead
@@ -229,9 +240,14 @@ def evaluate(
     # melee (wiki Blood_Rush, Weeping_Wounds, Gladiator_Set): combo-scaling bonuses add
     # bonus x (combo multiplier - 1) to the crit or status mod total
     steps = max(0.0, s.get("combo", 1.0) - 1)
+    heavy = bool(s.get("heavy")) and gun.heavy_mult > 0
     crit_bonus = (
         s.get("crit_chance", 0.0) + (s.get("combo_crit", 0.0) + 0.10 * s.get("gladiator", 0.0)) * steps
     )
+    if heavy:
+        # wiki Heavy_Attack: Killing Blow joins the base damage bonus; True Steel's "x2 for Heavy
+        # Attacks" and Melee Animosity add to the crit chance bonus
+        crit_bonus += s.get("heavy_crit_chance", 0.0)
     cc = max(0.0, gun.crit_chance * (1 + crit_bonus))
     cd = max(1.0, gun.crit_multiplier * (1 + s.get("crit_damage", 0.0)))
     ms = max(0.0, gun.multishot * (1 + s.get("multishot", 0.0)))
@@ -240,6 +256,16 @@ def evaluate(
     mag = max(1, round(gun.magazine * (1 + s.get("magazine", 0.0))))
     reload = gun.reload / max(0.05, 1 + s.get("reload", 0.0))
     uptime = mag / (fr * reload + mag) if reload > 0 else 1.0
+    if heavy and s.get("heavy_damage"):
+        f = (base_mult + s["heavy_damage"]) / base_mult
+        by_type = {k: v * f for k, v in by_type.items()}
+        base_mult += s["heavy_damage"]
+        per_projectile = sum(v * mods.get(k, 1.0) for k, v in by_type.items())
+    if s.get("doughty"):
+        # Melee Doughty (wiki, 2026-11): +1.0x critical multiplier per 10% Puncture status
+        # chance, rounded to 0.1, at most +50x
+        share = by_type.get("puncture", 0.0) / (sum(by_type.values()) or 1.0)
+        cd += min(DOUGHTY_CAP, round(s["doughty"] * sc * share * 10, 1))
     status_types = 0.0
     if s.get("per_status_damage"):
         # Condition Overload (wiki, 2026-10-12): +x per status type on the target, in the same
@@ -255,12 +281,22 @@ def evaluate(
         by_type = {k: v * factor for k, v in by_type.items()}
         base_mult *= factor
         per_projectile = sum(v * mods.get(k, 1.0) for k, v in by_type.items())
+    windup = 0.0
+    if heavy:
+        # one heavy attack: weapon-type multiplier x combo multiplier (the combo is spent);
+        # its status chance per hit is the weapon's, and it counts as one attack
+        h = gun.heavy_mult * max(1.0, s.get("combo", 1.0))
+        by_type = {k: v * h for k, v in by_type.items()}
+        base_mult *= h
+        per_projectile *= h
+        fr, uptime = 1.0, 1.0
+        windup = gun.windup / max(0.05, 1 + s.get("windup_speed", 0.0))
     per_shot = per_projectile * ms * (1 + cc * (cd - 1)) * bane
     burst = per_shot * fr
     sustained = burst * uptime
     extra = {}
     if enemy is not None:
-        extra = _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy)
+        extra = _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy, heavy)
     else:
         extra = {"direct_dps": sustained, "total_dps": sustained, "effective_dps": sustained}
     return Result(
@@ -270,18 +306,20 @@ def evaluate(
         crit_chance=cc,
         crit_multiplier=cd,
         status_chance=sc,
-        procs_per_second=ms * sc * fr * (mag / (fr * reload + mag) if reload > 0 else 1),
+        procs_per_second=ms * sc * fr * uptime,
         multishot=ms,
         fire_rate=fr,
         magazine=mag,
         reload=reload,
         by_type=by_type,
         status_types=status_types,
+        heavy=heavy,
+        windup=windup,
         **extra,
     )
 
 
-def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy) -> dict:
+def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy, heavy=False) -> dict:
     """Damage to one enemy while firing steadily: armor and its stripping, shields, Viral,
     Magnetic, Cold, and the damage over time of Slash, Heat, Toxin, Electricity and Gas.
 
@@ -293,23 +331,33 @@ def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult,
     the Magnetic bonus; health takes damage reduced by armor and raised by Viral. With health and
     shields set, the score is the time to kill: shields first (Toxin hurts health meanwhile),
     then health.
+
+    ``heavy``: one heavy attack instead of steady fire. Its own procs land after its hit, so the
+    hit meets full armor; the procs (one of each, not stacks built up over time) count for its
+    damage over time. "Per second" numbers are then per heavy attack.
     """
     total = sum(by_type.values()) or 1.0
     procs = ms * sc * fr * uptime
     rate = {k: procs * v / total for k, v in by_type.items()}
-    n_corr = min(10.0, rate.get("corrosive", 0.0) * 8)
-    n_viral = min(10.0, rate.get("viral", 0.0) * 6)
-    n_mag = min(10.0, rate.get("magnetic", 0.0) * 6)
-    n_cold = min(9.0, rate.get("cold", 0.0) * 6)
-    heat_up = 1 - math.exp(-rate.get("heat", 0.0) * 6)
+    # stacks = proc rate x duration; one heavy attack leaves its procs once
+    dur = (lambda d: 1.0) if heavy else (lambda d: d)
+    n_corr = min(10.0, rate.get("corrosive", 0.0) * dur(8))
+    n_viral = min(10.0, rate.get("viral", 0.0) * dur(6))
+    n_mag = min(10.0, rate.get("magnetic", 0.0) * dur(6))
+    n_cold = min(9.0, rate.get("cold", 0.0) * dur(6))
+    heat_up = 1 - math.exp(-rate.get("heat", 0.0) * dur(6))
     corr_strip = 0.26 * n_corr if n_corr < 1 else 0.20 + 0.06 * n_corr
-    armor = 0.0 if enemy.stripped else enemy.armor * (1 - 0.5 * heat_up) * (1 - corr_strip)
+    full_armor = 0.0 if enemy.stripped else enemy.armor
+    armor = full_armor * (1 - 0.5 * heat_up) * (1 - corr_strip)
     dr = armor_reduction(armor)
     viral = 1 + _stack_multiplier(n_viral, 1.0, 0.25)
     magnetic = 1 + _stack_multiplier(n_mag, 1.0, 0.25)
     crit = 1 + cc * (cd + _stack_multiplier(n_cold, 0.10, 0.05) - 1)
+    hit_dr, hit_viral, hit_mag, hit_crit = (
+        (armor_reduction(full_armor), 1.0, 1.0, 1 + cc * (cd - 1)) if heavy else (dr, viral, magnetic, crit)
+    )
     # direct hits per second by type, before armor, Viral or Magnetic
-    hits = {k: v * mods.get(k, 1.0) * ms * crit * bane * fr * uptime for k, v in by_type.items()}
+    hits = {k: v * mods.get(k, 1.0) * ms * hit_crit * bane * fr * uptime for k, v in by_type.items()}
     # damage over time per second by type: modded base x bane twice x that element's mod bonus
     base = gun.total * base_mult * bane
     elem: dict[str, float] = {}
@@ -324,14 +372,14 @@ def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult,
             # Slash bleed is Cinematic damage: no faction modifier, no armor
             dots[k] = r * DOT_TICKS * tick * (1.0 if k == "slash" else mods.get(k, 1.0))
     # to health: armor reduces everything but Slash bleed; Viral raises everything
-    to_health = {k: v * (1 - dr) * viral for k, v in hits.items()}
+    to_health = {k: v * (1 - hit_dr) * hit_viral for k, v in hits.items()}
     for k, v in dots.items():
         to_health[k] = to_health.get(k, 0.0) + v * (1.0 if k == "slash" else 1 - dr) * viral
     health_dps = sum(to_health.values())
-    direct = sum(v * (1 - dr) * viral for v in hits.values())
+    direct = sum(v * (1 - hit_dr) * hit_viral for v in hits.values())
     dot_total = health_dps - direct
     # to shields: everything but Toxin, no armor, Magnetic bonus; Toxin meanwhile hits health
-    shield_dps = sum(v for k, v in hits.items() if k != "toxin") * magnetic
+    shield_dps = sum(v for k, v in hits.items() if k != "toxin") * hit_mag
     shield_dps += sum(v for k, v in dots.items() if k != "toxin") * magnetic
     bypass = to_health.get("toxin", 0.0)
     ttk, effective = 0.0, health_dps

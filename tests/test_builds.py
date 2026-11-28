@@ -501,3 +501,145 @@ def test_page_offers_melee_options():
 
     page = page_source()
     assert 'r.category==="Melee"' in page and 'data-bopt="combo"' in page and "&xstatus=" in page
+
+
+def test_weapon_exilus_slot():
+    def pick(name, utility=False, **stats):
+        m = mods.GunMod(
+            "/M/" + name, name, "Rifle", "PRIMARY", None, 2, 0, "RARE", [[]], exclusive=name, utility=utility
+        )
+        return search.Pick(m, 0, eff(**stats), None)
+
+    general = [pick(f"G{i}", damage=0.1) for i in range(8)]
+    util = pick("Exilus Damage", utility=True, damage=0.05)
+    assert search._slots_ok([*general, util]) and not search._slots_ok([*general, pick("G9", damage=0.1)])
+    g = gun(status_chance=0.5)
+    found = search.search(g, [*general, util], None, False)
+    assert len(found) == 9 and util in found  # the 9th slot takes the exilus-capable mod
+
+
+# -- heavy attacks (wiki Heavy_Attack) and weapon arcanes (wiki Arcane_Enhancement) ----------
+
+
+def test_heavy_attack_mods_parse():
+    e = mods.parse_effect(["+120% Critical Chance (x2 for Heavy Attacks)"])
+    # x2 on heavies: the second half only counts on heavy attacks
+    assert e.stats == {"crit_chance": 1.2, "heavy_crit_chance": 1.2}
+    e = mods.parse_effect(["+120% Melee Damage on Heavy Attack", "+60% Heavy Attack Wind Up Speed"])
+    assert e.stats == {"heavy_damage": 1.2, "windup_speed": 0.6}
+
+
+def test_heavy_attack_damage():
+    g = melee(damage={"slash": 100.0}, crit_chance=0.0, status_chance=0.0, heavy_mult=6.0, windup=1.1)
+    t = damage.add_up([eff(heavy_damage=1.2, windup_speed=0.6), eff(damage=1.0)], stacks=False)
+    t.sums["combo"] = 12
+    normal = damage.evaluate(g, t)
+    assert normal.per_shot == pytest.approx(200) and not normal.heavy  # Killing Blow: heavies only
+    t.sums["heavy"] = 1
+    r = damage.evaluate(g, t)
+    # 100 x (1 + 1.0 + 1.2) x 6 (heavy multiplier) x 12 (combo, spent)
+    assert r.heavy and r.per_shot == pytest.approx(100 * 3.2 * 6 * 12)
+    assert r.windup == pytest.approx(1.1 / 1.6)
+    # True Steel's doubled half and Melee Animosity count on heavies only
+    g.crit_chance = 0.2
+    t = damage.add_up([mods.parse_effect(["+120% Critical Chance (x2 for Heavy Attacks)"])], stacks=False)
+    assert damage.evaluate(g, t).crit_chance == pytest.approx(0.2 * 2.2)
+    t.sums["heavy"] = 1
+    assert damage.evaluate(g, t).crit_chance == pytest.approx(0.2 * 3.4)
+
+
+def test_heavy_hit_meets_full_armor():
+    from openwarframe.builds.enemy import Enemy, armor_reduction
+
+    g = melee(damage={"impact": 100.0}, crit_chance=0.0, status_chance=1.0, heavy_mult=5.0)
+    t = damage.add_up([eff(corrosive=1.0)], stacks=False)
+    t.sums["heavy"] = 1
+    r = damage.evaluate(g, t, enemy=Enemy(None, 1000.0))
+    # its own Corrosive proc lands after the hit
+    assert r.direct_dps == pytest.approx(r.per_shot * (1 - armor_reduction(1000.0)))
+
+
+def test_doughty_adds_to_the_crit_multiplier():
+    g = melee(damage={"puncture": 50.0, "impact": 50.0}, crit_chance=0.2, status_chance=1.0)
+    t = damage.add_up([], stacks=False)
+    t.sums["doughty"] = 1.0
+    # 100% status x 50% Puncture = 50% Puncture status chance: +1.0x per 10% -> +5.0x
+    assert damage.evaluate(g, t).crit_multiplier == pytest.approx(2.0 + 5.0)
+
+
+def test_weapon_arcane_effects():
+    from openwarframe.builds.arcanes import Arcane, weapon_effect
+
+    def a(name, text):
+        return weapon_effect(Arcane("/A/" + name, name, 0, [text]))
+
+    assert a("Primary Merciless", "On Kill:\n+30% Damage for 4s. Stacks up to 12x.") == pytest.approx(
+        {"damage": 3.6}
+    )
+    assert a(
+        "Primary Blight",
+        "On Toxin Status Effect:\n+3.6% Critical Damage and +1.8% Multishot for 12s. Stacks up to 40x.",
+    ) == pytest.approx({"crit_damage": 1.44, "multishot": 0.72})
+    assert a(
+        "Melee Animosity", "+42% Critical Chance on your next Heavy Attack, up to 420%"
+    ) == pytest.approx({"heavy_crit_chance": 4.2})
+
+
+def test_stance_adds_melee_capacity():
+    def pick(slot, drain):
+        m = mods.GunMod("/M/" + str(drain) + slot, f"M{drain}{slot}", "x", slot, None, drain, 0, "RARE", [[]])
+        return search.Pick(m, 0, eff(damage=0.1), None)
+
+    picks = [pick("MELEE", 14) for _ in range(4)] + [pick("MELEE", 15)]  # 71 drain
+    assert search.forma_needed(picks) == 1  # 71 > 60 + 10 (stance): one Forma
+    picks = [pick("MELEE", 14) for _ in range(5)]  # 70
+    assert search.forma_needed(picks) == 0
+    guns = [pick("PRIMARY", 14) for _ in range(5)]
+    assert search.forma_needed(guns) == 2  # 60 without a stance: 70 -> 63 -> 56
+
+
+def test_heavy_suggest_with_arcane(tmp_path: Path):
+    from openwarframe.codex.schema import SCHEMA
+
+    con = sqlite3.connect(tmp_path / "h.sqlite")
+    con.executescript(SCHEMA)
+    w = {"name": "Testblade", "productCategory": "Melee", "damagePerShot": [0, 0, 100] + [0] * 17, "totalDamage": 100,
+         "heavyAttackDamage": 600, "windUp": 1.0, "criticalChance": 0.3, "criticalMultiplier": 2,
+         "procChance": 0.2, "fireRate": 1.0}  # fmt: skip
+    con.execute(
+        "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+        ("/B", "Testblade", "Melee", "Melee", 0, None, None, json.dumps(w)),
+    )
+    con.execute("INSERT INTO weapon_class VALUES ('/B', 'MELEE', NULL, '[]')")
+    for uid, name, line in [
+        ("/M/KB", "Killing Blow", "+120% Melee Damage on Heavy Attack"),
+        ("/M/PP", "Pressure Point", "+120% Melee Damage"),
+    ]:
+        d = {"type": "MELEE", "compatName": "Melee", "baseDrain": 4, "fusionLimit": 0, "rarity": "RARE",
+             "levelStats": [{"stats": [line]}]}  # fmt: skip
+        con.execute(
+            "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+            (uid, name, "Mod", None, None, None, None, json.dumps(d)),
+        )
+    arc = {"levelStats": [{"stats": ["+42% Critical Chance on your next Heavy Attack, up to 420%"]}]}
+    con.execute(
+        "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+        ("/A/An", "Melee Animosity", "Arcane", None, None, None, None, json.dumps(arc)),
+    )
+    b = search.suggest(con, "/B", combo=12, level="none")
+    assert b["attack"] == "normal" and b["can_heavy"] and b["arcane"] is None  # Animosity: heavies only
+    assert {m["name"] for m in b["mods"]} == {"Pressure Point"}  # Killing Blow does nothing here
+    h = search.suggest(con, "/B", combo=12, level="none", attack="heavy")
+    assert h["attack"] == "heavy" and h["arcane"]["name"] == "Melee Animosity" and h["arcane"]["counted"]
+    assert {m["name"] for m in h["mods"]} == {"Pressure Point", "Killing Blow"}
+    assert h["stats"]["crit_chance"] == pytest.approx(0.3 * (1 + 4.2))
+    assert h["stats"]["per_shot"] == pytest.approx(100 * 3.4 * 6 * 12 * (1 + 0.3 * 5.2 * 1))
+    n = search.suggest(con, "/B", combo=12, level="none", attack="heavy", arcane="none")
+    assert n["arcane"] is None and n["arcane_options"] == [{"name": "Melee Animosity", "scored": True}]
+
+
+def test_page_offers_heavy_and_arcane_options():
+    from openwarframe.app.server import page_source
+
+    page = page_source()
+    assert 'data-bopt="attack"' in page and "data-barc" in page and "&arcane=" in page

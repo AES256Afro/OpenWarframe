@@ -3,6 +3,17 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Heavy attacks.** Melee builds have an **Attack** choice: Heavy attack judges one heavy attack
+  at your combo, with the weapon's heavy multiplier from the game data, Killing Blow, True Steel
+  counting twice and the wind-up after mods.
+- **Weapon arcanes.** Gun and melee builds fill the weapon's arcane slot with the best arcane the
+  model can score (Merciless, Blight, Frostbite, Conjunction Voltage, Melee Doughty, Melee
+  Animosity), or the one you pick.
+- **Exilus slot on weapons.** Gun and melee builds get a 9th slot for an exilus-capable mod.
+- **Stance capacity.** Melee builds count 10 more capacity for a stance in a matching slot.
+
 ## 0.21.0
 
 - **Melee builds.** Open a melee weapon and click **Suggest a build**. It uses the same damage,

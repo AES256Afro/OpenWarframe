@@ -86,6 +86,7 @@ NUMERIC = (
     "windup_speed",
     "heavy_efficiency",
     "doughty",
+    "bow_fire_rate",  # "(x2 for Bows)" on fire rate mods: the extra half, bows only
     # context set by the search, not by mods: combo multiplier, Gladiator mods equipped,
     # status types other sources keep on the target
     "combo",
@@ -133,6 +134,7 @@ def add_up(effects: list[ModEffect], *, stacks: bool, fire_rate_locked: bool = F
                 t.bane[f] = t.bane.get(f, 0.0) + v
     if fire_rate_locked:
         t.sums.pop("fire_rate", None)
+        t.sums.pop("bow_fire_rate", None)
     return t
 
 
@@ -252,7 +254,8 @@ def evaluate(
     cd = max(1.0, gun.crit_multiplier * (1 + s.get("crit_damage", 0.0)))
     ms = max(0.0, gun.multishot * (1 + s.get("multishot", 0.0)))
     sc = max(0.0, gun.status_chance * (1 + s.get("status_chance", 0.0) + s.get("combo_status", 0.0) * steps))
-    fr = max(0.05, gun.fire_rate * (1 + s.get("fire_rate", 0.0)))
+    bow = s.get("bow_fire_rate", 0.0) if gun.holster == "BOW" else 0.0
+    fr = max(0.05, gun.fire_rate * (1 + s.get("fire_rate", 0.0) + bow))
     mag = max(1, round(gun.magazine * (1 + s.get("magazine", 0.0))))
     reload = gun.reload / max(0.05, 1 + s.get("reload", 0.0))
     uptime = mag / (fr * reload + mag) if reload > 0 else 1.0
@@ -273,10 +276,14 @@ def evaluate(
         # running), plus those other sources keep there.
         total_dmg = sum(by_type.values()) or 1.0
         procs = ms * sc * fr * uptime
-        status_types = s.get("extra_status", 0.0) + sum(
-            1 - math.exp(-procs * by_type.get(k, 0.0) / total_dmg * STATUS_DURATION.get(k, 6.0))
-            for k in STATUS_TYPES
-        )
+        status_types = min(
+            16.0,
+            s.get("extra_status", 0.0)
+            + sum(
+                1 - math.exp(-procs * by_type.get(k, 0.0) / total_dmg * STATUS_DURATION.get(k, 6.0))
+                for k in STATUS_TYPES
+            ),
+        )  # at most 16 statuses on one enemy
         factor = (base_mult + s["per_status_damage"] * status_types) / base_mult
         by_type = {k: v * factor for k, v in by_type.items()}
         base_mult *= factor

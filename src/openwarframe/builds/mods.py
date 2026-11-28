@@ -53,6 +53,8 @@ SIMPLE = {
     "Critical Chance stacks with Combo Multiplier": "combo_crit",
     "Status Chance per Combo Multiplier": "combo_status",
     "Melee Damage per Status Type affecting the target": "per_status_damage",
+    # Galvanized Aptitude, Savvy, Shot: the same bonus as Condition Overload (wiki, 2026-11-28)
+    "Direct Damage per Status Type affecting the target": "per_status_damage",
     "Multishot": "multishot",
     "Critical Chance": "crit_chance",
     "Critical Damage": "crit_damage",
@@ -66,7 +68,7 @@ SIMPLE = {
     "Heavy Attack Wind Up Speed": "windup_speed",
     "Heavy Attack Efficiency": "heavy_efficiency",
 }
-_HEAVY_X = re.compile(r"\(x(?P<n>\d+(?:\.\d+)?) for Heavy Attacks\)$")
+_ONLY_X = re.compile(r"\(x(?P<n>\d+(?:\.\d+)?) for (?P<what>Heavy Attacks|Bows)\)$")
 _PCT = re.compile(
     r"^(?P<v>[+-]?\d+(?:\.\d+)?)% (?P<what>.+?)(?: \(x(?P<bow>\d+(?:\.\d+)?) for (?:Bows|Heavy Attacks)\))?$"
 )
@@ -137,9 +139,9 @@ def parse_effect(lines: list[str]) -> ModEffect:
             p = parse_line(line)
             if p:
                 out.stats[p[0]] = out.stats.get(p[0], 0.0) + p[1]
-                h = _HEAVY_X.search(line)
-                if h:  # True Steel: "(x2 for Heavy Attacks)" -> the rest of the bonus on heavies
-                    k = f"heavy_{p[0]}"
+                h = _ONLY_X.search(line)
+                if h:  # "(x2 for Heavy Attacks)" / "(x2 for Bows)": the rest of the bonus, there only
+                    k = f"{'heavy' if h['what'] == 'Heavy Attacks' else 'bow'}_{p[0]}"
                     out.stats[k] = out.stats.get(k, 0.0) + p[1] * (float(h["n"]) - 1)
     return out
 

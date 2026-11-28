@@ -68,9 +68,9 @@ def _score(
     t = add_up([p.effect for p in picks], stacks=stacks, fire_rate_locked=locked)
     if gun.slot == "MELEE":
         t.sums["combo"] = gun.combo
-        t.sums["extra_status"] = gun.extra_status
         t.sums["gladiator"] = sum(1 for p in picks if p.mod.name.startswith("Gladiator "))
         t.sums["heavy"] = 1.0 if gun.heavy else 0.0
+    t.sums["extra_status"] = gun.extra_status
     for k, v in gun.arcane.items():  # the weapon arcane: its element goes after the mods'
         if k in ELEMENTS:
             t.elements.append((k, v))
@@ -255,10 +255,12 @@ def suggest(
 ) -> dict:
     """The suggested build for one gun or melee weapon, ready for the app.
 
+    ``extra_status`` counts status types other sources (abilities, your other weapons, the squad)
+    keep on the target, for Condition Overload and the Galvanized mods.
+
     Melee: ``combo`` is the combo multiplier (1 to 12) that Blood Rush, Weeping Wounds and the
-    Gladiator set read; ``extra_status`` counts status types other sources (abilities, your guns,
-    the squad) keep on the target, for Condition Overload. ``attack``: "heavy" judges one heavy
-    attack at that combo instead of normal hits.
+    Gladiator set read; ``attack``: "heavy" judges one heavy attack at that combo instead of
+    normal hits.
 
     ``arcane``: the weapon arcane's name; None picks the best of the ones that can be scored,
     "none" leaves the slot empty.
@@ -267,9 +269,9 @@ def suggest(
     the enemy's armor is already gone (abilities, squad).
     """
     gun = load_gun(conn, uid)
+    gun.extra_status = max(0.0, min(16.0, float(extra_status)))
     if gun.slot == "MELEE":
         gun.combo = max(1.0, min(13.0, float(combo)))
-        gun.extra_status = max(0.0, min(16.0, float(extra_status)))
         gun.heavy = attack == "heavy" and gun.heavy_mult > 0
     mods = load_gun_mods(conn)
     target = None if target in (None, "", "none") else target
@@ -360,6 +362,12 @@ def suggest(
             else "."
         ),
     ]
+    if gun.slot != "MELEE" and any("per_status_damage" in p.effect.stats for p in chosen):
+        notes.append(
+            f"{result.status_types:.1f} status types on the target for the damage per status type"
+            + (f" ({gun.extra_status:g} from other sources)" if gun.extra_status else "")
+            + "."
+        )
     if gun.slot == "MELEE":
         notes.append(
             f"Melee is judged at a {gun.combo:g}x combo multiplier (Blood Rush, Weeping Wounds and the Gladiator "

@@ -53,7 +53,8 @@ def test_conditional_effects_are_kept_apart():
         [
             "+80% Status Chance",
             "On Kill:",
-            "+40% Direct Damage per Status Type affecting the target for 20s. Stacks up to 2x.",
+            "On Kill:",
+            "+40% Weapon Recoil for 20s. Stacks up to 2x.",
         ]
     )
     assert e.stats == {"status_chance": 0.8} and e.stacks == {} and e.conditional
@@ -643,3 +644,29 @@ def test_page_offers_heavy_and_arcane_options():
 
     page = page_source()
     assert 'data-bopt="attack"' in page and "data-barc" in page and "&arcane=" in page
+
+
+def test_bows_get_double_from_bow_fire_rate_mods():
+    e = mods.parse_effect(["+60% Fire Rate (x2 for Bows)"])
+    assert e.stats == {"fire_rate": 0.6, "bow_fire_rate": 0.6}
+    t = damage.add_up([e], stacks=False)
+    assert damage.evaluate(gun(fire_rate=1.0, holster="BOW"), t).fire_rate == pytest.approx(2.2)
+    assert damage.evaluate(gun(fire_rate=1.0, holster="RIFLE"), t).fire_rate == pytest.approx(1.6)
+
+
+def test_galvanized_damage_per_status_type():
+    # wiki Galvanized_Aptitude: +40% per status type per stack, with Serration, like Condition Overload
+    e = mods.parse_effect(
+        [
+            "+80% Status Chance",
+            "On Kill:\n+40% Direct Damage per Status Type affecting the target for 20s. Stacks up to 2x.",
+        ]
+    )
+    assert e.stacks == {"per_status_damage": (0.4, 2)} and e.stats == {"status_chance": 0.8}
+    g = gun(damage={"impact": 100.0}, crit_chance=0.0, status_chance=0.0)
+    t = damage.add_up([e, eff(damage=1.65)], stacks=True)
+    t.sums["extra_status"] = 3
+    # 100 x (1 + 1.65 + 0.8 x 3)
+    assert damage.evaluate(g, t).per_shot == pytest.approx(100 * (1 + 1.65 + 2.4))
+    t.sums["extra_status"] = 40  # no more than 16 statuses on one enemy
+    assert damage.evaluate(g, t).status_types == pytest.approx(16)

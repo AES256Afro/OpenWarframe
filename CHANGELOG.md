@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.20.0
 
 - **Umbral set bonus.** Umbral Intensify, Vitality and Fiber now count with their set bonus
   (Intensify x1.25 / x1.75 with 2 / 3 pieces; Vitality and Fiber x1.30 / x1.80), so builds pick

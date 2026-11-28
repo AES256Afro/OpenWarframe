@@ -21,7 +21,7 @@ from .arcanes import (
 )
 from .damage import Result, Totals, add_up, best_order
 from .enemy import Enemy, enemy_for
-from .mods import ELEMENTS, GunMod, ModEffect, fits, load_gun_mods
+from .mods import ELEMENTS, GunMod, ModEffect, fits, load_gun_mods, riven_mod
 from .weapons import Gun, load_gun
 
 SLOTS = 8  # general slots
@@ -135,37 +135,50 @@ def candidates(gun: Gun, mods: list[GunMod], owned: dict[str, int] | None) -> li
 
 
 def search(
-    gun: Gun, pool: list[Pick], target: str | None, stacks: bool, enemy: Enemy | None = None
+    gun: Gun,
+    pool: list[Pick],
+    target: str | None,
+    stacks: bool,
+    enemy: Enemy | None = None,
+    fixed: tuple[Pick, ...] = (),
 ) -> list[Pick]:
+    """``fixed``: mods that stay in (a Riven); the search fills the other slots around them."""
+    fixed = tuple(fixed)
+    pool = [p for p in pool if not any(clash(p.mod, f.mod) for f in fixed)]
+
+    def score(c: list[Pick]) -> float:
+        return _score(gun, [*fixed, *c], target, stacks, enemy)[0]
+
+    def ok(c: list[Pick]) -> bool:
+        full = [*fixed, *c]
+        return _slots_ok(full) and _fits_capacity(full) and not _clashes(full)
+
     chosen: list[Pick] = []
-    while len(chosen) < SLOTS + EXILUS_SLOTS:
-        base = _score(gun, chosen, target, stacks, enemy)[0] if chosen else 0.0
+    while len(fixed) + len(chosen) < SLOTS + EXILUS_SLOTS:
+        base = score(chosen) if chosen or fixed else 0.0
         best, gain = None, 0.0
         for p in pool:
-            if (
-                any(clash(p.mod, c.mod) for c in chosen)
-                or not _fits_capacity([*chosen, p])
-                or not _slots_ok([*chosen, p])
-            ):
+            if any(clash(p.mod, c.mod) for c in chosen) or not ok([*chosen, p]):
                 continue
-            s = _score(gun, [*chosen, p], target, stacks, enemy)[0]
+            s = score([*chosen, p])
             if s - base > gain + 1e-9:
                 best, gain = p, s - base
         if best is None:
             break
         chosen.append(best)
     elemental = _best_per_element(pool)
+    room = SLOTS + EXILUS_SLOTS - len(fixed)
     improved = True
     while improved:
         improved = False
-        cur = _score(gun, chosen, target, stacks, enemy)[0]
-        for trial in _neighbours(chosen, pool, elemental):
-            if not _slots_ok(trial) or not _fits_capacity(trial) or _clashes(trial):
+        cur = score(chosen)
+        for trial in _neighbours(chosen, pool, elemental, room):
+            if not ok(trial):
                 continue
-            s = _score(gun, trial, target, stacks, enemy)[0]
+            s = score(trial)
             if s > cur * (1 + 1e-6):
                 chosen, cur, improved = trial, s, True
-    return chosen
+    return [*fixed, *chosen]
 
 
 ELEMENT_KEYS = (
@@ -197,13 +210,15 @@ def _clashes(picks: list[Pick]) -> bool:
     return any(clash(a.mod, b.mod) for i, a in enumerate(picks) for b in picks[i + 1 :])
 
 
-def _neighbours(chosen: list[Pick], pool: list[Pick], elemental: list[Pick]):
+def _neighbours(
+    chosen: list[Pick], pool: list[Pick], elemental: list[Pick], slots: int = SLOTS + EXILUS_SLOTS
+):
     """Builds one move away: add or swap one mod, or put in two elemental mods at once.
 
     Two at once matters: a combined element (Corrosive = Toxin + Electricity) only pays off
     when both halves are in, and either half alone can score worse than what it replaces.
     """
-    room = len(chosen) < SLOTS + EXILUS_SLOTS
+    room = len(chosen) < slots
     for p in pool:
         if p in chosen:
             continue
@@ -219,7 +234,7 @@ def _neighbours(chosen: list[Pick], pool: list[Pick], elemental: list[Pick]):
     ]
     n = len(chosen)
     for a, b in pairs:
-        free = SLOTS + EXILUS_SLOTS - n
+        free = slots - n
         if free >= 2:
             yield [*chosen, a, b]
         if free >= 1:
@@ -244,6 +259,8 @@ def _why(p: Pick) -> str:
         body_damage="body shot damage",
         weak_point_damage="weak point damage",
         weak_point_crit="weak point crit chance",
+        heavy_crit_chance="crit chance on heavy attacks",
+        bow_fire_rate="fire rate on bows",
     )
 
     def label(k: str) -> str:
@@ -281,6 +298,8 @@ def suggest(
     attack: str = "normal",
     arcane: str | None = None,
     aim: str = "body",
+    riven: str = "",
+    riven_drain: int = 18,
 ) -> dict:
     """The suggested build for one gun or melee weapon, ready for the app.
 
@@ -297,6 +316,10 @@ def suggest(
     ``arcane``: the weapon arcane's name; None picks the best of the ones that can be scored,
     "none" leaves the slot empty.
 
+    ``riven``: your Riven's stats, one per line as the game shows them on the maxed mod
+    ("+152.3% Critical Chance", "x0.62 Damage to Grineer"); it stays in a slot and the other
+    mods are picked around it. ``riven_drain``: its drain at max rank.
+
     ``level``: none (no armor), normal (level 35) or sp (Steel Path, level 135); ``stripped``:
     the enemy's armor is already gone (abilities, squad).
     """
@@ -310,14 +333,20 @@ def suggest(
     target = None if target in (None, "", "none") else target
     enemy = enemy_for(target, level, stripped)
     pool = candidates(gun, mods, owned)
-    chosen = search(gun, pool, target, stacks, enemy)
+    rv = riven_mod(riven, gun.slot, riven_drain)
+    fixed: tuple[Pick, ...] = ()
+    riven_unused: list[str] = []
+    if rv:
+        rmod, riven_unused = rv
+        fixed = (Pick(rmod, rmod.max_rank, rmod.effect(), True if owned is not None else None),)
+    chosen = search(gun, pool, target, stacks, enemy, fixed)
     arcanes = load_weapon_arcanes(conn, gun.slot, gun.holster)
     picked = _pick_arcane(gun, arcanes, arcane, chosen, target, stacks, enemy, owned)
     if picked and gun.arcane:
-        chosen = search(gun, pool, target, stacks, enemy)  # the arcane can change the best mods
+        chosen = search(gun, pool, target, stacks, enemy, fixed)  # the arcane can change the best mods
         if not _arcane_triggers(picked, _score(gun, chosen, target, stacks, enemy)[1]):
             gun.arcane = {}
-            chosen = search(gun, pool, target, stacks, enemy)
+            chosen = search(gun, pool, target, stacks, enemy, fixed)
             picked = None if arcane is None else picked
     score, result, order = _score(gun, chosen, target, stacks, enemy)
     saved, gun.arcane = gun.arcane, {}
@@ -334,14 +363,14 @@ def suggest(
     upgrade = None
     if owned is not None:
         full = candidates(gun, mods, None)
-        better = search(gun, full, target, stacks, enemy)
+        better = search(gun, full, target, stacks, enemy, fixed)
         gain_best = None
         for p in better:
             if p.mod.unique_name in owned:
                 continue
             # into a free slot, or in place of one of the mods you have
             options = [chosen] if len(chosen) < SLOTS + EXILUS_SLOTS else []
-            options += [chosen[:i] + chosen[i + 1 :] for i in range(len(chosen))]
+            options += [chosen[:i] + chosen[i + 1 :] for i in range(len(chosen)) if chosen[i] not in fixed]
             for rest in options:
                 if (
                     any(clash(p.mod, c.mod) for c in rest)
@@ -386,7 +415,7 @@ def suggest(
     notes = [
         ranked + ".",
         "Not counted: shield regeneration and the Magnetic shield-break burst, weak points other than the head, "
-        "Rivens, Incarnon forms; Heat is counted per proc, though in long fights its stacks keep growing.",
+        "Incarnon forms; Heat is counted per proc, though in long fights its stacks keep growing.",
         f"Mod drain {drain} against {cap} capacity with an Orokin Catalyst"
         + (" and a stance in a matching slot" if gun.slot == "MELEE" else "")
         + (
@@ -427,6 +456,11 @@ def suggest(
             + f", x{result.location_mult:.2f} with headshot mods. Crits on the head get x2 on the crit multiplier"
             " (not on status ticks). Mods and arcanes that work on weak point hits or kills count as active, and "
             "scopes' \"when Aiming\" as met. Area damage can't headshot, so explosive weapons score too high here."
+        )
+    if fixed:
+        notes.append(
+            "Your Riven stays in a slot and the other mods are picked around it"
+            + (f"; not counted: {', '.join(riven_unused)}." if riven_unused else ".")
         )
     if picked is not None:
         notes.append(
@@ -476,6 +510,7 @@ def suggest(
             if picked
             else None
         ),
+        "riven": {"lines": len(fixed[0].mod.ranks[0]), "unused": riven_unused} if fixed else None,
         "arcane_options": [{"name": a.name, "scored": a.name in WEAPON_SCORED} for a in arcanes],
         "notes": notes,
     }

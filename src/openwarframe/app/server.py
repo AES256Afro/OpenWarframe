@@ -423,6 +423,8 @@ class AppState:
         attack: str = "normal",
         arcane: str | None = None,
         aim: str = "body",
+        riven: str = "",
+        riven_drain: int = 18,
     ) -> dict:
         """A suggested mod build for one gun or melee weapon (builds.search)."""
         from ..builds.search import suggest
@@ -452,6 +454,8 @@ class AppState:
                     attack=attack,
                     arcane=arcane or None,
                     aim=aim,
+                    riven=riven,
+                    riven_drain=riven_drain,
                 )
             except NotAGun as exc:
                 return {"error": str(exc)}
@@ -1043,6 +1047,8 @@ def make_handler(state: AppState):
                             attack="heavy" if (q.get("attack") or [""])[0] == "heavy" else "normal",
                             arcane=(q.get("arcane") or [""])[0][:120] or None,
                             aim="head" if (q.get("aim") or [""])[0] == "head" else "body",
+                            riven=(q.get("riven") or [""])[0][:400],
+                            riven_drain=int(_float((q.get("rdrain") or ["18"])[0], 18.0)),
                         )
                     )
                 except Exception as exc:  # noqa: BLE001 - shown in the item details

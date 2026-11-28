@@ -2,10 +2,15 @@
 var BUILD={}, BUILD_OPTS={target:"none", owned:true, stacks:true, level:"sp", stripped:false, combo:"12", xstatus:"0", attack:"normal", aim:"body"};
 // weapon arcane per weapon: "" = the best one that can be scored, "none" = empty slot
 var BUILD_ARC={};
+// your Riven per weapon: its stat lines as the game shows them, and its drain; kept in this browser
+var BUILD_RIVEN={};
+try{ BUILD_RIVEN=JSON.parse(localStorage.getItem("owf-rivens")||"{}")||{}; }catch(e){ BUILD_RIVEN={}; }
+function rivenOf(id){ return BUILD_RIVEN[id]||{text:"",drain:"18"}; }
+function saveRivens(){ try{ localStorage.setItem("owf-rivens",JSON.stringify(BUILD_RIVEN)); }catch(e){} }
 var BUILD_LEVELS=[["none","No armor (damage test)"],["normal","Normal missions"],["sp","Steel Path"]];
 var BUILD_TARGETS=[["none","Any enemy"],["Grineer","Grineer"],["Corpus","Corpus"],["Infested","Infested"],["Orokin","Corrupted (Orokin)"],["Murmur","The Murmur"],["Sentient","Sentient"],["Scaldra","Scaldra"],["Techrot","Techrot"]];
 function isGun(r){ return r.category==="Primary"||r.category==="Secondary"||r.category==="Melee"; }
-function buildKey(id){ return [id,BUILD_OPTS.target,BUILD_OPTS.owned&&DATA.meta.inventory?1:0,BUILD_OPTS.stacks?1:0,BUILD_OPTS.level,BUILD_OPTS.stripped?1:0,BUILD_OPTS.combo,BUILD_OPTS.xstatus,BUILD_OPTS.attack,BUILD_OPTS.aim,BUILD_ARC[id]||""].join("|"); }
+function buildKey(id){ return [id,BUILD_OPTS.target,BUILD_OPTS.owned&&DATA.meta.inventory?1:0,BUILD_OPTS.stacks?1:0,BUILD_OPTS.level,BUILD_OPTS.stripped?1:0,BUILD_OPTS.combo,BUILD_OPTS.xstatus,BUILD_OPTS.attack,BUILD_OPTS.aim,BUILD_ARC[id]||"",rivenOf(id).text,rivenOf(id).drain].join("|"); }
 // arcane choices come with a build; keep the last list per weapon so the select stays up
 var BUILD_ARC_OPTS={};
 function buildPanel(r){
@@ -21,6 +26,8 @@ function buildPanel(r){
     +(r.category==="Melee"?'<label>Combo <select data-bopt="combo">'+[["1","No combo (1x)"],["6","6x"],["12","12x, the cap"]].map(function(c){return '<option value="'+c[0]+'"'+(BUILD_OPTS.combo===c[0]?' selected':'')+'>'+c[1]+'</option>'}).join('')+'</select></label>':'')
       +'<label>Status types from other sources <select data-bopt="xstatus">'+["0","1","2","3","4","5"].map(function(n){return '<option'+(BUILD_OPTS.xstatus===n?' selected':'')+'>'+n+'</option>'}).join('')+'</select></label>'
     +'<label><input type="checkbox" data-bopt="stacks"'+(BUILD_OPTS.stacks?' checked':'')+'> Count on-kill stacks at their maximum</label>'
+    +'<label class="rivenin">Your Riven, one stat per line as shown on the maxed mod <textarea rows="4" data-briven="'+esc(r.id)+'" placeholder="+152.3% Critical Chance&#10;+98.1% Multishot&#10;+120% Toxin&#10;-45% Zoom">'+esc(rivenOf(r.id).text)+'</textarea></label>'
+    +'<label>Riven drain <input type="number" min="8" max="26" step="1" data-brdrain="'+esc(r.id)+'" value="'+esc(rivenOf(r.id).drain)+'"></label>'
     +'<button class="btn" type="button" data-build="'+esc(r.id)+'">'+(BUILD[buildKey(r.id)]?'Build again':'Suggest a build')+'</button></div>';
   h+='<div class="buildout" data-buildout="'+esc(r.id)+'">'+(BUILD[buildKey(r.id)]?buildHtml(BUILD[buildKey(r.id)]):(inv?'':'<p class="muted">Without an inventory the build may use mods you don\'t have; load your inventory to limit it to yours.</p>'))+'</div></div>';
   return h;
@@ -30,7 +37,7 @@ function num(v){ return v>=100?Math.round(v).toLocaleString():(Math.round(v*10)/
 function buildHtml(b){
   if(b.error) return '<p class="muted">'+esc(b.error)+'</p>';
   var s=b.stats, h='';
-  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li>'+(m.exilus?'<span class="pill p-violet">Exilus</span> ':'')+'<b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+(m.owned===false?' · you don\'t have it':'')+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
+  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li>'+(m.exilus?'<span class="pill p-violet">Exilus</span> ':'')+'<b>'+esc(m.name)+'</b> <span class="muted">'+(m.id==="riven"?'yours, drain '+m.drain:'rank '+m.rank+'/'+m.max_rank)+(m.owned===false?' · you don\'t have it':'')+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
   if(b.arcane) h+='<p><span class="pill p-violet">Arcane</span> <b>'+esc(b.arcane.label||b.arcane.name)+'</b>'+(b.arcane.counted?'':' <span class="muted">(not counted)</span>')+'<span class="muted"> · '+esc(b.arcane.text.replace(/\n/g," "))+'</span></p>';
   if(s.heavy){
     if(s.time_to_kill) h+='<div class="buildstats"><span>Heavy attacks to kill <b>'+Math.max(1,Math.ceil(s.time_to_kill-1e-9))+'</b></span></div>';
@@ -60,7 +67,7 @@ function buildHtml(b){
 function runBuild(id){
   var k=buildKey(id);
   [].forEach.call(document.querySelectorAll("[data-buildout]"), function(el){ if(el.getAttribute("data-buildout")===id) el.innerHTML='<p class="muted">Working out the best mods…</p>'; });
-  var q="/api/build?id="+encodeURIComponent(id)+"&target="+encodeURIComponent(BUILD_OPTS.target)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+"&stacks="+(BUILD_OPTS.stacks?1:0)+"&level="+encodeURIComponent(BUILD_OPTS.level)+"&stripped="+(BUILD_OPTS.stripped?1:0)+"&combo="+encodeURIComponent(BUILD_OPTS.combo)+"&xstatus="+encodeURIComponent(BUILD_OPTS.xstatus)+"&attack="+encodeURIComponent(BUILD_OPTS.attack)+"&arcane="+encodeURIComponent(BUILD_ARC[id]||"")+"&aim="+encodeURIComponent(BUILD_OPTS.aim);
+  var q="/api/build?id="+encodeURIComponent(id)+"&target="+encodeURIComponent(BUILD_OPTS.target)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+"&stacks="+(BUILD_OPTS.stacks?1:0)+"&level="+encodeURIComponent(BUILD_OPTS.level)+"&stripped="+(BUILD_OPTS.stripped?1:0)+"&combo="+encodeURIComponent(BUILD_OPTS.combo)+"&xstatus="+encodeURIComponent(BUILD_OPTS.xstatus)+"&attack="+encodeURIComponent(BUILD_OPTS.attack)+"&arcane="+encodeURIComponent(BUILD_ARC[id]||"")+"&aim="+encodeURIComponent(BUILD_OPTS.aim)+"&riven="+encodeURIComponent(rivenOf(id).text)+"&rdrain="+encodeURIComponent(rivenOf(id).drain);
   api(q).then(function(b){ BUILD[k]=b; if(b.arcane_options) BUILD_ARC_OPTS[id]=b.arcane_options; redrawTable(); }).catch(function(){ BUILD[k]={error:"Could not work that out. Is OpenWarframe still running?"}; redrawTable(); });
 }
 function onBuildEvent(e){
@@ -69,10 +76,14 @@ function onBuildEvent(e){
   if(opt && e.type==="change"){ var k=opt.dataset.bopt; BUILD_OPTS[k]=opt.type==="checkbox"?opt.checked:opt.value; return; }
   var arc=t.closest("[data-barc]");
   if(arc && e.type==="change"){ BUILD_ARC[arc.dataset.barc]=arc.value; return; }
+  var rv=t.closest("[data-briven]"), rd=t.closest("[data-brdrain]");
+  if((rv||rd) && (e.type==="change"||e.type==="input")){ var rid=(rv||rd).getAttribute(rv?"data-briven":"data-brdrain"), cur=rivenOf(rid);
+    BUILD_RIVEN[rid]={text:rv?rv.value:cur.text, drain:rd?rd.value:cur.drain}; if(!BUILD_RIVEN[rid].text.trim()) delete BUILD_RIVEN[rid]; saveRivens(); return; }
   var b=t.closest("[data-build]"); if(b && e.type==="click"){ e.stopPropagation(); runBuild(b.dataset.build); }
 }
 $("view").addEventListener("click", onBuildEvent, true);
 $("view").addEventListener("change", onBuildEvent);
+$("view").addEventListener("input", onBuildEvent);
 // ---- Warframe builds: balance the stats the abilities you use scale with -----------------------
 var FBUILD={}, FOPTS={surv:"some", abilities:{}, augments:{}, shards:"none", arcanes:{}};
 function isFrame(r){ return r.category==="Warframe"; }

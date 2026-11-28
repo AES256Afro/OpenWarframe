@@ -770,3 +770,61 @@ def test_page_offers_aim():
 
     page = page_source()
     assert 'data-bopt="aim"' in page and "&aim=" in page
+
+
+# -- Rivens (wiki Riven_Mods, Faction_Damage_Bonus, read 2026-11-28) ----------------------------
+
+
+@pytest.mark.parametrize(
+    "line, want",
+    [
+        ("+152.3% Critical Chance", ("crit_chance", 1.523)),
+        ("120% Toxin", ("toxin", 1.2)),
+        ("+60% Impact", ("impact", 0.6)),
+        ("-30% Multishot", ("multishot", -0.3)),
+        ("+40% Weakpoint Damage", ("weak_point_damage", 0.4)),
+        ("+90% Rate of Fire", ("fire_rate", 0.9)),
+        ("x0.62 Damage to Grineer", ("bane:Grineer", -0.38)),
+        ("+45% Damage to Corpus", ("bane:Corpus", 0.45)),
+        ("1.45x Damage to Corpus", ("bane:Corpus", 0.45)),
+        ("-45% Zoom", None),
+    ],
+)
+def test_riven_lines(line, want):
+    got = mods.parse_line(mods.riven_line(line))
+    assert got == want if want is None else (got[0], pytest.approx(got[1])) == want
+
+
+def test_riven_mod():
+    assert mods.riven_mod("  \n", "PRIMARY") is None
+    m, unused = mods.riven_mod(
+        "+200% Critical Chance (x2 for Heavy Attacks)\n+130% Melee Damage\n-30% Range", "MELEE"
+    )
+    assert m.effect().stats == {"crit_chance": 2.0, "heavy_crit_chance": 2.0, "damage": 1.3}
+    assert unused == ["-30% Range"] and m.drain(m.max_rank) == 18 and not m.utility
+    assert mods.riven_mod("+1% Damage", "PRIMARY", drain=15)[0].drain(8) == 15
+
+
+def test_riven_stays_in_the_build(tmp_path: Path):
+    con = _db(tmp_path)
+    b = search.suggest(con, "/G", target="Grineer", riven="+100% Damage\n+50% Multishot\n-20% Zoom")
+    names = [m["name"] for m in b["mods"]]
+    assert "Riven Mod" in names and b["riven"] == {"lines": 3, "unused": ["-20% Zoom"]}
+    riven = next(m for m in b["mods"] if m["name"] == "Riven Mod")
+    assert riven["drain"] == 18 and riven["why"] == "+100% damage, +50% multishot"
+    # the Riven's damage adds to Serration's: 100 x (1 + 1.65 + 1) x (1 + 0.9 + 0.5) x 1.2 x 1.5 x 1.55
+    assert b["stats"]["per_shot"] == pytest.approx(100 * 3.65 * 2.4 * 1.2 * 1.5 * 1.55)
+    assert any("Riven stays" in n and "-20% Zoom" in n for n in b["notes"])
+    # a Riven worse than nothing still stays (it's yours, you asked for it)
+    b = search.suggest(con, "/G", target="Grineer", riven="-50% Damage")
+    assert "Riven Mod" in [m["name"] for m in b["mods"]]
+    # a faction stat adds to Bane: x(1 + 0.55 - 0.38)
+    b = search.suggest(con, "/G", target="Grineer", riven="x0.62 Damage to Grineer")
+    assert b["stats"]["per_shot"] == pytest.approx(100 * 2.65 * 1.9 * 1.2 * 1.5 * 1.17)
+
+
+def test_page_offers_riven_input():
+    from openwarframe.app.server import page_source
+
+    page = page_source()
+    assert "data-briven=" in page and "&riven=" in page and "owf-rivens" in page

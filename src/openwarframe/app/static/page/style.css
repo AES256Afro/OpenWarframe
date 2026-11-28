@@ -174,6 +174,9 @@ body.big-text .tab .n, body.big-text .brand span{display:none}
 .buildbox{margin-top:12px; border-top:1px solid var(--line); padding-top:10px}
 .buildbox h3{margin:0 0 8px; font-size:14px}
 .buildopts{display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; font-size:13px}
+.buildopts .rivenin{display:flex; flex-direction:column; gap:4px; flex-basis:100%}
+.buildopts .rivenin textarea{width:100%; max-width:420px; font:inherit; background:var(--bg); color:inherit; border:1px solid var(--line); border-radius:6px; padding:6px}
+.buildopts input[type=number]{width:4em}
 .buildmods{margin:10px 0; padding-left:1.4em; display:grid; gap:4px; font-size:13px}
 .buildstats{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px}
 .buildnotes{font-size:12px; margin:6px 0 0; padding-left:1.2em}

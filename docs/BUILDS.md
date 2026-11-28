@@ -121,6 +121,26 @@ Fire rate mods marked "(x2 for Bows)" (Speed Trigger, Vile Acceleration, Critica
 others) give bows twice their bonus or penalty (wiki Speed_Trigger). Bows are the weapons the game
 data puts in the bow class.
 
+## Rivens
+
+A Riven's stats are random, so the build can't choose one for you. Type your Riven's stats
+into the build panel, one per line as the maxed mod shows them in the game
+(`+152.3% Critical Chance`, `+120% Toxin`, `x0.62 Damage to Grineer`), and its drain. The
+Riven takes one of the 8 general slots, and the search fills the other slots around it. The page
+keeps what you typed for each weapon in this browser.
+
+- Since the disposition change, every weapon uses the same 1.2x multiplier, so the numbers on a
+  maxed Riven are its final values. A Riven has 2 or 3 positive stats and at most 1 negative
+  (wiki Riven_Mods, edited 2026-11-24).
+- Stats count like the same stat on any other mod: "Damage" adds to Serration, an element joins
+  the elemental order, and "(x2 for Heavy Attacks)" or "(x2 for Bows)" works as it does on other
+  mods. A faction stat (`x1.45` or `+45% Damage to Corpus`) adds to Bane and Smite mods, the same
+  as other faction bonuses (wiki Faction_Damage_Bonus).
+- Stats the damage model doesn't use (zoom, recoil, range, punch through, combo duration...) are
+  listed in the notes as not counted.
+- The wiki doesn't give a Riven's drain, so the field defaults to 18. Enter the number on your
+  mod.
+
 ## Not counted yet
 
 - Shield regeneration between bursts, the Magnetic shield-break burst, overguard, and the
@@ -130,7 +150,7 @@ data puts in the bow class.
 - Heat's growing stacks in long fights (each Heat proc refreshes them all; counted per proc).
   The reference kills take 1 to 3 seconds, and the growth only shows after about 6, so it's left
   out. Heat's 2-second ramp, Electricity and Gas hitting nearby enemies, Blast and Puncture effects.
-- Weak points other than the head (Acuity's bonus is 1.0x there, not 1.5x), Riven mods, Incarnon forms.
+- Weak points other than the head (Acuity's bonus is 1.0x there, not 1.5x), Incarnon forms.
 - Charge and burst timing.
 - Archguns and companion weapons.
 

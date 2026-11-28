@@ -20,6 +20,8 @@ SLOTS = 8
 CAPACITY = 60  # with an Orokin Catalyst / Orokin Reactor equivalent
 # pairs the game won't equip together beyond "same mod, other variant" (wiki infoboxes)
 CONFLICTS = {
+    frozenset(("Berserker Fury", "Fury")),
+    frozenset(("Berserker Fury", "Primed Fury")),
     frozenset(("Galvanized Chamber", "Split Chamber")),
     frozenset(("Galvanized Chamber", "Split Flights")),
     frozenset(("Split Chamber", "Split Flights")),
@@ -53,6 +55,10 @@ def _score(
 ) -> tuple[float, Result, list[int]]:
     locked = any(p.mod.locks_fire_rate for p in picks)
     t = add_up([p.effect for p in picks], stacks=stacks, fire_rate_locked=locked)
+    if gun.slot == "MELEE":
+        t.sums["combo"] = gun.combo
+        t.sums["extra_status"] = gun.extra_status
+        t.sums["gladiator"] = sum(1 for p in picks if p.mod.name.startswith("Gladiator "))
     r, order = best_order(gun, t, target, enemy)
     return r.effective_dps, r, order
 
@@ -191,16 +197,23 @@ def _neighbours(chosen: list[Pick], pool: list[Pick], elemental: list[Pick]):
 
 
 def _why(p: Pick) -> str:
+    melee = p.mod.slot == "MELEE"
+    labels = {
+        "fire_rate": "attack speed" if melee else "fire rate",
+        "combo_crit": "crit chance per combo multiplier",
+        "combo_status": "status chance per combo multiplier",
+        "per_status_damage": "damage per status type on the target",
+    }
     bits = []
     for k, v in p.effect.stats.items():
-        label = k.split(":", 1)[1] + " damage" if k.startswith("bane:") else k.replace("_", " ")
-        bits.append(
-            f"{'+' if v >= 0 else ''}{round(v * 100)}% {label}"
-            if not k.startswith("bane:")
-            else f"x{1 + v:.2f} {label}"
-        )
+        if k.startswith("bane:"):
+            bits.append(f"x{1 + v:.2f} {k.split(':', 1)[1]} damage")
+        else:
+            bits.append(f"{'+' if v >= 0 else ''}{round(v * 100)}% {labels.get(k, k.replace('_', ' '))}")
     for k, (per, n) in p.effect.stacks.items():
-        bits.append(f"+{round(per * 100)}% {k.replace('_', ' ')} per on-kill stack (up to {n})")
+        bits.append(
+            f"+{round(per * 100)}% {labels.get(k, k.replace('_', ' '))} per on-kill stack (up to {n})"
+        )
     return ", ".join(bits)
 
 
@@ -213,13 +226,22 @@ def suggest(
     stacks: bool = True,
     level: str = "sp",
     stripped: bool = False,
+    combo: float = 12.0,
+    extra_status: float = 0.0,
 ) -> dict:
-    """The suggested build for one gun, ready for the app.
+    """The suggested build for one gun or melee weapon, ready for the app.
+
+    Melee: ``combo`` is the combo multiplier (1 to 12) that Blood Rush, Weeping Wounds and the
+    Gladiator set read; ``extra_status`` counts status types other sources (abilities, your guns,
+    the squad) keep on the target, for Condition Overload.
 
     ``level``: none (no armor), normal (level 35) or sp (Steel Path, level 135); ``stripped``:
     the enemy's armor is already gone (abilities, squad).
     """
     gun = load_gun(conn, uid)
+    if gun.slot == "MELEE":
+        gun.combo = max(1.0, min(13.0, float(combo)))
+        gun.extra_status = max(0.0, min(16.0, float(extra_status)))
     mods = load_gun_mods(conn)
     target = None if target in (None, "", "none") else target
     enemy = enemy_for(target, level, stripped)
@@ -280,6 +302,20 @@ def suggest(
             else "."
         ),
     ]
+    if gun.slot == "MELEE":
+        notes.append(
+            f"Melee is judged at a {gun.combo:g}x combo multiplier (Blood Rush, Weeping Wounds and the Gladiator "
+            f"set read it; it doesn't raise normal attack damage)"
+            + (
+                f", with {result.status_types:.1f} status types on the target for Condition Overload"
+                + (f" ({gun.extra_status:g} from other sources)" if gun.extra_status else "")
+                if any("per_status_damage" in p.effect.stats for p in chosen)
+                else ""
+            )
+            + ". Damage per second uses the weapon's attack speed; real hits per second depend on the stance, "
+            "so compare builds of this weapon rather than with guns. Heavy attacks, the stance slot's extra "
+            "capacity and the Exilus slot aren't counted."
+        )
     if stacks and any(p.effect.stacks for p in chosen):
         notes.append("On-kill stacks are counted at their maximum, as in steady fighting.")
     cond = sorted({c for p in chosen for c in p.effect.conditional})
@@ -287,6 +323,7 @@ def suggest(
         notes.append("Not counted: " + "; ".join(cond[:4]) + ("…" if len(cond) > 4 else ""))
     return {
         "weapon": gun.name,
+        "slot": gun.slot,
         "target": target,
         "mods": [
             {

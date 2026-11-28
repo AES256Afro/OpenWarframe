@@ -104,6 +104,28 @@ The app shows per-shot damage, sustained DPS, crit, status, multishot and fire r
 mods on the weapon in the game's Arsenal and compare the numbers there; differences point at
 something the model doesn't cover. Reports with the weapon and mods are welcome.
 
+## Melee builds
+
+Open a melee weapon and click **Suggest a build**. Melee uses the same damage, armor, shield and
+status model as guns (no multishot, no reload), plus (wiki pages read 2026-11-27):
+
+| Rule | Source |
+| --- | --- |
+| The combo multiplier is 1x below 20 hits, then +1x per 20 hits up to 12x; it doesn't raise normal attack damage | Melee_Combo (2026-10-28) |
+| Blood Rush: crit chance = base x (1 + crit mods + 0.40 x (combo - 1)); Weeping Wounds the same for status | Blood_Rush (2026-08-24), Weeping_Wounds (2026-05-14) |
+| Gladiator set: +10% crit per set mod per combo step, alongside Blood Rush | Gladiator_Set (2026-01-16) |
+| Condition Overload: +80% per status type on the target (any source), in the same bonus as Pressure Point | Condition_Overload (2026-10-12) |
+| Attack speed bonuses add together; Berserker Fury can't be used with Fury or Primed Fury | Attack_Speed (2026-11-11), Berserker_Fury |
+
+Choices in the app: **Combo** (none, 6x, 12x) and **Status types from other sources** (what your
+abilities, guns or squad keep on the target, for Condition Overload). The weapon's own statuses
+count as the chance that at least one proc of each type is still running.
+
+Damage per second uses the attack speed from the game data; real hits per second depend on the
+stance, so compare builds of one weapon rather than melee with guns. Not counted yet: heavy
+attacks, slams, follow-through, the stance slot's extra capacity, the Exilus slot and melee
+arcanes.
+
 ## Warframe builds
 
 Open a Warframe and click **Suggest a build**. A frame's abilities don't share one formula, so

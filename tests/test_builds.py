@@ -391,3 +391,113 @@ def test_corpus_search_is_optimal(tmp_path: Path):
     best = max(search._score(g, list(c), "Corpus", False, enemy)[0] for c in combinations(pool, 8))
     assert score == pytest.approx(best)
     assert "viral" in result.by_type and 0 < result.time_to_kill < float("inf")
+
+
+# -- melee (wiki Melee_Combo, Blood_Rush, Weeping_Wounds, Condition_Overload, Gladiator_Set) --
+
+
+def melee(**kw):
+    g = gun(slot="MELEE", holster="MELEE", magazine=1, reload=0.0, fire_rate=1.0, **kw)
+    return g
+
+
+def test_melee_mods_parse():
+    assert mods.parse_line("+40% Critical Chance stacks with Combo Multiplier") == ("combo_crit", 0.4)
+    assert mods.parse_line("+40% Status Chance per Combo Multiplier") == ("combo_status", 0.4)
+    assert mods.parse_line("+80% Melee Damage per Status Type affecting the target") == (
+        "per_status_damage",
+        0.8,
+    )
+    assert mods.parse_line("+120% Melee Damage") == ("damage", 1.2)
+    assert mods.parse_line("+220% Critical Chance (x2 for Heavy Attacks)") == ("crit_chance", 2.2)
+    assert mods.parse_line("x1.33 Damage to Sentients")[0] == "bane:Sentient"
+
+
+def test_combo_scaling_mods():
+    g = melee(crit_chance=0.2, status_chance=0.2)
+    t = damage.add_up([eff(combo_crit=0.4), eff(combo_status=0.4)], stacks=False)
+    t.sums["combo"] = 12
+    r = damage.evaluate(g, t)
+    # crit: 0.2 x (1 + 0.4 x 11) = 1.08; status the same
+    assert r.crit_chance == pytest.approx(1.08) and r.status_chance == pytest.approx(1.08)
+    t.sums["combo"] = 1
+    assert damage.evaluate(g, t).crit_chance == pytest.approx(0.2)  # no combo, no bonus
+    # Gladiator set: +10% per set mod per combo step, with Blood Rush
+    t = damage.add_up([eff(combo_crit=0.4)], stacks=False)
+    t.sums.update(combo=12, gladiator=2)
+    assert damage.evaluate(g, t).crit_chance == pytest.approx(0.2 * (1 + (0.4 + 0.2) * 11))
+    # the combo never raises a normal hit's damage
+    plain = damage.evaluate(g, damage.add_up([], stacks=False))
+    t = damage.add_up([], stacks=False)
+    t.sums["combo"] = 12
+    assert damage.evaluate(g, t).per_shot == pytest.approx(plain.per_shot)
+
+
+def test_condition_overload_counts_status_types():
+    g = melee(damage={"impact": 100.0}, crit_chance=0.0, status_chance=0.0)
+    t = damage.add_up([eff(damage=1.2), eff(per_status_damage=0.8)], stacks=False)
+    t.sums["extra_status"] = 3  # three types kept up by abilities
+    r = damage.evaluate(g, t)
+    # 100 x (1 + 1.2 + 0.8 x 3): the same bonus as Pressure Point
+    assert r.status_types == pytest.approx(3) and r.per_shot == pytest.approx(100 * (1 + 1.2 + 2.4))
+    g.status_chance = 1.0  # impact procs every hit, 1 hit/s for 6 s: impact is (almost surely) up
+    r = damage.evaluate(g, t)
+    assert 3.99 < r.status_types <= 4.0
+
+
+def test_berserker_fury_clashes_with_fury():
+    def m(name):
+        return mods.GunMod(
+            "/M/" + name, name, "Melee", "MELEE", None, 4, 5, "RARE", [[]], exclusive=mods.exclusive_key(name)
+        )
+
+    assert search.clash(m("Berserker Fury"), m("Primed Fury")) and search.clash(
+        m("Berserker Fury"), m("Fury")
+    )
+    assert mods.fits(m("Pressure Point"), mods.WeaponClass("MELEE", "MELEE", None, "Galatine Prime"))
+    assert not mods.fits(m("Pressure Point"), mods.WeaponClass("PRIMARY", "RIFLE", None, "Braton"))
+
+
+def test_melee_suggest(tmp_path: Path):
+    from openwarframe.codex.schema import SCHEMA
+
+    con = sqlite3.connect(tmp_path / "m.sqlite")
+    con.executescript(SCHEMA)
+    w = {"name": "Testsword", "productCategory": "Melee", "damagePerShot": [0, 0, 100] + [0] * 17,
+         "criticalChance": 0.25, "criticalMultiplier": 2, "procChance": 0.25, "fireRate": 1.0}  # fmt: skip
+    con.execute(
+        "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+        ("/S", "Testsword", "Melee", "Melee", 0, None, None, json.dumps(w)),
+    )
+    con.execute("INSERT INTO weapon_class VALUES ('/S', 'MELEE', NULL, '[]')")
+
+    def add(uid, name, line):
+        d = {
+            "type": "MELEE",
+            "compatName": "Melee",
+            "baseDrain": 4,
+            "fusionLimit": 0,
+            "rarity": "RARE",
+            "levelStats": [{"stats": [line]}],
+        }
+        con.execute(
+            "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+            (uid, name, "Mod", None, None, None, None, json.dumps(d)),
+        )
+
+    add("/M/BR", "Blood Rush", "+40% Critical Chance stacks with Combo Multiplier")
+    add("/M/TS", "True Steel", "+120% Critical Chance (x2 for Heavy Attacks)")
+    add("/M/PP", "Pressure Point", "+120% Melee Damage")
+    b = search.suggest(con, "/S", combo=12, level="none")
+    assert {m["name"] for m in b["mods"]} == {"Blood Rush", "True Steel", "Pressure Point"}
+    assert b["stats"]["crit_chance"] == pytest.approx(0.25 * (1 + 1.2 + 0.4 * 11))
+    assert any("12x combo" in n for n in b["notes"])
+    b1 = search.suggest(con, "/S", combo=1, level="none")
+    assert b1["stats"]["crit_chance"] == pytest.approx(0.25 * 2.2)
+
+
+def test_page_offers_melee_options():
+    from openwarframe.app.server import page_source
+
+    page = page_source()
+    assert 'r.category==="Melee"' in page and 'data-bopt="combo"' in page and "&xstatus=" in page

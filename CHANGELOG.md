@@ -3,6 +3,14 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Melee builds.** Open a melee weapon and click **Suggest a build**. It uses the same damage,
+  armor, shield and status model as guns, plus the combo multiplier (Blood Rush, Weeping Wounds,
+  the Gladiator set), Condition Overload (counting your weapon's statuses and any you say other
+  sources keep on the target) and attack speed. Pick the combo you fight at (none, 6x, 12x).
+  Against armored Steel Path enemies Slash bleeds carry most of the damage, since they ignore armor.
+
 ## 0.20.0
 
 - **Umbral set bonus.** Umbral Intensify, Vitality and Fiber now count with their set bonus

@@ -95,6 +95,26 @@ The weapon's own statuses count as the chance that at least one proc of each typ
 running; **Status types from other sources** adds the ones your abilities, other weapons or squad
 keep up. At most 16 statuses fit on one enemy.
 
+## Headshots
+
+Set **Aim** to **Headshots** to land every hit on the head (wiki Enemy_Body_Parts, Critical_Hit,
+Target_Acquired, Primary_Acuity, Meticulous_Aim, read 2026-11-28):
+
+| Rule | Source |
+| --- | --- |
+| Heads take x3 on Grineer, Corpus, Infested and Sentients; x1.5 on the Murmur and Techrot | Enemy_Body_Parts |
+| A crit on the head gets x2 on the crit multiplier: 1 + CC x (2 x CD - 1) on average. Corpus humanoids and most Murmur and Techrot don't get it | Critical_Hit, Enemy_Body_Parts |
+| Headshot bonuses (Target Acquired, Meticulous Aim, Deadhead) add together and multiply the head multiplier | Target_Acquired, Meticulous_Aim |
+| Acuity adds 1.5 x its weak point damage to a head's multiplier, adds its crit chance to Point Strike's, and locks multishot | Primary_Acuity |
+| Meticulous Aim's penalty applies to body shots | Meticulous_Aim |
+| Status ticks from a headshot get the head multiplier | Damage/Calculation |
+
+Mods and arcanes that work "On Weak Point Hit" or "On Weak Point Kill" (Argon Scope, Galvanized
+Scope, Primary and Secondary Deadhead, Primary Crux) count as active with headshots, scopes'
+"when Aiming" as met; with body shots they do nothing. The wiki doesn't say whether the crit
+headshot bonus reaches status ticks, so it isn't applied to them. Area damage can't headshot, so
+explosive weapons score too high with headshots on.
+
 ## Bows
 
 Fire rate mods marked "(x2 for Bows)" (Speed Trigger, Vile Acceleration, Critical Delay and
@@ -110,7 +130,7 @@ data puts in the bow class.
 - Heat's growing stacks in long fights (each Heat proc refreshes them all; counted per proc).
   The reference kills take 1 to 3 seconds, and the growth only shows after about 6, so it's left
   out. Heat's 2-second ramp, Electricity and Gas hitting nearby enemies, Blast and Puncture effects.
-- Headshots and weak points, Riven mods, Incarnon forms.
+- Weak points other than the head (Acuity's bonus is 1.0x there, not 1.5x), Riven mods, Incarnon forms.
 - Charge and burst timing.
 - Archguns and companion weapons.
 

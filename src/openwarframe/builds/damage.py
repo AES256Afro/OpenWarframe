@@ -86,7 +86,17 @@ NUMERIC = (
     "windup_speed",
     "heavy_efficiency",
     "doughty",
-    "bow_fire_rate",  # "(x2 for Bows)" on fire rate mods: the extra half, bows only
+    "bow_fire_rate",
+    # headshots and weak points: Target Acquired / Meticulous Aim / Deadhead, Meticulous Aim's
+    # body penalty, Acuity; context: aiming at heads, the head's multiplier and crit bonus
+    "headshot_bonus",
+    "body_damage",
+    "weak_point_damage",
+    "weak_point_crit",
+    "lock_multishot",
+    "headshot",
+    "head_mult",
+    "headcrit",  # "(x2 for Bows)" on fire rate mods: the extra half, bows only
     # context set by the search, not by mods: combo multiplier, Gladiator mods equipped,
     # status types other sources keep on the target
     "combo",
@@ -112,6 +122,7 @@ class Totals:
     elements: list[tuple[str, float]] = field(default_factory=list)  # (element, %) in slot order
     physical: dict[str, float] = field(default_factory=dict)
     bane: dict[str, float] = field(default_factory=dict)
+    head: dict[str, float] = field(default_factory=dict)  # counted only when aiming at heads
 
 
 def add_up(effects: list[ModEffect], *, stacks: bool, fire_rate_locked: bool = False) -> Totals:
@@ -123,7 +134,10 @@ def add_up(effects: list[ModEffect], *, stacks: bool, fire_rate_locked: bool = F
             for k, (per, n) in e.stacks.items():
                 stats[k] = stats.get(k, 0.0) + per * n
         for k, v in stats.items():
-            if k in NUMERIC:
+            if k.startswith("head:"):
+                k2 = k.split(":", 1)[1]
+                t.head[k2] = t.head.get(k2, 0.0) + v
+            elif k in NUMERIC:
                 t.sums[k] = t.sums.get(k, 0.0) + v
             elif k in ELEMENTS:
                 t.elements.append((k, v))
@@ -207,6 +221,8 @@ class Result:
     status_types: float = 0.0  # status types on the target, for Condition Overload
     heavy: bool = False  # per-shot and per-second numbers are for one heavy attack
     windup: float = 0.0  # heavy attack wind-up after mods, seconds
+    headshot: bool = False  # every hit lands on the head
+    location_mult: float = 1.0  # head multiplier with bonuses, or the body multiplier
 
     def as_dict(self) -> dict:
         # infinity (nothing gets through) isn't valid JSON: say "unknown" instead
@@ -224,7 +240,7 @@ def evaluate(
     enemy: Enemy | None = None,
 ) -> Result:
     if element_order is not None:
-        t = Totals(t.sums, [t.elements[i] for i in element_order], t.physical, t.bane)
+        t = Totals(t.sums, [t.elements[i] for i in element_order], t.physical, t.bane, t.head)
     s = t.sums
     base_mult = 1 + s.get("damage", 0.0)
     by_type: dict[str, float] = {}
@@ -246,13 +262,17 @@ def evaluate(
     crit_bonus = (
         s.get("crit_chance", 0.0) + (s.get("combo_crit", 0.0) + 0.10 * s.get("gladiator", 0.0)) * steps
     )
+    head = bool(s.get("headshot"))
+    if head:
+        crit_bonus += s.get("weak_point_crit", 0.0)  # Acuity: with Point Strike (wiki)
     if heavy:
         # wiki Heavy_Attack: Killing Blow joins the base damage bonus; True Steel's "x2 for Heavy
         # Attacks" and Melee Animosity add to the crit chance bonus
         crit_bonus += s.get("heavy_crit_chance", 0.0)
     cc = max(0.0, gun.crit_chance * (1 + crit_bonus))
     cd = max(1.0, gun.crit_multiplier * (1 + s.get("crit_damage", 0.0)))
-    ms = max(0.0, gun.multishot * (1 + s.get("multishot", 0.0)))
+    # Acuity: "Multishot cannot be modified"
+    ms = gun.multishot if s.get("lock_multishot") else max(0.0, gun.multishot * (1 + s.get("multishot", 0.0)))
     sc = max(0.0, gun.status_chance * (1 + s.get("status_chance", 0.0) + s.get("combo_status", 0.0) * steps))
     bow = s.get("bow_fire_rate", 0.0) if gun.holster == "BOW" else 0.0
     fr = max(0.05, gun.fire_rate * (1 + s.get("fire_rate", 0.0) + bow))
@@ -298,12 +318,24 @@ def evaluate(
         per_projectile *= h
         fr, uptime = 1.0, 1.0
         windup = gun.windup / max(0.05, 1 + s.get("windup_speed", 0.0))
-    per_shot = per_projectile * ms * (1 + cc * (cd - 1)) * bane
+    # where the hit lands (wiki Enemy_Body_Parts, Critical_Hit, read 2026-11-28): a head takes
+    # (head multiplier + 1.5 x Acuity's weak point damage) x (1 + headshot bonuses), and a crit
+    # there gets x2 on top of the crit multiplier; Meticulous Aim's penalty hits the body
+    if head:
+        loc = (s.get("head_mult", 3.0) + 1.5 * s.get("weak_point_damage", 0.0)) * (
+            1 + s.get("headshot_bonus", 0.0)
+        )
+    else:
+        loc = max(0.0, 1 + s.get("body_damage", 0.0))
+    headcrit = head and bool(s.get("headcrit", 1.0))
+    per_shot = per_projectile * ms * (1 + cc * ((2 * cd if headcrit else cd) - 1)) * bane * loc
     burst = per_shot * fr
     sustained = burst * uptime
     extra = {}
     if enemy is not None:
-        extra = _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy, heavy)
+        extra = _against(
+            gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy, heavy, loc, headcrit
+        )
     else:
         extra = {"direct_dps": sustained, "total_dps": sustained, "effective_dps": sustained}
     return Result(
@@ -322,11 +354,30 @@ def evaluate(
         status_types=status_types,
         heavy=heavy,
         windup=windup,
+        headshot=head,
+        location_mult=loc,
         **extra,
     )
 
 
-def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult, enemy, heavy=False) -> dict:
+def _against(
+    gun,
+    t,
+    by_type,
+    mods,
+    bane,
+    cc,
+    cd,
+    ms,
+    sc,
+    fr,
+    uptime,
+    base_mult,
+    enemy,
+    heavy=False,
+    loc=1.0,
+    headcrit=False,
+) -> dict:
     """Damage to one enemy while firing steadily: armor and its stripping, shields, Viral,
     Magnetic, Cold, and the damage over time of Slash, Heat, Toxin, Electricity and Gas.
 
@@ -342,6 +393,9 @@ def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult,
     ``heavy``: one heavy attack instead of steady fire. Its own procs land after its hit, so the
     hit meets full armor; the procs (one of each, not stacks built up over time) count for its
     damage over time. "Per second" numbers are then per heavy attack.
+
+    ``loc``: the head or body multiplier, on hits and on damage over time; ``headcrit``: crits on
+    the head get x2 on the crit multiplier (hits only: the wiki doesn't give it to ticks).
     """
     total = sum(by_type.values()) or 1.0
     procs = ms * sc * fr * uptime
@@ -360,11 +414,14 @@ def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult,
     viral = 1 + _stack_multiplier(n_viral, 1.0, 0.25)
     magnetic = 1 + _stack_multiplier(n_mag, 1.0, 0.25)
     crit = 1 + cc * (cd + _stack_multiplier(n_cold, 0.10, 0.05) - 1)
+    hc = 2.0 if headcrit else 1.0
     hit_dr, hit_viral, hit_mag, hit_crit = (
-        (armor_reduction(full_armor), 1.0, 1.0, 1 + cc * (cd - 1)) if heavy else (dr, viral, magnetic, crit)
+        (armor_reduction(full_armor), 1.0, 1.0, 1 + cc * (hc * cd - 1))
+        if heavy
+        else (dr, viral, magnetic, 1 + cc * (hc * (cd + _stack_multiplier(n_cold, 0.10, 0.05)) - 1))
     )
     # direct hits per second by type, before armor, Viral or Magnetic
-    hits = {k: v * mods.get(k, 1.0) * ms * hit_crit * bane * fr * uptime for k, v in by_type.items()}
+    hits = {k: v * mods.get(k, 1.0) * ms * hit_crit * bane * loc * fr * uptime for k, v in by_type.items()}
     # damage over time per second by type: modded base x bane twice x that element's mod bonus
     base = gun.total * base_mult * bane
     elem: dict[str, float] = {}
@@ -375,7 +432,7 @@ def _against(gun, t, by_type, mods, bane, cc, cd, ms, sc, fr, uptime, base_mult,
     for k, c in DOT.items():
         r = rate.get(k, 0.0)
         if r:
-            tick = c * base * (1 + elem.get(k, 0.0)) * bane * sd * crit
+            tick = c * base * (1 + elem.get(k, 0.0)) * bane * sd * crit * loc
             # Slash bleed is Cinematic damage: no faction modifier, no armor
             dots[k] = r * DOT_TICKS * tick * (1.0 if k == "slash" else mods.get(k, 1.0))
     # to health: armor reduces everything but Slash bleed; Viral raises everything

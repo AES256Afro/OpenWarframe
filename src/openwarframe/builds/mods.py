@@ -67,7 +67,19 @@ SIMPLE = {
     "Melee Damage on Heavy Attack": "heavy_damage",
     "Heavy Attack Wind Up Speed": "windup_speed",
     "Heavy Attack Efficiency": "heavy_efficiency",
+    # headshots and weak points (wiki Enemy_Body_Parts, Target_Acquired, Primary_Acuity,
+    # Meticulous_Aim, read 2026-11-28)
+    "to Headshot Multiplier": "headshot_bonus",
+    "Headshot Damage": "headshot_bonus",
+    "Bodyshot Damage": "body_damage",
+    "Weak Point Damage": "weak_point_damage",
+    "Weak Point Critical Chance": "weak_point_crit",
 }
+# effects that only work on weak point or head hits: kept under "head:" and counted when aiming
+# for the head
+_HEAD_HEADER = re.compile(r"^On (?:Weak Point|Headshot)(?: Hit| Kill)?s?:$", re.IGNORECASE)
+_FOR_SECONDS = re.compile(r" for \d+(?:\.\d+)?s$")
+_NO_MULTISHOT = ". Multishot cannot be modified."
 _ONLY_X = re.compile(r"\(x(?P<n>\d+(?:\.\d+)?) for (?P<what>Heavy Attacks|Bows)\)$")
 _PCT = re.compile(
     r"^(?P<v>[+-]?\d+(?:\.\d+)?)% (?P<what>.+?)(?: \(x(?P<bow>\d+(?:\.\d+)?) for (?:Bows|Heavy Attacks)\))?$"
@@ -116,14 +128,23 @@ class ModEffect:
 
 def parse_effect(lines: list[str]) -> ModEffect:
     out = ModEffect()
-    conditional = False
+    conditional = head = False
     for raw in lines:
         for line in str(raw).split("\n"):
             line = line.strip()
             if not line or line == "<LINE_SEPARATOR>":
                 continue
+            if line.endswith(_NO_MULTISHOT):  # Primary / Pistol Acuity
+                out.stats["lock_multishot"] = 1.0
+                line = line.removesuffix(_NO_MULTISHOT)
+            if _HEAD_HEADER.match(line):
+                conditional, head = False, True
+                continue
             if _CONDITION.search(line) and line.endswith(":"):
-                conditional = True
+                conditional, head = True, False
+                continue
+            if head:
+                _parse_head_line(out, line)
                 continue
             s = _STACKS.match(line)
             if s:
@@ -144,6 +165,23 @@ def parse_effect(lines: list[str]) -> ModEffect:
                     k = f"{'heavy' if h['what'] == 'Heavy Attacks' else 'bow'}_{p[0]}"
                     out.stats[k] = out.stats.get(k, 0.0) + p[1] * (float(h["n"]) - 1)
     return out
+
+
+def _parse_head_line(out: ModEffect, line: str) -> None:
+    """A line under "On Weak Point Hit:" and the like. Aiming at heads keeps it up; "when Aiming"
+    is taken as met (scopes)."""
+    text = line.replace(" when Aiming", "")
+    s = _STACKS.match(text)
+    if s:
+        p = parse_line(s["line"])
+        if p:
+            out.stacks["head:" + p[0]] = (p[1], int(s["n"]))
+            return
+    p = parse_line(_FOR_SECONDS.sub("", text))
+    if p and "chance for" not in text:
+        out.stats["head:" + p[0]] = out.stats.get("head:" + p[0], 0.0) + p[1]
+    else:
+        out.conditional.append(line)
 
 
 @dataclass

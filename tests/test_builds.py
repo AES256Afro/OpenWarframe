@@ -682,3 +682,91 @@ def test_weapon_arcane_only_from_inventory(tmp_path: Path):
     ]
     assert search._pick_arcane(g, arcs, None, [], None, False, None).name == "Melee Animosity"
     assert search._pick_arcane(g, arcs, None, [], None, False, None, owned={}) is None and g.arcane == {}
+
+
+# -- headshots and weak points (wiki Enemy_Body_Parts, Critical_Hit, Primary_Acuity) -----------
+
+
+def test_headshot_mods_parse():
+    e = mods.parse_effect(
+        ["+350% Weak Point Damage", "+350% Weak Point Critical Chance. Multishot cannot be modified."]
+    )
+    assert e.stats == {"weak_point_damage": 3.5, "weak_point_crit": 3.5, "lock_multishot": 1.0}
+    assert mods.parse_effect(["+60% to Headshot Multiplier"]).stats == {"headshot_bonus": 0.6}
+    e = mods.parse_effect(["+105% Headshot Damage", "-45% Bodyshot Damage"])
+    assert e.stats == {"headshot_bonus": 1.05, "body_damage": -0.45}
+    # scopes: on weak point hit / kill, "when Aiming" taken as met; kept apart for head aim only
+    e = mods.parse_effect(
+        [
+            "On Weak Point Hit:\r\n+120% Critical Chance when Aiming for 12s\r\nOn Weak Point Kill:\r\n"
+            "+40% Critical Chance when Aiming for 12s. Stacks up to 5x."
+        ]
+    )
+    assert e.stats == {"head:crit_chance": 1.2} and e.stacks == {"head:crit_chance": (0.4, 5)}
+    assert mods.parse_effect(["On Headshot:\r\n40% chance for Infinite Ammo for 2s"]).conditional
+
+
+def _head(t, head_mult=3.0, headcrit=True):
+    t.sums.update(headshot=1.0, head_mult=head_mult, headcrit=float(headcrit))
+    return t
+
+
+def test_headshot_damage():
+    g = gun(damage={"impact": 100.0}, crit_chance=0.5, crit_multiplier=2.0, multishot=1.0)
+    body = damage.evaluate(g, damage.add_up([], stacks=False))
+    assert body.per_shot == pytest.approx(100 * 1.5)
+    # head x3; crit headshots x2 on the crit multiplier: 1 + 0.5 x (2 x 2 - 1) = 2.5
+    assert damage.evaluate(g, _head(damage.add_up([], stacks=False))).per_shot == pytest.approx(100 * 3 * 2.5)
+    # no headcrit (Corpus humanoids): 3 x 1.5
+    r = damage.evaluate(g, _head(damage.add_up([], stacks=False), headcrit=False))
+    assert r.per_shot == pytest.approx(100 * 3 * 1.5)
+    # wiki Primary_Acuity: 1.3 x (3 + 1.5 x 3.5) = 10.725 with Deadhead's +30%
+    t = _head(damage.add_up([eff(weak_point_damage=3.5), eff(headshot_bonus=0.3)], stacks=False))
+    assert damage.evaluate(g, t).location_mult == pytest.approx(10.725)
+    # Meticulous Aim's penalty applies to body shots only
+    t = damage.add_up([eff(headshot_bonus=1.05, body_damage=-0.45)], stacks=False)
+    assert damage.evaluate(g, t).per_shot == pytest.approx(150 * 0.55)
+    assert damage.evaluate(g, _head(t)).location_mult == pytest.approx(3 * 2.05)
+
+
+def test_acuity_crit_and_multishot_lock():
+    g = gun(damage={"impact": 100.0}, crit_chance=0.2, multishot=1.0)
+    t = damage.add_up(
+        [
+            mods.parse_effect(["+350% Weak Point Critical Chance. Multishot cannot be modified."]),
+            eff(crit_chance=1.5, multishot=1.2),
+        ],
+        stacks=False,
+    )
+    assert damage.evaluate(g, t).multishot == pytest.approx(1.0)  # locked
+    assert damage.evaluate(g, t).crit_chance == pytest.approx(0.2 * 2.5)  # body: no weak point crit
+    assert damage.evaluate(g, _head(t)).crit_chance == pytest.approx(0.2 * (1 + 1.5 + 3.5))
+
+
+def test_head_effects_only_when_aiming_at_heads():
+    g = gun(damage={"impact": 100.0}, crit_chance=0.2)
+    scope = mods.parse_effect(["On Weak Point Hit:\r\n+135% Critical Chance when Aiming for 9s"])
+    m = mods.GunMod("/M/AS", "Argon Scope", "Rifle", "PRIMARY", None, 4, 0, "RARE", [[]])
+    picks = [search.Pick(m, 0, scope, None)]
+    assert search._score(g, picks, None, False)[1].crit_chance == pytest.approx(0.2)
+    g.head = True
+    assert search._score(g, picks, None, False)[1].crit_chance == pytest.approx(0.2 * 2.35)
+
+
+def test_head_only_arcanes():
+    from openwarframe.builds.arcanes import Arcane, weapon_effect
+
+    text = "On Weak Point Kill:\n+120% Damage for 24s. Stacks up to 3x.\n+30% to Headshot Multiplier\n-50% Weapon Recoil\n+30% to Headshot Multiplier"
+    dh = Arcane("/A/DH", "Primary Deadhead", 0, [text])
+    assert weapon_effect(dh) == pytest.approx({"damage": 3.6, "headshot_bonus": 0.3})
+    g = gun(damage={"impact": 100.0})
+    assert search._pick_arcane(g, [dh], None, [], None, False, None) is None  # body shots: not offered
+    g.head = True
+    assert search._pick_arcane(g, [dh], None, [], None, False, None).name == "Primary Deadhead"
+
+
+def test_page_offers_aim():
+    from openwarframe.app.server import page_source
+
+    page = page_source()
+    assert 'data-bopt="aim"' in page and "&aim=" in page

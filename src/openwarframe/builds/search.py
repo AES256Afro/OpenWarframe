@@ -11,7 +11,14 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 
-from .arcanes import HEAVY_ONLY, STATUS_TRIGGERED, WEAPON_SCORED, load_weapon_arcanes, weapon_effect
+from .arcanes import (
+    HEAD_ONLY,
+    HEAVY_ONLY,
+    STATUS_TRIGGERED,
+    WEAPON_SCORED,
+    load_weapon_arcanes,
+    weapon_effect,
+)
 from .damage import Result, Totals, add_up, best_order
 from .enemy import Enemy, enemy_for
 from .mods import ELEMENTS, GunMod, ModEffect, fits, load_gun_mods
@@ -71,6 +78,12 @@ def _score(
         t.sums["gladiator"] = sum(1 for p in picks if p.mod.name.startswith("Gladiator "))
         t.sums["heavy"] = 1.0 if gun.heavy else 0.0
     t.sums["extra_status"] = gun.extra_status
+    if gun.head:
+        t.sums["headshot"] = 1.0
+        for k, v in t.head.items():
+            t.sums[k] = t.sums.get(k, 0.0) + v
+        if enemy is not None:
+            t.sums["head_mult"], t.sums["headcrit"] = enemy.head_mult, float(enemy.headcrit)
     for k, v in gun.arcane.items():  # the weapon arcane: its element goes after the mods'
         if k in ELEMENTS:
             t.elements.append((k, v))
@@ -226,15 +239,30 @@ def _why(p: Pick) -> str:
         "combo_status": "status chance per combo multiplier",
         "per_status_damage": "damage per status type on the target",
     }
+    labels.update(
+        headshot_bonus="headshot multiplier",
+        body_damage="body shot damage",
+        weak_point_damage="weak point damage",
+        weak_point_crit="weak point crit chance",
+    )
+
+    def label(k: str) -> str:
+        head = k.startswith("head:")
+        k = k.removeprefix("head:")
+        return labels.get(k, k.replace("_", " ")) + (" on weak point hits" if head else "")
+
     bits = []
     for k, v in p.effect.stats.items():
-        if k.startswith("bane:"):
+        if k == "lock_multishot":
+            bits.append("multishot can't be modded")
+        elif k.startswith("bane:"):
             bits.append(f"x{1 + v:.2f} {k.split(':', 1)[1]} damage")
         else:
-            bits.append(f"{'+' if v >= 0 else ''}{round(v * 100)}% {labels.get(k, k.replace('_', ' '))}")
+            bits.append(f"{'+' if v >= 0 else ''}{round(v * 100)}% {label(k)}")
     for k, (per, n) in p.effect.stacks.items():
+        kill = "weak point kill" if k.startswith("head:") else "on-kill"
         bits.append(
-            f"+{round(per * 100)}% {labels.get(k, k.replace('_', ' '))} per on-kill stack (up to {n})"
+            f"+{round(per * 100)}% {label(k).removesuffix(' on weak point hits')} per {kill} stack (up to {n})"
         )
     return ", ".join(bits)
 
@@ -252,6 +280,7 @@ def suggest(
     extra_status: float = 0.0,
     attack: str = "normal",
     arcane: str | None = None,
+    aim: str = "body",
 ) -> dict:
     """The suggested build for one gun or melee weapon, ready for the app.
 
@@ -262,6 +291,9 @@ def suggest(
     Gladiator set read; ``attack``: "heavy" judges one heavy attack at that combo instead of
     normal hits.
 
+    ``aim``: "head" lands every hit on the head (a weak point): the head multiplier, crit
+    headshots, and mods and arcanes that work on weak point hits or kills.
+
     ``arcane``: the weapon arcane's name; None picks the best of the ones that can be scored,
     "none" leaves the slot empty.
 
@@ -270,6 +302,7 @@ def suggest(
     """
     gun = load_gun(conn, uid)
     gun.extra_status = max(0.0, min(16.0, float(extra_status)))
+    gun.head = aim == "head"
     if gun.slot == "MELEE":
         gun.combo = max(1.0, min(13.0, float(combo)))
         gun.heavy = attack == "heavy" and gun.heavy_mult > 0
@@ -352,7 +385,7 @@ def suggest(
         )
     notes = [
         ranked + ".",
-        "Not counted: shield regeneration and the Magnetic shield-break burst, headshots and weak points, "
+        "Not counted: shield regeneration and the Magnetic shield-break burst, weak points other than the head, "
         "Rivens, Incarnon forms; Heat is counted per proc, though in long fights its stacks keep growing.",
         f"Mod drain {drain} against {cap} capacity with an Orokin Catalyst"
         + (" and a stance in a matching slot" if gun.slot == "MELEE" else "")
@@ -386,6 +419,14 @@ def suggest(
                 else ". Damage per second uses the weapon's attack speed; real hits per second depend on the "
                 "stance, so compare builds of this weapon rather than with guns."
             )
+        )
+    if gun.head:
+        notes.append(
+            f"Every hit lands on the head: x{enemy.head_mult:g} on this enemy"
+            + ("" if enemy.headcrit else ", and its head doesn't take the extra crit headshot bonus")
+            + f", x{result.location_mult:.2f} with headshot mods. Crits on the head get x2 on the crit multiplier"
+            " (not on status ticks). Mods and arcanes that work on weak point hits or kills count as active, and "
+            "scopes' \"when Aiming\" as met. Area damage can't headshot, so explosive weapons score too high here."
         )
     if picked is not None:
         notes.append(
@@ -429,7 +470,7 @@ def suggest(
             {
                 "id": picked.unique_name,
                 "name": picked.name,
-                "text": picked.text(),
+                "text": "\n".join(dict.fromkeys(picked.text().split("\n"))),  # the data repeats lines
                 "counted": bool(gun.arcane),
             }
             if picked
@@ -483,7 +524,7 @@ def _pick_arcane(gun: Gun, arcanes, wanted: str | None, chosen, target, stacks, 
         for a in arcanes:
             if a.name == wanted or a.unique_name == wanted:
                 gun.arcane = weapon_effect(a) if a.name in WEAPON_SCORED or weapon_effect(a) else {}
-                if a.name in HEAVY_ONLY and not gun.heavy:
+                if (a.name in HEAVY_ONLY and not gun.heavy) or (a.name in HEAD_ONLY and not gun.head):
                     gun.arcane = {}
                 return a
         return None
@@ -491,6 +532,8 @@ def _pick_arcane(gun: Gun, arcanes, wanted: str | None, chosen, target, stacks, 
     best, best_s = None, base * 1.001
     for a in arcanes:
         if a.name not in WEAPON_SCORED or (a.name in HEAVY_ONLY and not gun.heavy):
+            continue
+        if a.name in HEAD_ONLY and not gun.head:
             continue
         if owned is not None and a.unique_name not in owned:
             continue

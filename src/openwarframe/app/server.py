@@ -422,6 +422,7 @@ class AppState:
         extra_status: float = 0.0,
         attack: str = "normal",
         arcane: str | None = None,
+        aim: str = "body",
     ) -> dict:
         """A suggested mod build for one gun or melee weapon (builds.search)."""
         from ..builds.search import suggest
@@ -450,6 +451,7 @@ class AppState:
                     extra_status=extra_status,
                     attack=attack,
                     arcane=arcane or None,
+                    aim=aim,
                 )
             except NotAGun as exc:
                 return {"error": str(exc)}
@@ -1040,6 +1042,7 @@ def make_handler(state: AppState):
                             extra_status=_float((q.get("xstatus") or ["0"])[0], 0.0),
                             attack="heavy" if (q.get("attack") or [""])[0] == "heavy" else "normal",
                             arcane=(q.get("arcane") or [""])[0][:120] or None,
+                            aim="head" if (q.get("aim") or [""])[0] == "head" else "body",
                         )
                     )
                 except Exception as exc:  # noqa: BLE001 - shown in the item details

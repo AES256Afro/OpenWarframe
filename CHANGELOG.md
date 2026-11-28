@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.22.0
 
 - **Heavy attacks.** Melee builds have an **Attack** choice: Heavy attack judges one heavy attack
   at your combo, with the weapon's heavy multiplier from the game data, Killing Blow, True Steel

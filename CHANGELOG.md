@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.21.0
 
 - **Melee builds.** Open a melee weapon and click **Suggest a build**. It uses the same damage,
   armor, shield and status model as guns, plus the combo multiplier (Blood Rush, Weeping Wounds,

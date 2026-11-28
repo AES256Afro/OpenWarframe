@@ -86,6 +86,21 @@ placed in the order that gives the best combination for the target. Every build 
 capacity (an Orokin Catalyst) with matching polarities halving a mod's drain; the build says how
 many Forma that takes.
 
+## Damage per status type
+
+Galvanized Aptitude, Savvy and Shot ("+40% Direct Damage per Status Type affecting the target",
+on-kill stacks) and Condition Overload on melee add their bonus per status type on the target, in
+the same bonus as Serration (wiki Galvanized_Aptitude and Condition_Overload, read 2026-11-28).
+The weapon's own statuses count as the chance that at least one proc of each type is still
+running; **Status types from other sources** adds the ones your abilities, other weapons or squad
+keep up. At most 16 statuses fit on one enemy.
+
+## Bows
+
+Fire rate mods marked "(x2 for Bows)" (Speed Trigger, Vile Acceleration, Critical Delay and
+others) give bows twice their bonus or penalty (wiki Speed_Trigger). Bows are the weapons the game
+data puts in the bow class.
+
 ## Not counted yet
 
 - Shield regeneration between bursts, the Magnetic shield-break burst, overguard, and the
@@ -95,9 +110,8 @@ many Forma that takes.
 - Heat's growing stacks in long fights (each Heat proc refreshes them all; counted per proc).
   The reference kills take 1 to 3 seconds, and the growth only shows after about 6, so it's left
   out. Heat's 2-second ramp, Electricity and Gas hitting nearby enemies, Blast and Puncture effects.
-- Status-based bonuses (Galvanized Aptitude's damage per status type).
 - Headshots and weak points, Riven mods, Incarnon forms.
-- Bow fire-rate bonuses (bows get double from some mods) and charge or burst timing.
+- Charge and burst timing.
 - Archguns and companion weapons.
 
 ## Checking a build
@@ -161,7 +175,7 @@ can score, at full stacks, from the in-game text:
 
 Other weapon arcanes trigger on things the model doesn't track (headshots, ability casts,
 blocking). Pick one in the **Arcane** selector to see the build with it; ones the model can't
-read are shown but not counted. The arcane isn't checked against your inventory.
+read are shown but not counted. With **Only mods I own** on, the build only picks arcanes you own.
 
 ## Warframe builds
 

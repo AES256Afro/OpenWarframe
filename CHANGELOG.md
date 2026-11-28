@@ -3,6 +3,15 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Damage per status type on guns.** Galvanized Aptitude, Savvy and Shot are counted (on-kill
+  stacks at their maximum), using the statuses the weapon keeps up plus **Status types from other
+  sources**, which is now offered for guns too. At most 16 statuses count.
+- **Weapon arcanes from your inventory.** With **Only mods I own** on, the build only picks weapon
+  arcanes you own.
+- **Bows** get double from fire rate mods marked "(x2 for Bows)".
+
 ## 0.22.0
 
 - **Heavy attacks.** Melee builds have an **Attack** choice: Heavy attack judges one heavy attack

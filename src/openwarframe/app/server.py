@@ -418,8 +418,10 @@ class AppState:
         stacks: bool,
         level: str = "sp",
         stripped: bool = False,
+        combo: float = 12.0,
+        extra_status: float = 0.0,
     ) -> dict:
-        """A suggested mod build for one gun (builds.search)."""
+        """A suggested mod build for one gun or melee weapon (builds.search)."""
         from ..builds.search import suggest
         from ..builds.weapons import NotAGun
         from ..codex import Codex
@@ -435,7 +437,15 @@ class AppState:
         with Codex(self.settings.codex_path) as codex:
             try:
                 b = suggest(
-                    codex.conn, uid, target=target, owned=owned, stacks=stacks, level=level, stripped=stripped
+                    codex.conn,
+                    uid,
+                    target=target,
+                    owned=owned,
+                    stacks=stacks,
+                    level=level,
+                    stripped=stripped,
+                    combo=combo,
+                    extra_status=extra_status,
                 )
             except NotAGun as exc:
                 return {"error": str(exc)}
@@ -864,6 +874,13 @@ class AppState:
         return self.build(force=True)
 
 
+def _float(v: str, default: float) -> float:
+    try:
+        return float(v)
+    except ValueError:
+        return default
+
+
 def _accepts_gzip(header: str | None) -> bool:
     """Accept-Encoding lists gzip, and not with q=0."""
     for part in (header or "").lower().split(","):
@@ -1011,6 +1028,8 @@ def make_handler(state: AppState):
                             stacks=(q.get("stacks") or ["1"])[0] == "1",
                             level=(q.get("level") or ["sp"])[0],
                             stripped=(q.get("stripped") or ["0"])[0] == "1",
+                            combo=_float((q.get("combo") or ["12"])[0], 12.0),
+                            extra_status=_float((q.get("xstatus") or ["0"])[0], 0.0),
                         )
                     )
                 except Exception as exc:  # noqa: BLE001 - shown in the item details

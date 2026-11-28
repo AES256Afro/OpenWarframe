@@ -1,9 +1,9 @@
 // ---- suggested builds for guns: computed from the game data on request -----------------
-var BUILD={}, BUILD_OPTS={target:"none", owned:true, stacks:true, level:"sp", stripped:false};
+var BUILD={}, BUILD_OPTS={target:"none", owned:true, stacks:true, level:"sp", stripped:false, combo:"12", xstatus:"0"};
 var BUILD_LEVELS=[["none","No armor (damage test)"],["normal","Normal missions"],["sp","Steel Path"]];
 var BUILD_TARGETS=[["none","Any enemy"],["Grineer","Grineer"],["Corpus","Corpus"],["Infested","Infested"],["Orokin","Corrupted (Orokin)"],["Murmur","The Murmur"],["Sentient","Sentient"],["Scaldra","Scaldra"],["Techrot","Techrot"]];
-function isGun(r){ return r.category==="Primary"||r.category==="Secondary"; }
-function buildKey(id){ return [id,BUILD_OPTS.target,BUILD_OPTS.owned&&DATA.meta.inventory?1:0,BUILD_OPTS.stacks?1:0,BUILD_OPTS.level,BUILD_OPTS.stripped?1:0].join("|"); }
+function isGun(r){ return r.category==="Primary"||r.category==="Secondary"||r.category==="Melee"; }
+function buildKey(id){ return [id,BUILD_OPTS.target,BUILD_OPTS.owned&&DATA.meta.inventory?1:0,BUILD_OPTS.stacks?1:0,BUILD_OPTS.level,BUILD_OPTS.stripped?1:0,BUILD_OPTS.combo,BUILD_OPTS.xstatus].join("|"); }
 function buildPanel(r){
   var inv=!!DATA.meta.inventory;
   var h='<div class="buildbox"><h3>Suggested build</h3><div class="buildopts">'
@@ -11,6 +11,8 @@ function buildPanel(r){
     +'<label>Enemies <select data-bopt="level">'+BUILD_LEVELS.map(function(t){return '<option value="'+t[0]+'"'+(t[0]===BUILD_OPTS.level?' selected':'')+'>'+esc(t[1])+'</option>'}).join('')+'</select></label>'
     +'<label><input type="checkbox" data-bopt="stripped"'+(BUILD_OPTS.stripped?' checked':'')+'> Armor already stripped (abilities, squad)</label>'
     +(inv?'<label><input type="checkbox" data-bopt="owned"'+(BUILD_OPTS.owned?' checked':'')+'> Only mods I own</label>':'')
+    +(r.category==="Melee"?'<label>Combo <select data-bopt="combo">'+[["1","No combo (1x)"],["6","6x"],["12","12x, the cap"]].map(function(c){return '<option value="'+c[0]+'"'+(BUILD_OPTS.combo===c[0]?' selected':'')+'>'+c[1]+'</option>'}).join('')+'</select></label>'
+      +'<label>Status types from other sources <select data-bopt="xstatus">'+["0","1","2","3","4","5"].map(function(n){return '<option'+(BUILD_OPTS.xstatus===n?' selected':'')+'>'+n+'</option>'}).join('')+'</select></label>':'')
     +'<label><input type="checkbox" data-bopt="stacks"'+(BUILD_OPTS.stacks?' checked':'')+'> Count on-kill stacks at their maximum</label>'
     +'<button class="btn" type="button" data-build="'+esc(r.id)+'">'+(BUILD[buildKey(r.id)]?'Build again':'Suggest a build')+'</button></div>';
   h+='<div class="buildout" data-buildout="'+esc(r.id)+'">'+(BUILD[buildKey(r.id)]?buildHtml(BUILD[buildKey(r.id)]):(inv?'':'<p class="muted">Without an inventory the build may use mods you don\'t have; load your inventory to limit it to yours.</p>'))+'</div></div>';
@@ -24,7 +26,8 @@ function buildHtml(b){
   h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li><b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+(m.owned===false?' · you don\'t have it':'')+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
   if(s.time_to_kill) h+='<div class="buildstats"><span>Time to kill <b>'+num(s.time_to_kill)+' s</b></span>'+(s.shield_dps?'<span>To shields <b>'+num(s.shield_dps)+'</b>/s</span>':'')+'</div>';
   h+='<div class="buildstats"><span>Damage per second to health <b>'+num(s.total_dps)+'</b></span><span>Direct hits <b>'+num(s.direct_dps)+'</b></span><span>Status damage over time <b>'+num(s.status_dps)+'</b></span></div>';
-  h+='<div class="buildstats"><span>Per shot <b>'+num(s.per_shot)+'</b> before armor</span><span>Crit <b>'+pct(s.crit_chance)+'</b> × '+num(s.crit_multiplier)+'</span><span>Status <b>'+pct(s.status_chance)+'</b> ('+num(s.procs_per_second)+' procs/s)</span><span>Multishot <b>'+num(s.multishot)+'</b></span><span>Fire rate <b>'+num(s.fire_rate)+'</b></span></div>';
+  var isMelee=b.slot==="MELEE";
+  h+='<div class="buildstats"><span>Per '+(isMelee?'hit':'shot')+' <b>'+num(s.per_shot)+'</b> before armor</span><span>Crit <b>'+pct(s.crit_chance)+'</b> × '+num(s.crit_multiplier)+'</span><span>Status <b>'+pct(s.status_chance)+'</b> ('+num(s.procs_per_second)+' procs/s)</span>'+(isMelee?'':'<span>Multishot <b>'+num(s.multishot)+'</b></span>')+'<span>'+(isMelee?'Attack speed':'Fire rate')+' <b>'+num(s.fire_rate)+'</b></span></div>';
   var fx=[];
   if(s.armor_reduction) fx.push('armor '+Math.round(s.armor).toLocaleString()+' stops '+pct(s.armor_reduction));
   if(s.corrosive_stacks>=0.5) fx.push(num(s.corrosive_stacks)+' Corrosive stacks');
@@ -41,7 +44,7 @@ function buildHtml(b){
 function runBuild(id){
   var k=buildKey(id);
   [].forEach.call(document.querySelectorAll("[data-buildout]"), function(el){ if(el.getAttribute("data-buildout")===id) el.innerHTML='<p class="muted">Working out the best mods…</p>'; });
-  var q="/api/build?id="+encodeURIComponent(id)+"&target="+encodeURIComponent(BUILD_OPTS.target)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+"&stacks="+(BUILD_OPTS.stacks?1:0)+"&level="+encodeURIComponent(BUILD_OPTS.level)+"&stripped="+(BUILD_OPTS.stripped?1:0);
+  var q="/api/build?id="+encodeURIComponent(id)+"&target="+encodeURIComponent(BUILD_OPTS.target)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+"&stacks="+(BUILD_OPTS.stacks?1:0)+"&level="+encodeURIComponent(BUILD_OPTS.level)+"&stripped="+(BUILD_OPTS.stripped?1:0)+"&combo="+encodeURIComponent(BUILD_OPTS.combo)+"&xstatus="+encodeURIComponent(BUILD_OPTS.xstatus);
   api(q).then(function(b){ BUILD[k]=b; redrawTable(); }).catch(function(){ BUILD[k]={error:"Could not work that out. Is OpenWarframe still running?"}; redrawTable(); });
 }
 function onBuildEvent(e){

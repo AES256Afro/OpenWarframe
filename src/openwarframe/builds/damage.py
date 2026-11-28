@@ -75,7 +75,22 @@ NUMERIC = (
     "fire_rate",
     "magazine",
     "reload",
+    # melee: mods that read the combo multiplier or the statuses on the target
+    "combo_crit",
+    "combo_status",
+    "per_status_damage",
+    # context set by the search, not by mods: combo multiplier, Gladiator mods equipped,
+    # status types other sources keep on the target
+    "combo",
+    "gladiator",
+    "extra_status",
 )
+# how long each status lasts (s), for "how many status types are on the target"
+STATUS_DURATION = {"corrosive": 8.0}
+STATUS_TYPES = (
+    "impact", "puncture", "slash", "heat", "cold", "electricity", "toxin",
+    "blast", "radiation", "gas", "magnetic", "viral", "corrosive",
+)  # fmt: skip
 # damage over time per proc: share of modded base damage per tick (wiki Damage/<Type>_Damage)
 DOT = {"slash": 0.35, "heat": 0.5, "toxin": 0.5, "electricity": 0.5, "gas": 0.5}
 DOT_TICKS = 6  # one per second for 6 seconds
@@ -178,6 +193,7 @@ class Result:
     shield_dps: float = 0.0  # damage per second to shields while they are up
     time_to_kill: float = 0.0  # seconds for one reference enemy (0: not judged on one)
     effective_dps: float = 0.0  # (shields + health) / time to kill; the score
+    status_types: float = 0.0  # status types on the target, for Condition Overload
 
     def as_dict(self) -> dict:
         # infinity (nothing gets through) isn't valid JSON: say "unknown" instead
@@ -210,16 +226,37 @@ def evaluate(
     mods = FACTION_MODIFIERS.get(target or "", {})
     per_projectile = sum(v * mods.get(k, 1.0) for k, v in by_type.items())
     bane = 1 + t.bane.get(BANE_FOR.get(target or "", ""), 0.0)
-    cc = max(0.0, gun.crit_chance * (1 + s.get("crit_chance", 0.0)))
+    # melee (wiki Blood_Rush, Weeping_Wounds, Gladiator_Set): combo-scaling bonuses add
+    # bonus x (combo multiplier - 1) to the crit or status mod total
+    steps = max(0.0, s.get("combo", 1.0) - 1)
+    crit_bonus = (
+        s.get("crit_chance", 0.0) + (s.get("combo_crit", 0.0) + 0.10 * s.get("gladiator", 0.0)) * steps
+    )
+    cc = max(0.0, gun.crit_chance * (1 + crit_bonus))
     cd = max(1.0, gun.crit_multiplier * (1 + s.get("crit_damage", 0.0)))
     ms = max(0.0, gun.multishot * (1 + s.get("multishot", 0.0)))
-    sc = max(0.0, gun.status_chance * (1 + s.get("status_chance", 0.0)))
+    sc = max(0.0, gun.status_chance * (1 + s.get("status_chance", 0.0) + s.get("combo_status", 0.0) * steps))
     fr = max(0.05, gun.fire_rate * (1 + s.get("fire_rate", 0.0)))
     mag = max(1, round(gun.magazine * (1 + s.get("magazine", 0.0))))
     reload = gun.reload / max(0.05, 1 + s.get("reload", 0.0))
+    uptime = mag / (fr * reload + mag) if reload > 0 else 1.0
+    status_types = 0.0
+    if s.get("per_status_damage"):
+        # Condition Overload (wiki, 2026-10-12): +x per status type on the target, in the same
+        # bonus as Pressure Point. Types this weapon keeps up (chance at least one proc is still
+        # running), plus those other sources keep there.
+        total_dmg = sum(by_type.values()) or 1.0
+        procs = ms * sc * fr * uptime
+        status_types = s.get("extra_status", 0.0) + sum(
+            1 - math.exp(-procs * by_type.get(k, 0.0) / total_dmg * STATUS_DURATION.get(k, 6.0))
+            for k in STATUS_TYPES
+        )
+        factor = (base_mult + s["per_status_damage"] * status_types) / base_mult
+        by_type = {k: v * factor for k, v in by_type.items()}
+        base_mult *= factor
+        per_projectile = sum(v * mods.get(k, 1.0) for k, v in by_type.items())
     per_shot = per_projectile * ms * (1 + cc * (cd - 1)) * bane
     burst = per_shot * fr
-    uptime = mag / (fr * reload + mag) if reload > 0 else 1.0
     sustained = burst * uptime
     extra = {}
     if enemy is not None:
@@ -239,6 +276,7 @@ def evaluate(
         magazine=mag,
         reload=reload,
         by_type=by_type,
+        status_types=status_types,
         **extra,
     )
 

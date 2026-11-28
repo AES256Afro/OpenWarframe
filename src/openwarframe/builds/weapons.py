@@ -27,7 +27,7 @@ DAMAGE_ORDER = (
     "void",
     "tau",
 )
-SLOTS = {"LongGuns": "PRIMARY", "Pistols": "SECONDARY"}
+SLOTS = {"LongGuns": "PRIMARY", "Pistols": "SECONDARY", "Melee": "MELEE"}
 
 
 @dataclass
@@ -47,6 +47,8 @@ class Gun:
     reload: float
     trigger: str = ""
     tags: list[str] = field(default_factory=list)
+    combo: float = 1.0  # melee: combo multiplier the build is judged at
+    extra_status: float = 0.0  # melee: status types other sources keep on the target
 
     @property
     def total(self) -> float:
@@ -73,7 +75,7 @@ def load_gun(conn: sqlite3.Connection, uid: str) -> Gun:
     slot = SLOTS.get(str(d.get("productCategory")))
     dps = d.get("damagePerShot")
     if not slot or not isinstance(dps, list):
-        raise NotAGun(f"{name} isn't a primary or secondary gun; builds cover those for now.")
+        raise NotAGun(f"{name} isn't a primary, secondary or melee weapon; builds cover those.")
     try:
         holster, parent, tags = conn.execute(
             "SELECT holster, parent, tags FROM weapon_class WHERE unique_name = ?", (uid,)
@@ -95,8 +97,9 @@ def load_gun(conn: sqlite3.Connection, uid: str) -> Gun:
         status_chance=float(d.get("procChance") or 0),
         fire_rate=float(d.get("fireRate") or 1),
         multishot=float(d.get("multishot") or 1),
-        magazine=int(d.get("magazineSize") or 1),
-        reload=float(d.get("reloadTime") or 0),
+        # melee: fireRate is attacks per second; no magazine, no reload
+        magazine=int(d.get("magazineSize") or 1) if slot != "MELEE" else 1,
+        reload=float(d.get("reloadTime") or 0) if slot != "MELEE" else 0.0,
         trigger=str(d.get("trigger") or ""),
         tags=json.loads(tags or "[]"),
     )

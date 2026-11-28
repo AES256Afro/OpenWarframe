@@ -47,6 +47,12 @@ ELEMENTS = (
 )
 SIMPLE = {
     "Damage": "damage",
+    "Melee Damage": "damage",
+    "Attack Speed": "fire_rate",
+    # melee mods that scale with the combo multiplier or with statuses on the target
+    "Critical Chance stacks with Combo Multiplier": "combo_crit",
+    "Status Chance per Combo Multiplier": "combo_status",
+    "Melee Damage per Status Type affecting the target": "per_status_damage",
     "Multishot": "multishot",
     "Critical Chance": "crit_chance",
     "Critical Damage": "crit_damage",
@@ -56,7 +62,9 @@ SIMPLE = {
     "Magazine Capacity": "magazine",
     "Reload Speed": "reload",
 }
-_PCT = re.compile(r"^(?P<v>[+-]?\d+(?:\.\d+)?)% (?P<what>.+?)(?: \(x(?P<bow>\d+(?:\.\d+)?) for Bows\))?$")
+_PCT = re.compile(
+    r"^(?P<v>[+-]?\d+(?:\.\d+)?)% (?P<what>.+?)(?: \(x(?P<bow>\d+(?:\.\d+)?) for (?:Bows|Heavy Attacks)\))?$"
+)
 _TAG = re.compile(r"^<DT_(?P<tag>[A-Z]+)_COLOR>(?P<name>\w+)$")
 _BANE = re.compile(r"^x(?P<v>\d+(?:\.\d+)?) Damage to (?P<faction>[\w ]+)$")
 _STACKS = re.compile(r"^(?P<line>.+?) for \d+(?:\.\d+)?s\. Stacks up to (?P<n>\d+)x\.$")
@@ -77,7 +85,9 @@ def parse_line(line: str) -> tuple[str, float] | None:
     line = line.strip()
     m = _BANE.match(line)
     if m:
-        return f"bane:{m['faction'].strip().removeprefix('The ')}", float(m["v"]) - 1
+        faction = m["faction"].strip().removeprefix("The ")
+        faction = {"Sentients": "Sentient"}.get(faction, faction)
+        return f"bane:{faction}", float(m["v"]) - 1
     m = _PCT.match(line)
     if not m:
         return None
@@ -130,7 +140,7 @@ class GunMod:
     unique_name: str
     name: str
     compat: str  # compatName: Rifle, Shotgun, Pistol, a weapon name for augments
-    slot: str  # PRIMARY or SECONDARY
+    slot: str  # PRIMARY, SECONDARY or MELEE
     polarity: str | None
     base_drain: int
     max_rank: int
@@ -185,7 +195,7 @@ def load_gun_mods(conn: sqlite3.Connection) -> list[GunMod]:
             d = json.loads(data or "{}")
         except ValueError:
             continue
-        if d.get("type") not in ("PRIMARY", "SECONDARY") or not d.get("levelStats"):
+        if d.get("type") not in ("PRIMARY", "SECONDARY", "MELEE") or not d.get("levelStats"):
             continue
         out.append(
             GunMod(
@@ -225,6 +235,8 @@ def fits(mod: GunMod, w: WeaponClass) -> bool:
     c = mod.compat
     if w.slot == "SECONDARY":
         return c in ("Pistol", "SECONDARY") or _named(c, w)
+    if w.slot == "MELEE":
+        return c in ("Melee", "MELEE") or _named(c, w)
     if c in GROUPS:
         return (w.holster or "") in GROUPS[c]
     return _named(c, w)

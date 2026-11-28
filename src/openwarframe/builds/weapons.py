@@ -49,6 +49,10 @@ class Gun:
     tags: list[str] = field(default_factory=list)
     combo: float = 1.0  # melee: combo multiplier the build is judged at
     extra_status: float = 0.0  # melee: status types other sources keep on the target
+    heavy_mult: float = 0.0  # melee: heavy attack damage / normal hit damage (0: no heavy attack)
+    windup: float = 0.0  # melee: heavy attack wind-up, seconds
+    heavy: bool = False  # melee: judge heavy attacks instead of normal hits
+    arcane: dict[str, float] = field(default_factory=dict)  # the weapon arcane's numbers
 
     @property
     def total(self) -> float:
@@ -102,4 +106,12 @@ def load_gun(conn: sqlite3.Connection, uid: str) -> Gun:
         reload=float(d.get("reloadTime") or 0) if slot != "MELEE" else 0.0,
         trigger=str(d.get("trigger") or ""),
         tags=json.loads(tags or "[]"),
+        # heavyAttackDamage = total damage x the weapon type's heavy multiplier (Galatine Prime:
+        # 1680 = 280 x 6, wiki Heavy_Attack)
+        heavy_mult=(
+            float(d.get("heavyAttackDamage") or 0) / float(d.get("totalDamage") or sum(dps) or 1)
+            if slot == "MELEE"
+            else 0.0
+        ),
+        windup=float(d.get("windUp") or 0) if slot == "MELEE" else 0.0,
     )

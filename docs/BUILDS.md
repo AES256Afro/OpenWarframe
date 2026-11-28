@@ -89,14 +89,16 @@ many Forma that takes.
 ## Not counted yet
 
 - Shield regeneration between bursts, the Magnetic shield-break burst, overguard, and the
-  Toxic Ancient's own Toxin resistance.
+  Toxic Ancient's own Toxin resistance. Regeneration waits for a pause in incoming damage, and
+  the model fires steadily, so it wouldn't change the result.
 - Stacks are taken at their steady state from the first shot; very short kills get less.
-- Heat's growing stacks in long fights (each Heat proc refreshes them all; counted per proc),
-  Heat's 2-second ramp, Electricity and Gas hitting nearby enemies, Blast and Puncture effects.
+- Heat's growing stacks in long fights (each Heat proc refreshes them all; counted per proc).
+  The reference kills take 1 to 3 seconds, and the growth only shows after about 6, so it's left
+  out. Heat's 2-second ramp, Electricity and Gas hitting nearby enemies, Blast and Puncture effects.
 - Status-based bonuses (Galvanized Aptitude's damage per status type).
-- Headshots and weak points, Riven mods, arcanes, Incarnon forms, the Exilus slot.
+- Headshots and weak points, Riven mods, Incarnon forms.
 - Bow fire-rate bonuses (bows get double from some mods) and charge or burst timing.
-- Melee weapons, Archguns and companion weapons.
+- Archguns and companion weapons.
 
 ## Checking a build
 
@@ -122,9 +124,44 @@ abilities, guns or squad keep on the target, for Condition Overload). The weapon
 count as the chance that at least one proc of each type is still running.
 
 Damage per second uses the attack speed from the game data; real hits per second depend on the
-stance, so compare builds of one weapon rather than melee with guns. Not counted yet: heavy
-attacks, slams, follow-through, the stance slot's extra capacity, the Exilus slot and melee
-arcanes.
+stance, so compare builds of one weapon rather than melee with guns. Melee gets 10 more capacity
+for a stance in a slot of matching polarity. Not counted yet: slams and follow-through.
+
+### Heavy attacks
+
+Set **Attack** to **Heavy attack** to judge one heavy attack instead of normal hits (wiki
+Heavy_Attack, read 2026-11-27):
+
+| Rule | Source |
+| --- | --- |
+| Heavy damage = normal damage x the weapon type's heavy multiplier x the combo multiplier; the game data's `heavyAttackDamage` is normal damage x that multiplier (Galatine Prime: 1,680 = 280 x 6) | Heavy_Attack, game data |
+| A heavy attack spends the combo | Heavy_Attack, Melee_Combo |
+| Killing Blow's heavy damage joins the base damage bonus (Pressure Point) | Killing_Blow |
+| True Steel and its variants count twice on heavies ("x2 for Heavy Attacks") | True_Steel |
+| Wind-up speed mods shorten the wind-up; attack speed doesn't | Heavy_Attack |
+
+The score is the damage of one heavy attack, its hit plus the status damage over time of its
+procs. Its own procs land after the hit, so the hit meets full armor. The time to build the
+combo again isn't counted, so compare heavy builds with heavy builds.
+
+## Weapon arcanes
+
+Guns and melee weapons have one arcane slot (wiki Arcane_Enhancement, read 2026-11-27). Primary
+weapons take Primary and Fractalized arcanes (bows add Longbow, shotguns Shotgun); secondaries take
+Secondary, Cascadia and Conjunction; melee takes Melee. The build picks the best of the ones it
+can score, at full stacks, from the in-game text:
+
+- Primary and Secondary Merciless: +30% damage per kill stack, up to 12, added to the base damage
+  bonus (Serration).
+- Primary Blight, Primary Frostbite, Conjunction Voltage: stacks from the weapon's own Toxin,
+  Cold or Electricity procs; only offered when the build deals that element.
+- Melee Doughty: +1.0x critical multiplier per 10% Puncture status chance, rounded to 0.1, at most
+  +50x.
+- Melee Animosity: up to +420% crit chance on the next heavy attack; heavy attacks only.
+
+Other weapon arcanes trigger on things the model doesn't track (headshots, ability casts,
+blocking). Pick one in the **Arcane** selector to see the build with it; ones the model can't
+read are shown but not counted. The arcane isn't checked against your inventory.
 
 ## Warframe builds
 

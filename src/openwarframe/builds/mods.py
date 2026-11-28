@@ -61,7 +61,12 @@ SIMPLE = {
     "Fire Rate": "fire_rate",
     "Magazine Capacity": "magazine",
     "Reload Speed": "reload",
+    # heavy attacks (Killing Blow, Reflex Coil, wind-up mods)
+    "Melee Damage on Heavy Attack": "heavy_damage",
+    "Heavy Attack Wind Up Speed": "windup_speed",
+    "Heavy Attack Efficiency": "heavy_efficiency",
 }
+_HEAVY_X = re.compile(r"\(x(?P<n>\d+(?:\.\d+)?) for Heavy Attacks\)$")
 _PCT = re.compile(
     r"^(?P<v>[+-]?\d+(?:\.\d+)?)% (?P<what>.+?)(?: \(x(?P<bow>\d+(?:\.\d+)?) for (?:Bows|Heavy Attacks)\))?$"
 )
@@ -132,6 +137,10 @@ def parse_effect(lines: list[str]) -> ModEffect:
             p = parse_line(line)
             if p:
                 out.stats[p[0]] = out.stats.get(p[0], 0.0) + p[1]
+                h = _HEAVY_X.search(line)
+                if h:  # True Steel: "(x2 for Heavy Attacks)" -> the rest of the bonus on heavies
+                    k = f"heavy_{p[0]}"
+                    out.stats[k] = out.stats.get(k, 0.0) + p[1] * (float(h["n"]) - 1)
     return out
 
 
@@ -150,6 +159,7 @@ class GunMod:
     needs_tags: tuple[str, ...] = ()  # the weapon must have all of these (SEMI_AUTO, BEAM...)
     bans_tags: tuple[str, ...] = ()  # and none of these (SINGLESHOT, AOE...)
     locks_fire_rate: bool = False  # "Fire Rate cannot be modified" (Cannonade mods)
+    utility: bool = False  # can go in the Exilus slot (isUtility in the game data)
 
     def effect(self, rank: int | None = None) -> ModEffect:
         r = self.max_rank if rank is None else max(0, min(rank, self.max_rank))
@@ -212,6 +222,7 @@ def load_gun_mods(conn: sqlite3.Connection) -> list[GunMod]:
                 needs_tags=tuple(tags.get(uid, ([], []))[0]),
                 bans_tags=tuple(tags.get(uid, ([], []))[1]),
                 locks_fire_rate="Fire Rate cannot be modified" in json.dumps(d.get("description") or ""),
+                utility=bool(d.get("isUtility")),
             )
         )
     return out

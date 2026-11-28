@@ -420,6 +420,8 @@ class AppState:
         stripped: bool = False,
         combo: float = 12.0,
         extra_status: float = 0.0,
+        attack: str = "normal",
+        arcane: str | None = None,
     ) -> dict:
         """A suggested mod build for one gun or melee weapon (builds.search)."""
         from ..builds.search import suggest
@@ -446,6 +448,8 @@ class AppState:
                     stripped=stripped,
                     combo=combo,
                     extra_status=extra_status,
+                    attack=attack,
+                    arcane=arcane or None,
                 )
             except NotAGun as exc:
                 return {"error": str(exc)}
@@ -455,6 +459,10 @@ class AppState:
                     m["name"] = tr.by_id(m["id"], m["name"])
                 if b.get("upgrade"):
                     b["upgrade"]["name"] = tr.by_name(b["upgrade"]["name"])
+                if b.get("arcane"):
+                    b["arcane"]["label"] = tr.by_id(b["arcane"]["id"], b["arcane"]["name"])
+                for o in b.get("arcane_options") or []:
+                    o["label"] = tr.by_name(o["name"])
         return b
 
     def frame_build_for(
@@ -1030,6 +1038,8 @@ def make_handler(state: AppState):
                             stripped=(q.get("stripped") or ["0"])[0] == "1",
                             combo=_float((q.get("combo") or ["12"])[0], 12.0),
                             extra_status=_float((q.get("xstatus") or ["0"])[0], 0.0),
+                            attack="heavy" if (q.get("attack") or [""])[0] == "heavy" else "normal",
+                            arcane=(q.get("arcane") or [""])[0][:120] or None,
                         )
                     )
                 except Exception as exc:  # noqa: BLE001 - shown in the item details

@@ -134,3 +134,70 @@ def load_frame_arcanes(conn: sqlite3.Connection) -> list[Arcane]:
         seen.add(name)
         out.append(Arcane(uid, name, len(ranks) - 1, ranks))
     return sorted(out, key=lambda a: (not a.scored(), a.name))
+
+
+# -- weapon arcanes (wiki Arcane_Enhancement, edited 2026-11-21): one slot per weapon -----------
+WEAPON_FAMILIES = {
+    "PRIMARY": ("Primary ", "Fractalized "),
+    "SECONDARY": ("Secondary ", "Cascadia ", "Conjunction "),
+    "MELEE": ("Melee ",),
+}
+HOLSTER_FAMILIES = {"BOW": ("Longbow ",), "SHOTGUN": ("Shotgun ",)}
+# arcanes that need a status from the weapon itself: scored only when the build has that element
+STATUS_TRIGGERED = {
+    "Primary Blight": "toxin",
+    "Primary Frostbite": "cold",
+    "Conjunction Voltage": "electricity",
+}
+# arcanes scored automatically (others are listed for you to pick); "heavy" ones only for heavy attacks
+WEAPON_SCORED = {
+    "Primary Merciless",
+    "Secondary Merciless",
+    "Melee Doughty",
+    "Melee Animosity",
+    *STATUS_TRIGGERED,
+}
+HEAVY_ONLY = {"Melee Animosity"}
+
+
+def load_weapon_arcanes(conn: sqlite3.Connection, slot: str, holster: str | None) -> list[Arcane]:
+    prefixes = WEAPON_FAMILIES.get(slot, ()) + HOLSTER_FAMILIES.get(holster or "", ())
+    out, seen = [], set()
+    for uid, name, data in conn.execute("SELECT unique_name, name, data FROM item WHERE category = 'Arcane'"):
+        if not name.startswith(prefixes) or name in seen:
+            continue
+        d = json.loads(data or "{}")
+        ranks = ["\n".join(x.get("stats") or []) for x in d.get("levelStats") or []]
+        if not ranks or not ranks[-1].strip():
+            continue
+        seen.add(name)
+        out.append(Arcane(uid, name, len(ranks) - 1, ranks))
+    return sorted(out, key=lambda a: (a.name not in WEAPON_SCORED, a.name))
+
+
+def weapon_effect(a: Arcane, rank: int | None = None) -> dict[str, float]:
+    """An arcane's numbers for the damage model, at full stacks. Text shapes from the game data:
+    "+30% Damage for 4s. Stacks up to 12x." / "+3.6% Critical Damage and +1.8% Multishot for 12s.
+    Stacks up to 40x." / Doughty: "1.0x Critical Damage for every 10% Puncture Status chance" /
+    Animosity: "42% Critical Chance on your next Heavy Attack, up to 420%" /
+    Exposure: "60% Corrosive Damage ... Stacks up to 240%"."""
+    from .mods import parse_line
+
+    text = a.text(rank)
+    if a.name == "Melee Doughty":
+        v = _num(r"([\d.]+)x Critical Damage for every", text)
+        return {"doughty": v} if v else {}
+    if a.name == "Melee Animosity":
+        v = _num(r"up to ([\d.]+)%", text)
+        return {"heavy_crit_chance": v / 100} if v else {}
+    if a.name == "Melee Exposure":
+        v = _num(r"up to ([\d.]+)%", text)
+        return {"corrosive": v / 100} if v else {}
+    out: dict[str, float] = {}
+    for m in re.finditer(r"(?P<body>[^\n]+?) for [\d.]+s\. Stacks up to (?P<n>\d+)x", text):
+        n = int(m["n"])
+        for part in m["body"].split(" and "):
+            got = parse_line(part.strip().removeprefix("Gain "))
+            if got:
+                out[got[0]] = out.get(got[0], 0.0) + got[1] * n
+    return out

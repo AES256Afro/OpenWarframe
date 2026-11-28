@@ -1,9 +1,13 @@
 // ---- suggested builds for guns: computed from the game data on request -----------------
-var BUILD={}, BUILD_OPTS={target:"none", owned:true, stacks:true, level:"sp", stripped:false, combo:"12", xstatus:"0"};
+var BUILD={}, BUILD_OPTS={target:"none", owned:true, stacks:true, level:"sp", stripped:false, combo:"12", xstatus:"0", attack:"normal"};
+// weapon arcane per weapon: "" = the best one that can be scored, "none" = empty slot
+var BUILD_ARC={};
 var BUILD_LEVELS=[["none","No armor (damage test)"],["normal","Normal missions"],["sp","Steel Path"]];
 var BUILD_TARGETS=[["none","Any enemy"],["Grineer","Grineer"],["Corpus","Corpus"],["Infested","Infested"],["Orokin","Corrupted (Orokin)"],["Murmur","The Murmur"],["Sentient","Sentient"],["Scaldra","Scaldra"],["Techrot","Techrot"]];
 function isGun(r){ return r.category==="Primary"||r.category==="Secondary"||r.category==="Melee"; }
-function buildKey(id){ return [id,BUILD_OPTS.target,BUILD_OPTS.owned&&DATA.meta.inventory?1:0,BUILD_OPTS.stacks?1:0,BUILD_OPTS.level,BUILD_OPTS.stripped?1:0,BUILD_OPTS.combo,BUILD_OPTS.xstatus].join("|"); }
+function buildKey(id){ return [id,BUILD_OPTS.target,BUILD_OPTS.owned&&DATA.meta.inventory?1:0,BUILD_OPTS.stacks?1:0,BUILD_OPTS.level,BUILD_OPTS.stripped?1:0,BUILD_OPTS.combo,BUILD_OPTS.xstatus,BUILD_OPTS.attack,BUILD_ARC[id]||""].join("|"); }
+// arcane choices come with a build; keep the last list per weapon so the select stays up
+var BUILD_ARC_OPTS={};
 function buildPanel(r){
   var inv=!!DATA.meta.inventory;
   var h='<div class="buildbox"><h3>Suggested build</h3><div class="buildopts">'
@@ -11,6 +15,8 @@ function buildPanel(r){
     +'<label>Enemies <select data-bopt="level">'+BUILD_LEVELS.map(function(t){return '<option value="'+t[0]+'"'+(t[0]===BUILD_OPTS.level?' selected':'')+'>'+esc(t[1])+'</option>'}).join('')+'</select></label>'
     +'<label><input type="checkbox" data-bopt="stripped"'+(BUILD_OPTS.stripped?' checked':'')+'> Armor already stripped (abilities, squad)</label>'
     +(inv?'<label><input type="checkbox" data-bopt="owned"'+(BUILD_OPTS.owned?' checked':'')+'> Only mods I own</label>':'')
+    +(r.category==="Melee"?'<label>Attack <select data-bopt="attack">'+[["normal","Normal hits"],["heavy","Heavy attack"]].map(function(c){return '<option value="'+c[0]+'"'+(BUILD_OPTS.attack===c[0]?' selected':'')+'>'+c[1]+'</option>'}).join('')+'</select></label>':'')
+    +(BUILD_ARC_OPTS[r.id]?'<label>Arcane <select data-barc="'+esc(r.id)+'"><option value="">Best one that can be scored</option><option value="none"'+(BUILD_ARC[r.id]==="none"?' selected':'')+'>None</option>'+BUILD_ARC_OPTS[r.id].map(function(o){return '<option value="'+esc(o.name)+'"'+(BUILD_ARC[r.id]===o.name?' selected':'')+'>'+esc(o.label||o.name)+(o.scored?'':' (not scored)')+'</option>'}).join('')+'</select></label>':'')
     +(r.category==="Melee"?'<label>Combo <select data-bopt="combo">'+[["1","No combo (1x)"],["6","6x"],["12","12x, the cap"]].map(function(c){return '<option value="'+c[0]+'"'+(BUILD_OPTS.combo===c[0]?' selected':'')+'>'+c[1]+'</option>'}).join('')+'</select></label>'
       +'<label>Status types from other sources <select data-bopt="xstatus">'+["0","1","2","3","4","5"].map(function(n){return '<option'+(BUILD_OPTS.xstatus===n?' selected':'')+'>'+n+'</option>'}).join('')+'</select></label>':'')
     +'<label><input type="checkbox" data-bopt="stacks"'+(BUILD_OPTS.stacks?' checked':'')+'> Count on-kill stacks at their maximum</label>'
@@ -23,11 +29,18 @@ function num(v){ return v>=100?Math.round(v).toLocaleString():(Math.round(v*10)/
 function buildHtml(b){
   if(b.error) return '<p class="muted">'+esc(b.error)+'</p>';
   var s=b.stats, h='';
-  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li><b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+(m.owned===false?' · you don\'t have it':'')+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
+  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li>'+(m.exilus?'<span class="pill p-violet">Exilus</span> ':'')+'<b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+(m.owned===false?' · you don\'t have it':'')+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
+  if(b.arcane) h+='<p><span class="pill p-violet">Arcane</span> <b>'+esc(b.arcane.label||b.arcane.name)+'</b>'+(b.arcane.counted?'':' <span class="muted">(not counted)</span>')+'<span class="muted"> · '+esc(b.arcane.text.replace(/\n/g," "))+'</span></p>';
+  if(s.heavy){
+    if(s.time_to_kill) h+='<div class="buildstats"><span>Heavy attacks to kill <b>'+Math.max(1,Math.ceil(s.time_to_kill-1e-9))+'</b></span></div>';
+    h+='<div class="buildstats"><span>One heavy attack to health <b>'+num(s.total_dps)+'</b></span><span>Hit <b>'+num(s.direct_dps)+'</b></span><span>Status damage over time <b>'+num(s.status_dps)+'</b></span></div>';
+    h+='<div class="buildstats"><span>Heavy attack <b>'+num(s.per_shot)+'</b> before armor</span><span>Crit <b>'+pct(s.crit_chance)+'</b> × '+num(s.crit_multiplier)+'</span><span>Status <b>'+pct(s.status_chance)+'</b></span><span>Wind-up <b>'+num(s.windup)+' s</b></span></div>';
+  } else {
   if(s.time_to_kill) h+='<div class="buildstats"><span>Time to kill <b>'+num(s.time_to_kill)+' s</b></span>'+(s.shield_dps?'<span>To shields <b>'+num(s.shield_dps)+'</b>/s</span>':'')+'</div>';
   h+='<div class="buildstats"><span>Damage per second to health <b>'+num(s.total_dps)+'</b></span><span>Direct hits <b>'+num(s.direct_dps)+'</b></span><span>Status damage over time <b>'+num(s.status_dps)+'</b></span></div>';
   var isMelee=b.slot==="MELEE";
   h+='<div class="buildstats"><span>Per '+(isMelee?'hit':'shot')+' <b>'+num(s.per_shot)+'</b> before armor</span><span>Crit <b>'+pct(s.crit_chance)+'</b> × '+num(s.crit_multiplier)+'</span><span>Status <b>'+pct(s.status_chance)+'</b> ('+num(s.procs_per_second)+' procs/s)</span>'+(isMelee?'':'<span>Multishot <b>'+num(s.multishot)+'</b></span>')+'<span>'+(isMelee?'Attack speed':'Fire rate')+' <b>'+num(s.fire_rate)+'</b></span></div>';
+  }
   var fx=[];
   if(s.armor_reduction) fx.push('armor '+Math.round(s.armor).toLocaleString()+' stops '+pct(s.armor_reduction));
   if(s.corrosive_stacks>=0.5) fx.push(num(s.corrosive_stacks)+' Corrosive stacks');
@@ -37,20 +50,22 @@ function buildHtml(b){
   if(s.cold_stacks>=0.5) fx.push(num(s.cold_stacks)+' Cold stacks');
   if(fx.length) h+='<p class="muted">On the enemy: '+esc(fx.join(' · '))+'</p>';
   h+='<p class="muted">Damage: '+b.elements.map(function(e){return esc(e[0])+' '+num(e[1])}).join(' · ')+'</p>';
-  if(b.upgrade) h+='<p>Best mod you don\'t have: <b>'+esc(b.upgrade.name)+'</b> <span class="muted">('+esc(b.upgrade.gain)+' more damage per second)</span></p>';
+  if(b.upgrade) h+='<p>Best mod you don\'t have: <b>'+esc(b.upgrade.name)+'</b> <span class="muted">('+esc(b.upgrade.gain)+(s.heavy?' more damage per heavy attack)':' more damage per second)')+'</span></p>';
   if(b.notes&&b.notes.length) h+='<ul class="muted buildnotes">'+b.notes.map(function(n){return '<li>'+esc(n)+'</li>'}).join('')+'</ul>';
   return h;
 }
 function runBuild(id){
   var k=buildKey(id);
   [].forEach.call(document.querySelectorAll("[data-buildout]"), function(el){ if(el.getAttribute("data-buildout")===id) el.innerHTML='<p class="muted">Working out the best mods…</p>'; });
-  var q="/api/build?id="+encodeURIComponent(id)+"&target="+encodeURIComponent(BUILD_OPTS.target)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+"&stacks="+(BUILD_OPTS.stacks?1:0)+"&level="+encodeURIComponent(BUILD_OPTS.level)+"&stripped="+(BUILD_OPTS.stripped?1:0)+"&combo="+encodeURIComponent(BUILD_OPTS.combo)+"&xstatus="+encodeURIComponent(BUILD_OPTS.xstatus);
-  api(q).then(function(b){ BUILD[k]=b; redrawTable(); }).catch(function(){ BUILD[k]={error:"Could not work that out. Is OpenWarframe still running?"}; redrawTable(); });
+  var q="/api/build?id="+encodeURIComponent(id)+"&target="+encodeURIComponent(BUILD_OPTS.target)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+"&stacks="+(BUILD_OPTS.stacks?1:0)+"&level="+encodeURIComponent(BUILD_OPTS.level)+"&stripped="+(BUILD_OPTS.stripped?1:0)+"&combo="+encodeURIComponent(BUILD_OPTS.combo)+"&xstatus="+encodeURIComponent(BUILD_OPTS.xstatus)+"&attack="+encodeURIComponent(BUILD_OPTS.attack)+"&arcane="+encodeURIComponent(BUILD_ARC[id]||"");
+  api(q).then(function(b){ BUILD[k]=b; if(b.arcane_options) BUILD_ARC_OPTS[id]=b.arcane_options; redrawTable(); }).catch(function(){ BUILD[k]={error:"Could not work that out. Is OpenWarframe still running?"}; redrawTable(); });
 }
 function onBuildEvent(e){
   var t=e.target; if(!t.closest) return;
   var opt=t.closest("[data-bopt]");
   if(opt && e.type==="change"){ var k=opt.dataset.bopt; BUILD_OPTS[k]=opt.type==="checkbox"?opt.checked:opt.value; return; }
+  var arc=t.closest("[data-barc]");
+  if(arc && e.type==="change"){ BUILD_ARC[arc.dataset.barc]=arc.value; return; }
   var b=t.closest("[data-build]"); if(b && e.type==="click"){ e.stopPropagation(); runBuild(b.dataset.build); }
 }
 $("view").addEventListener("click", onBuildEvent, true);

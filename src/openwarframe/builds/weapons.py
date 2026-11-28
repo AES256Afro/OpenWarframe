@@ -54,6 +54,7 @@ class Gun:
     heavy: bool = False  # melee: judge heavy attacks instead of normal hits
     head: bool = False  # every hit lands on the head (weak point)
     arcane: dict[str, float] = field(default_factory=dict)  # the weapon arcane's numbers
+    bonus: dict[str, float] = field(default_factory=dict)  # Incarnon form and evolution stats
 
     @property
     def total(self) -> float:

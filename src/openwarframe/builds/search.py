@@ -11,6 +11,7 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 
+from . import incarnon as inc
 from .arcanes import (
     HEAD_ONLY,
     HEAVY_ONLY,
@@ -89,6 +90,8 @@ def _score(
             t.elements.append((k, v))
         else:
             t.sums[k] = t.sums.get(k, 0.0) + v
+    for k, v in gun.bonus.items():  # Incarnon form and evolutions
+        t.sums[k] = t.sums.get(k, 0.0) + v
     r, order = best_order(gun, t, target, enemy)
     return r.effective_dps, r, order
 
@@ -300,6 +303,8 @@ def suggest(
     aim: str = "body",
     riven: str = "",
     riven_drain: int = 18,
+    incarnon: str | None = None,
+    perks: dict[int, str] | None = None,
 ) -> dict:
     """The suggested build for one gun or melee weapon, ready for the app.
 
@@ -320,6 +325,10 @@ def suggest(
     ("+152.3% Critical Chance", "x0.62 Damage to Grineer"); it stays in a slot and the other
     mods are picked around it. ``riven_drain``: its drain at max rank.
 
+    ``incarnon``: "off", "normal" (evolution perks on the normal attack) or "form" (the Incarnon
+    form with its perks); None: "form" for weapons born Incarnon, "off" for Genesis weapons.
+    ``perks``: tier -> perk name; tiers left out get the best scored perk.
+
     ``level``: none (no armor), normal (level 35) or sp (Steel Path, level 135); ``stripped``:
     the enemy's armor is already gone (abilities, squad).
     """
@@ -333,13 +342,62 @@ def suggest(
     target = None if target in (None, "", "none") else target
     enemy = enemy_for(target, level, stripped)
     pool = candidates(gun, mods, owned)
+    found = inc.lookup(gun.name)
+    if found and found[1]["slot"] != gun.slot:
+        found = None
+    mode = "off"
+    inc_tiers: dict[int, list[dict]] = {}
+    picks_inc: dict[int, dict] = {}
+    if found:
+        _fam, entry, vi = found
+        mode = incarnon if incarnon in ("off", "normal", "form") else ("off" if entry["genesis"] else "form")
+        if mode == "form" and not inc.can_form(entry):
+            mode = "normal"
+        inc_tiers = inc.tiers(entry)
+    base_gun = gun
     rv = riven_mod(riven, gun.slot, riven_drain)
     fixed: tuple[Pick, ...] = ()
     riven_unused: list[str] = []
     if rv:
         rmod, riven_unused = rv
         fixed = (Pick(rmod, rmod.max_rank, rmod.effect(), True if owned is not None else None),)
-    chosen = search(gun, pool, target, stacks, enemy, fixed)
+    wanted = {int(k): v for k, v in (perks or {}).items() if v}
+    if mode != "off":
+
+        def with_perks(ps: dict[int, dict]) -> Gun:
+            return inc.apply(base_gun, entry, vi, form=mode == "form", perks=list(ps.values()), stacks=stacks)
+
+        def best_perks(mods_now: list[Pick]) -> dict[int, dict]:
+            ps = {
+                t: next((p for p in opts if p["name"] == wanted.get(t)), None)
+                for t, opts in inc_tiers.items()
+            }
+            ps = {t: p for t, p in ps.items() if p}
+            for t, opts in sorted(inc_tiers.items()):
+                if t in ps:
+                    continue
+                best, best_s = None, None
+                for p in opts:
+                    if not p["effect"]:
+                        continue
+                    trial = with_perks({**ps, t: p})
+                    sc_ = _score(trial, mods_now, target, stacks, enemy)[0]
+                    if best_s is None or sc_ > best_s * (1 + 1e-9):
+                        best, best_s = p, sc_
+                if best:
+                    ps[t] = best
+            return ps
+
+        picks_inc = best_perks(list(fixed))
+        gun = with_perks(picks_inc)
+        chosen = search(gun, pool, target, stacks, enemy, fixed)
+        again = best_perks(chosen)
+        if [p["name"] for p in again.values()] != [p["name"] for p in picks_inc.values()]:
+            picks_inc = again
+            gun = with_perks(picks_inc)
+            chosen = search(gun, pool, target, stacks, enemy, fixed)
+    else:
+        chosen = search(gun, pool, target, stacks, enemy, fixed)
     arcanes = load_weapon_arcanes(conn, gun.slot, gun.holster)
     picked = _pick_arcane(gun, arcanes, arcane, chosen, target, stacks, enemy, owned)
     if picked and gun.arcane:
@@ -414,8 +472,8 @@ def suggest(
         )
     notes = [
         ranked + ".",
-        "Not counted: shield regeneration and the Magnetic shield-break burst, weak points other than the head, "
-        "Incarnon forms; Heat is counted per proc, though in long fights its stacks keep growing.",
+        "Not counted: shield regeneration and the Magnetic shield-break burst, weak points other than the head; "
+        "Heat is counted per proc, though in long fights its stacks keep growing.",
         f"Mod drain {drain} against {cap} capacity with an Orokin Catalyst"
         + (" and a stance in a matching slot" if gun.slot == "MELEE" else "")
         + (
@@ -457,6 +515,25 @@ def suggest(
             " (not on status ticks). Mods and arcanes that work on weak point hits or kills count as active, and "
             "scopes' \"when Aiming\" as met. Area damage can't headshot, so explosive weapons score too high here."
         )
+    if mode != "off":
+        if mode == "form" and gun.slot == "MELEE":
+            notes.append(
+                "Incarnon form: Evolution I's bonus is counted as always up (it lasts 90 to 180 s after a "
+                "heavy attack at a 6x combo); its spectral projectiles and fields aren't."
+            )
+        elif mode == "form":
+            notes.append(
+                "Incarnon form: the form's own damage, crit, status, fire rate and multishot, with mods as "
+                "usual, firing its charges without reloads (charge it with "
+                + str((entry.get("charge") or {}).get("by") or "weak point hits")
+                + "). An area part of the shot is added to the hit at full strength; chains, ricochets "
+                "and bounces aren't counted."
+            )
+        else:
+            notes.append("Incarnon evolutions on the normal attack.")
+        skipped = [p["name"] for p in picks_inc.values() if not p["effect"]]
+        if skipped:
+            notes.append("Evolution perks shown but not counted: " + ", ".join(skipped) + ".")
     if fixed:
         notes.append(
             "Your Riven stays in a slot and the other mods are picked around it"
@@ -511,6 +588,36 @@ def suggest(
             else None
         ),
         "riven": {"lines": len(fixed[0].mod.ranks[0]), "unused": riven_unused} if fixed else None,
+        "incarnon": (
+            {
+                "family": found[0],
+                "genesis": entry["genesis"],
+                "mode": mode,
+                "can_form": inc.can_form(entry),
+                "form_skip": entry.get("form_skip"),
+                "evo1": entry.get("evo1", ""),
+                "page": entry["page"],
+                "tiers": [
+                    {
+                        "tier": t,
+                        "chosen": picks_inc[t]["name"] if t in picks_inc else None,
+                        "auto": t not in wanted,
+                        "options": [
+                            {
+                                "name": p["name"],
+                                "text": p["text"],
+                                "counted": bool(p["effect"]),
+                                "counts": inc.describe(inc.perk_effect(p, vi)),
+                            }
+                            for p in opts
+                        ],
+                    }
+                    for t, opts in sorted(inc_tiers.items())
+                ],
+            }
+            if found
+            else None
+        ),
         "arcane_options": [{"name": a.name, "scored": a.name in WEAPON_SCORED} for a in arcanes],
         "notes": notes,
     }

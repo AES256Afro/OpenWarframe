@@ -16,7 +16,7 @@ Sustained DPS = per shot x fire rate x mag / (fire rate x reload + mag).
 Against an enemy (see ``_against``): armor and its stripping by Corrosive and Heat, Viral,
 Cold and the damage over time of Slash, Heat, Toxin, Electricity and Gas.
 Melee heavy attacks (``heavy`` in the sums) are judged one attack at a time; see ``evaluate``.
-Not modelled: weak points other than the head, Incarnon forms.
+Not modelled: weak points other than the head.
 """
 
 from __future__ import annotations
@@ -87,6 +87,13 @@ NUMERIC = (
     "heavy_efficiency",
     "doughty",
     "bow_fire_rate",
+    # Incarnon evolutions: crit and status added after mods (Zariman weapons), Prelude of Might's
+    # crit multiplier below a crit chance, Attrition's expected bonus on non-critical hits
+    "flat_crit_chance",
+    "flat_status_chance",
+    "lowcrit_cd",
+    "lowcrit_below",
+    "noncrit",
     # headshots and weak points: Target Acquired / Meticulous Aim / Deadhead, Meticulous Aim's
     # body penalty, Acuity; context: aiming at heads, the head's multiplier and crit bonus
     "headshot_bonus",
@@ -269,11 +276,18 @@ def evaluate(
         # wiki Heavy_Attack: Killing Blow joins the base damage bonus; True Steel's "x2 for Heavy
         # Attacks" and Melee Animosity add to the crit chance bonus
         crit_bonus += s.get("heavy_crit_chance", 0.0)
-    cc = max(0.0, gun.crit_chance * (1 + crit_bonus))
-    cd = max(1.0, gun.crit_multiplier * (1 + s.get("crit_damage", 0.0)))
+    cc = max(0.0, gun.crit_chance * (1 + crit_bonus) + s.get("flat_crit_chance", 0.0))
+    base_cd = gun.crit_multiplier
+    if s.get("lowcrit_cd") and cc < s.get("lowcrit_below", 0.0):
+        base_cd += s["lowcrit_cd"]  # Prelude of Might: base crit multiplier, so mods scale it
+    cd = max(1.0, base_cd * (1 + s.get("crit_damage", 0.0)))
     # Acuity: "Multishot cannot be modified"
     ms = gun.multishot if s.get("lock_multishot") else max(0.0, gun.multishot * (1 + s.get("multishot", 0.0)))
-    sc = max(0.0, gun.status_chance * (1 + s.get("status_chance", 0.0) + s.get("combo_status", 0.0) * steps))
+    sc = max(
+        0.0,
+        gun.status_chance * (1 + s.get("status_chance", 0.0) + s.get("combo_status", 0.0) * steps)
+        + s.get("flat_status_chance", 0.0),
+    )
     bow = s.get("bow_fire_rate", 0.0) if gun.holster == "BOW" else 0.0
     fr = max(0.05, gun.fire_rate * (1 + s.get("fire_rate", 0.0) + bow))
     mag = max(1, round(gun.magazine * (1 + s.get("magazine", 0.0))))
@@ -328,7 +342,8 @@ def evaluate(
     else:
         loc = max(0.0, 1 + s.get("body_damage", 0.0))
     headcrit = head and bool(s.get("headcrit", 1.0))
-    per_shot = per_projectile * ms * (1 + cc * ((2 * cd if headcrit else cd) - 1)) * bane * loc
+    noncrit = max(0.0, 1 - cc) * s.get("noncrit", 0.0)  # Devastating / Devouring Attrition
+    per_shot = per_projectile * ms * (1 + cc * ((2 * cd if headcrit else cd) - 1) + noncrit) * bane * loc
     burst = per_shot * fr
     sustained = burst * uptime
     extra = {}
@@ -415,10 +430,11 @@ def _against(
     magnetic = 1 + _stack_multiplier(n_mag, 1.0, 0.25)
     crit = 1 + cc * (cd + _stack_multiplier(n_cold, 0.10, 0.05) - 1)
     hc = 2.0 if headcrit else 1.0
+    nc = max(0.0, 1 - cc) * t.sums.get("noncrit", 0.0)
     hit_dr, hit_viral, hit_mag, hit_crit = (
-        (armor_reduction(full_armor), 1.0, 1.0, 1 + cc * (hc * cd - 1))
+        (armor_reduction(full_armor), 1.0, 1.0, 1 + cc * (hc * cd - 1) + nc)
         if heavy
-        else (dr, viral, magnetic, 1 + cc * (hc * (cd + _stack_multiplier(n_cold, 0.10, 0.05)) - 1))
+        else (dr, viral, magnetic, 1 + cc * (hc * (cd + _stack_multiplier(n_cold, 0.10, 0.05)) - 1) + nc)
     )
     # direct hits per second by type, before armor, Viral or Magnetic
     hits = {k: v * mods.get(k, 1.0) * ms * hit_crit * bane * loc * fr * uptime for k, v in by_type.items()}

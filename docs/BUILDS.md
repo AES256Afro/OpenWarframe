@@ -147,11 +147,23 @@ this doesn't calculate kills. It balances the stats the abilities you use scale 
   and Azure shards you have are used; shards already in a frame aren't in the inventory counts.
   Not scored: Amber (casting speed, orbs) and the Emerald, Topaz and Violet options that raise
   ability damage against enemies with a status.
+- **Umbral set** (wiki Umbral_Intensify, _Vitality, _Fiber, edited 2026-07-10): each Umbral mod's
+  value grows with the number of Umbral mods equipped. Umbral Intensify x1.25 with 2 and x1.75
+  with 3 (44% -> 77% Strength); Umbral Vitality and Umbral Fiber x1.30 and x1.80 (100% -> 180%).
+- **Arcanes** (2 slots, no duplicates; wiki Arcane_Enhancement, edited 2026-11-21). Warframe
+  arcanes are the "Arcane ..." and "Molt ..." ones. Four hold steady during a mission and are
+  scored from the game's text: Molt Augmented (+0.24% Strength per kill, 250 stacks: +60%;
+  lasts until death), Arcane Blessing (+24 health per health orb, 50 stacks: +1,200), Arcane
+  Bellicose (round(max health / 250 x 6)% Strength, up to 72%; it reads your final health,
+  Blessing included) and Arcane Intention (+250 health per channeled ability you use, up to 4).
+  The rest trigger on something (being hit, freezing enemies, going invisible), so you pick them
+  in the two arcane selectors; the free slots get the best scored ones.
 - **Variants** can't be equipped together: Primed, Umbral, Archon and Amalgam versions with their
   base mod (Umbral Fiber with Steel Fiber).
 
 The limit: the data says that an ability uses a stat, not how much it gains from it, so a
 damage ability and a buff count the same. Picking the abilities you actually cast is how to
-steer it. Not counted yet: arcanes and set bonuses (Umbral); conditional effects aren't counted. Aura health and armor bonuses are added to the mods' bonuses;
+steer it. Not counted: arcanes that trigger on something (you can still pick them), conditional
+mod effects (on kill, while aiming). Aura health and armor bonuses are added to the mods' bonuses;
 the wiki doesn't say whether they stack that way or multiply.
 

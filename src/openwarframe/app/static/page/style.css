@@ -177,4 +177,4 @@ body.big-text .tab .n, body.big-text .brand span{display:none}
 .buildmods{margin:10px 0; padding-left:1.4em; display:grid; gap:4px; font-size:13px}
 .buildstats{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px}
 .buildnotes{font-size:12px; margin:6px 0 0; padding-left:1.2em}
-
+.augs{display:flex; flex-wrap:wrap; gap:4px 14px; align-items:center; font-size:13px; flex-basis:100%}

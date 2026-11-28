@@ -448,7 +448,14 @@ class AppState:
         return b
 
     def frame_build_for(
-        self, uid: str, *, abilities: list[int] | None, survivability: str, owned_only: bool
+        self,
+        uid: str,
+        *,
+        abilities: list[int] | None,
+        survivability: str,
+        owned_only: bool,
+        augments: list[str] | None = None,
+        shards: str = "none",
     ) -> dict:
         """A suggested mod build for one Warframe (builds.frames)."""
         from ..builds.frames import NotAFrame, suggest_frame
@@ -457,15 +464,23 @@ class AppState:
 
         if not uid or not self.settings.codex_path.exists():
             return {"error": "No game data yet."}
-        owned = None
+        owned = owned_shards = None
         if owned_only and self.inventory_path.exists():
             with contextlib.suppress(Exception):
                 inv = load_inventory(self.inventory_path)
                 owned = {u: max(m.get("ranks") or [0]) for u, m in inv.mods.items()}
+                owned_shards = {u: n for u, n in inv.misc.items() if "/NarmerSorties/ArchonCrystal" in u}
         with Codex(self.settings.codex_path) as codex:
             try:
                 b = suggest_frame(
-                    codex.conn, uid, abilities=abilities, survivability=survivability, owned=owned
+                    codex.conn,
+                    uid,
+                    abilities=abilities,
+                    survivability=survivability,
+                    owned=owned,
+                    augments=augments,
+                    shards=shards,
+                    owned_shards=owned_shards,
                 )
             except NotAFrame as exc:
                 return {"error": str(exc)}
@@ -972,6 +987,8 @@ def make_handler(state: AppState):
                             abilities=keys or None,
                             survivability=(q.get("surv") or ["some"])[0],
                             owned_only=(q.get("owned") or ["0"])[0] == "1",
+                            augments=[a for a in (q.get("augments") or [""])[0].split(",") if a],
+                            shards=(q.get("shards") or ["none"])[0],
                         )
                     )
                 except Exception as exc:  # noqa: BLE001 - shown in the item details

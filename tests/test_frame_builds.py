@@ -228,3 +228,86 @@ def test_suggest_reports_aura_and_exilus(tmp_path: Path):
     assert b["aura"]["name"] == "Physique" and b["aura"]["capacity"] == 14 and b["capacity"] == 74
     assert [m["name"] for m in b["mods"] if m["exilus"]] == ["Cunning Drift"]
     assert b["stats"]["health"] == pytest.approx(365 * 1.2)
+
+
+# -- Archon Shards and augments (wiki Archon_Shard, edited 2026-11-21) -----------------------
+
+
+def test_shards_add_percent_to_mods_and_flat_after():
+    f = frame()
+    extra = frames.shard_effects(["strength", "health", "armor"], tauforged=False)
+    assert extra == {"strength": 0.10, "health_flat": 150.0, "armor_flat": 150.0}
+    t = frames.totals(f, [(mod("Vitality", ["+100% Health"]), 0)], extra)
+    assert t["strength"] == pytest.approx(1.10)
+    assert t["health"] == pytest.approx(300 * 2 + 150)  # flat after the mod's percentage
+    assert t["armor"] == pytest.approx(450)
+    assert frames.shard_effects(["duration"], tauforged=True) == {"duration": pytest.approx(0.15)}
+
+
+def test_best_shards_follow_the_weights_and_your_shards():
+    f = frame()
+    tanky = frames.weights_for(f, [2], "tanky")
+    picks = frames.best_shards(f, tanky, [], tauforged=False)
+    assert len(picks) == 5
+    # without Crimson shards, only Azure stats can be picked
+    only_azure = frames.best_shards(
+        f, frames.weights_for(f, None, "none"), [], False, {"Azure": 2, "Crimson": 0}
+    )
+    assert len(only_azure) <= 2 and all(frames.SHARD_STATS[x][0] == "Azure" for x in only_azure)
+    assert frames.best_shards(f, tanky, [], False, {}) == []
+
+
+def test_augments_load_and_lock_in(tmp_path: Path):
+    from openwarframe.codex.schema import SCHEMA
+
+    con = sqlite3.connect(tmp_path / "c.sqlite")
+    con.executescript(SCHEMA)
+
+    def add(uid, name, lines, compat="WARFRAME", drain=4, utility=False):
+        d = {"type": "WARFRAME", "compatName": compat, "baseDrain": drain, "fusionLimit": 0,
+             "levelStats": [{"stats": lines}], "isUtility": utility}  # fmt: skip
+        con.execute(
+            "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+            (uid, name, "Mod", None, None, None, None, json.dumps(d)),
+        )
+
+    for i in range(9):
+        add(f"/M/S{i}", f"Strong{i}", ["+30% Ability Strength"])
+    add(
+        "/Saryn/Venom",
+        "Venom Dose",
+        ["Spores Augment: Hold to cast will grant allies more <DT_CORROSIVE_COLOR>Corrosive."],
+        "Saryn",
+        6,
+    )
+    add("/Saryn/Cloud", "Contagion Cloud", ["Toxic Lash Augment : Create toxic clouds."], "Saryn", 6)
+    add("/Rhino/Roar", "Piercing Roar", ["Roar Augment: Roar gains range."], "Rhino", 6)
+    augs = frames.load_augments(con, "Saryn Prime")  # augments name the base frame
+    assert [(a.name, a.augment_for) for a in augs] == [
+        ("Venom Dose", "Spores"),
+        ("Contagion Cloud", "Toxic Lash"),
+    ]
+    assert augs[0].text == "Hold to cast will grant allies more Corrosive."
+    b = frames.suggest_frame(con, "/Lotus/Powersuits/Saryn/SarynPrime", augments=["/Saryn/Venom"])
+    names = [m["name"] for m in b["mods"]]
+    assert "Venom Dose" in names and len(names) == 8  # 7 stat mods fill the rest
+    assert {a["name"]: a["chosen"] for a in b["augments"]} == {"Venom Dose": True, "Contagion Cloud": False}
+    assert next(m for m in b["mods"] if m["name"] == "Venom Dose")["augment"] == "Spores"
+    # owned mode: an augment you don't have is still put in when you tick it, and marked
+    b = frames.suggest_frame(
+        con,
+        "/Lotus/Powersuits/Saryn/SarynPrime",
+        augments=["/Saryn/Cloud"],
+        owned={"/M/S1": 0},
+        shards="regular",
+        owned_shards={},
+    )
+    cloud = next(m for m in b["mods"] if m["name"] == "Contagion Cloud")
+    assert cloud["owned"] is False and b["shards"] == []
+
+
+def test_page_has_shards_and_augments():
+    from openwarframe.app.server import page_source
+
+    page = page_source()
+    assert 'data-fopt="shards"' in page and "data-faug" in page and "&shards=" in page

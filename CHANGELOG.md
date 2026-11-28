@@ -3,6 +3,16 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Archon Shards in Warframe builds.** Choose None, 5 shards or 5 Tauforged: the build picks
+  Crimson (Ability Strength, Duration) and Azure (Health, Shields, Armor) shard stats alongside
+  the mods, using the wiki's stacking rules (Crimson adds to the mods' bonuses; Azure is added
+  after them). With your inventory it sticks to the loose shards you own.
+- **Augment mods.** The build panel lists the augments for the abilities you use, with what they
+  do and whether you own them. Tick the ones you want; the rest of the build is fitted around
+  them.
+
 ## 0.18.0
 
 - **Warframe builds fill the Aura and Exilus slots.** The Exilus slot takes one exilus-capable mod

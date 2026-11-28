@@ -58,6 +58,8 @@ class FrameMod:
     exclusive: str
     utility: bool = False  # can go in the Exilus slot (isUtility in the game data)
     aura: bool = False
+    augment_for: str | None = None  # the ability an augment changes
+    text: str = ""  # an augment's effect at its top rank, as the game describes it
 
     def stats(self, rank: int | None = None) -> dict[str, float]:
         r = self.max_rank if rank is None else max(0, min(rank, self.max_rank))
@@ -105,6 +107,101 @@ _AURA = re.compile(
 
 # variants whose name doesn't contain the base mod's name
 VARIANT_OF = {"Umbral Fiber": "Steel Fiber"}
+
+
+_AUGMENT = re.compile(r"^(?P<ability>.+?)\s*Augment\s*:\s*(?P<text>.*)$", re.S)
+
+
+# Archon Shards (wiki Archon_Shard, edited 2026-11-21): 5 slots per frame, any stat may repeat;
+# Tauforged gives 1.5x. Crimson percentages add to the mods'; Azure values are flat and added
+# after all percentage bonuses. Only stats this model scores are offered.
+SHARD_SLOTS = 5
+SHARD_STATS = {  # (color, stat key, regular value)
+    "strength": ("Crimson", "strength", 0.10),
+    "duration": ("Crimson", "duration", 0.10),
+    "health": ("Azure", "health_flat", 150.0),
+    "shields": ("Azure", "shields_flat", 150.0),
+    "armor": ("Azure", "armor_flat", 150.0),
+}
+SHARD_ITEMS = {  # color -> (regular, Tauforged) item uniqueNames (wiki Module:Resources/data)
+    "Crimson": (
+        "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalAmar",
+        "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalAmarMythic",
+    ),
+    "Azure": (
+        "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalBoreal",
+        "/Lotus/Types/Gameplay/NarmerSorties/ArchonCrystalBorealMythic",
+    ),
+}
+
+
+def shard_effects(picks: list[str], tauforged: bool) -> dict[str, float]:
+    out: dict[str, float] = {}
+    for stat in picks:
+        _, key, v = SHARD_STATS[stat]
+        out[key] = out.get(key, 0.0) + v * (1.5 if tauforged else 1.0)
+    return out
+
+
+def best_shards(
+    frame: Frame, w: Weights, mods: list, tauforged: bool, limits: dict[str, int] | None = None
+) -> list[str]:
+    """Every way to fill the shard slots with the scored stats (126 at most); the best one.
+    ``limits``: how many shards of each color you have (None: any)."""
+    from itertools import combinations_with_replacement
+
+    base = totals(frame, [])["effective_health"]
+    best: tuple[float, list[str]] | None = None
+    for n in range(SHARD_SLOTS, -1, -1):
+        for combo in combinations_with_replacement(sorted(SHARD_STATS), n):
+            if limits is not None:
+                need: dict[str, int] = {}
+                for stat in combo:
+                    color = SHARD_STATS[stat][0]
+                    need[color] = need.get(color, 0) + 1
+                if any(need[c] > limits.get(c, 0) for c in need):
+                    continue
+            sc = score(frame, w, mods, base, shard_effects(list(combo), tauforged))
+            if best is None or sc > best[0] + 1e-12:
+                best = (sc, list(combo))
+    return best[1] if best else []
+
+
+def base_frame(name: str) -> str:
+    """'Saryn Prime' -> 'Saryn': augments name the base frame."""
+    return re.sub(r" (Prime|Umbra)$", "", name)
+
+
+def load_augments(conn: sqlite3.Connection, frame_name: str) -> list[FrameMod]:
+    """The frame's augment mods (compatName = the frame), each tied to the ability its text names."""
+    out = []
+    rows = conn.execute(
+        "SELECT unique_name, name, data FROM item WHERE category = 'Mod' AND json_extract(data, '$.compatName') = ?",
+        (base_frame(frame_name),),
+    )
+    for uid, name, data in rows:
+        if any(p in uid for p in SKIP_PATHS):
+            continue
+        d = json.loads(data or "{}")
+        stats = [list(x.get("stats") or []) for x in d.get("levelStats") or []]
+        first = " ".join(stats[-1]) if stats else ""
+        m = _AUGMENT.match(first)
+        if d.get("type") != "WARFRAME" or not m:
+            continue
+        out.append(
+            FrameMod(
+                uid,
+                name,
+                int(d.get("baseDrain") or 0),
+                int(d.get("fusionLimit") or 0),
+                stats,
+                name,
+                utility=bool(d.get("isUtility")),
+                augment_for=m["ability"].strip(),
+                text=re.sub(r"<[^>]+>", "", m["text"]).strip(),
+            )
+        )
+    return sorted(out, key=lambda a: (a.augment_for or "", a.name))
 
 
 def frame_exclusive_key(name: str) -> str:
@@ -216,8 +313,11 @@ def weights_for(frame: Frame, chosen: list[int] | None, survivability: str = "so
     return w
 
 
-def totals(frame: Frame, mods: list[tuple[FrameMod, int]]) -> dict[str, float]:
-    s: dict[str, float] = {}
+def totals(
+    frame: Frame, mods: list[tuple[FrameMod, int]], extra: dict[str, float] | None = None
+) -> dict[str, float]:
+    """``extra``: Archon Shard effects (percentages added to the mods'; ``*_flat`` added last)."""
+    s: dict[str, float] = dict(extra or {})
     for m, rank in mods:
         for k, v in m.stats(rank).items():
             s[k] = s.get(k, 0.0) + v
@@ -225,9 +325,9 @@ def totals(frame: Frame, mods: list[tuple[FrameMod, int]]) -> dict[str, float]:
     duration = 1 + s.get("duration", 0.0)
     rng = 1 + s.get("range", 0.0)
     efficiency = 1 + s.get("efficiency", 0.0)
-    health = frame.health * (1 + s.get("health", 0.0))
-    armor = frame.armor * (1 + s.get("armor", 0.0))
-    shields = frame.shields * (1 + s.get("shields", 0.0))
+    health = frame.health * (1 + s.get("health", 0.0)) + s.get("health_flat", 0.0)
+    armor = frame.armor * (1 + s.get("armor", 0.0)) + s.get("armor_flat", 0.0)
+    shields = frame.shields * (1 + s.get("shields", 0.0)) + s.get("shields_flat", 0.0)
     ehp = health * (armor + 300) / 300 + shields
     return {
         "strength": strength,
@@ -244,8 +344,14 @@ def totals(frame: Frame, mods: list[tuple[FrameMod, int]]) -> dict[str, float]:
     }
 
 
-def score(frame: Frame, w: Weights, mods: list[tuple[FrameMod, int]], base_ehp: float) -> float:
-    t = totals(frame, mods)
+def score(
+    frame: Frame,
+    w: Weights,
+    mods: list[tuple[FrameMod, int]],
+    base_ehp: float,
+    extra: dict[str, float] | None = None,
+) -> float:
+    t = totals(frame, mods, extra)
     return (
         w.strength * math.log(max(FLOOR, t["strength"]))
         + w.duration * math.log(max(FLOOR, t["duration"]))
@@ -296,16 +402,21 @@ def search(
     *,
     fixed: list[tuple[FrameMod, int]] | None = None,
     capacity: int = CAPACITY,
+    locked: list[tuple[FrameMod, int]] | None = None,
+    extra: dict[str, float] | None = None,
 ) -> list[tuple[FrameMod, int]]:
     """Mods for the 8 general slots and the Exilus slot. ``fixed`` (the aura) counts toward the
-    stats but takes no slot; ``capacity`` includes what the aura adds."""
+    stats but takes no slot; ``capacity`` includes what the aura adds; ``locked`` mods (augments
+    you picked) take slots and are never swapped out."""
     fixed = fixed or []
+    locked = list(locked or [])
     base = totals(frame, [])["effective_health"]
 
     def sc(mods):
-        return score(frame, w, [*mods, *fixed], base)
+        return score(frame, w, [*mods, *fixed], base, extra)
 
-    chosen: list[tuple[FrameMod, int]] = []
+    chosen: list[tuple[FrameMod, int]] = list(locked)
+    pool = [p for p in pool if p not in locked]
     while len(chosen) < SLOTS + EXILUS_SLOTS:
         cur = sc(chosen)
         best, gain = None, 1e-9
@@ -322,15 +433,15 @@ def search(
     while True:
         # one mod in or swapped; when that stops helping, two at once: mods with a cost
         # (Blind Rage, Overextended) often only pay off next to the mod that covers the cost
-        best = _best_move(sc, chosen, pool, cur, capacity, pairs=False) or _best_move(
-            sc, chosen, pool, cur, capacity, pairs=True
+        best = _best_move(sc, chosen, pool, cur, capacity, pairs=False, locked=locked) or _best_move(
+            sc, chosen, pool, cur, capacity, pairs=True, locked=locked
         )
         if best is None:
             return chosen
         chosen, cur = best
 
 
-def _best_move(sc, chosen, pool, cur, capacity, *, pairs: bool):
+def _best_move(sc, chosen, pool, cur, capacity, *, pairs: bool, locked=()):
     out = None
     left = [p for p in pool if p not in chosen]
     room = SLOTS + EXILUS_SLOTS
@@ -349,7 +460,7 @@ def _best_move(sc, chosen, pool, cur, capacity, *, pairs: bool):
             drops.append(list(chosen))
         candidates = ([*rest, a, b] for a_i, a in enumerate(left) for b in left[a_i + 1 :] for rest in drops)
     for trial in candidates:
-        if not _ok(trial, capacity):
+        if not _ok(trial, capacity) or any(x not in trial for x in locked):
             continue
         s = sc(trial)
         if s > cur + 1e-9 and (out is None or s > out[1]):
@@ -358,12 +469,12 @@ def _best_move(sc, chosen, pool, cur, capacity, *, pairs: bool):
 
 
 def exilus_of(chosen: list[tuple[FrameMod, int]]) -> tuple[FrameMod, int] | None:
-    """Which chosen mod goes in the Exilus slot: needed when 9 are chosen; otherwise the cheapest
-    exilus-capable one, so the general slots stay free."""
+    """Which chosen mod goes in the Exilus slot: the cheapest exilus-capable one, so the costlier
+    mods sit in general slots (an augment that can go there is preferred: it has no other home)."""
     utility = [p for p in chosen if p[0].utility]
     if not utility:
         return None
-    return min(utility, key=lambda p: p[0].drain(p[1]))
+    return min(utility, key=lambda p: (p[0].augment_for is None, p[0].drain(p[1])))
 
 
 def suggest_frame(
@@ -373,10 +484,22 @@ def suggest_frame(
     abilities: list[int] | None = None,
     survivability: str = "some",
     owned: dict[str, int] | None = None,
+    augments: list[str] | None = None,
+    shards: str = "none",
+    owned_shards: dict[str, int] | None = None,
 ) -> dict:
+    """``augments``: uniqueNames of augment mods to put in (they change abilities in ways a number
+    can't capture, so you choose them; the rest of the build is fitted around them)."""
     data = kb_abilities()
     frame = load_frame(uid, data)
     mods = load_frame_mods(conn)
+    all_augments = load_augments(conn, frame.name)
+    wanted = set(augments or [])
+    locked = [
+        (a, min(owned.get(a.unique_name, a.max_rank), a.max_rank) if owned is not None else a.max_rank)
+        for a in all_augments
+        if a.unique_name in wanted
+    ]
     if owned is not None:
         every = [(m, min(owned[m.unique_name], m.max_rank)) for m in mods if m.unique_name in owned]
     else:
@@ -386,25 +509,39 @@ def suggest_frame(
     aura = pick_aura(frame, w, [p for p in every if p[0].aura])
     fixed = [aura] if aura else []
     capacity = CAPACITY + (aura[0].aura_capacity(aura[1]) if aura else 0)
-    chosen = search(frame, w, pool, fixed=fixed, capacity=capacity)
-    t = totals(frame, [*chosen, *fixed])
+    chosen = search(frame, w, pool, fixed=fixed, capacity=capacity, locked=locked)
+    shard_picks: list[str] = []
+    tauforged = shards == "tauforged"
+    extra: dict[str, float] = {}
+    if shards in ("regular", "tauforged"):
+        limits = None
+        if owned_shards is not None:
+            limits = {
+                c: owned_shards.get(items[1 if tauforged else 0], 0) for c, items in SHARD_ITEMS.items()
+            }
+        # shards and mods depend on each other: alternate twice
+        for _ in range(2):
+            shard_picks = best_shards(frame, w, [*chosen, *fixed], tauforged, limits)
+            extra = shard_effects(shard_picks, tauforged)
+            chosen = search(frame, w, pool, fixed=fixed, capacity=capacity, locked=locked, extra=extra)
+    t = totals(frame, [*chosen, *fixed], extra)
     base = totals(frame, [])
     upgrade = None
     if owned is not None:
         full = [(m, m.max_rank) for m in mods if not m.aura]
-        best = search(frame, w, full, fixed=fixed, capacity=capacity)
-        cur = score(frame, w, [*chosen, *fixed], base["effective_health"])
+        best = search(frame, w, full, fixed=fixed, capacity=capacity, locked=locked, extra=extra)
+        cur = score(frame, w, [*chosen, *fixed], base["effective_health"], extra)
         cand = None
         for p in best:
             if p[0].unique_name in owned:
                 continue
             options = [chosen] if len(chosen) < SLOTS + EXILUS_SLOTS else []
-            options += [chosen[:i] + chosen[i + 1 :] for i in range(len(chosen))]
+            options += [chosen[:i] + chosen[i + 1 :] for i in range(len(chosen)) if chosen[i] not in locked]
             for rest in options:
                 trial = [*rest, p]
                 if not _ok(trial, capacity):
                     continue
-                s = score(frame, w, [*trial, *fixed], base["effective_health"])
+                s = score(frame, w, [*trial, *fixed], base["effective_health"], extra)
                 if s > cur + 1e-6 and (cand is None or s > cand[1]):
                     cand = (p[0], s)
         if cand:
@@ -440,6 +577,27 @@ def suggest_frame(
             "counts": bool(aura[0].stats(aura[1])),
         },
         "capacity": capacity,
+        "shards": [
+            {
+                "color": SHARD_STATS[x][0],
+                "stat": x,
+                "value": SHARD_STATS[x][2] * (1.5 if tauforged else 1.0),
+                "tauforged": tauforged,
+            }
+            for x in shard_picks
+        ],
+        "augments": [
+            {
+                "id": a.unique_name,
+                "name": a.name,
+                "ability": a.augment_for,
+                "text": a.text,
+                "exilus_ok": a.utility,
+                "owned": None if owned is None else a.unique_name in owned,
+                "chosen": a.unique_name in wanted,
+            }
+            for a in all_augments
+        ],
         "stats": t,
         "base": base,
         "upgrade": upgrade,
@@ -451,8 +609,12 @@ def suggest_frame(
             "The Exilus slot takes one exilus-capable mod. The aura adds capacity (double its drain in a "
             "slot of matching polarity); most auras help the squad in ways this doesn't count, so any "
             "max-rank aura with a matching polarity adds the same capacity.",
-            "Not counted: augment mods, Archon Shards, arcanes, set bonuses (Umbral) and conditional "
-            "effects (on kill, while aiming).",
+            "Augments change what an ability does, which no single number captures, so they go in only "
+            "when you tick them; the rest of the build is fitted around them.",
+            "Not counted: arcanes, set bonuses (Umbral) and conditional effects (on kill, while aiming). "
+            "Archon Shards here are Crimson (Strength, Duration) and Azure (Health, Shields, Armor, added "
+            "after mods); shards that raise ability damage against enemies with a status, and Amber "
+            "shards, aren't scored.",
             f"Mod drain {drain} against {capacity} capacity (Orokin Reactor 60"
             + (f" + {capacity - CAPACITY} from the aura" if capacity > CAPACITY else "")
             + ")"
@@ -464,12 +626,14 @@ def suggest_frame(
 
 
 def _mod_row(m: FrameMod, r: int, owned: dict[str, int] | None, *, exilus: bool) -> dict:
+    why = ", ".join(f"{'+' if v >= 0 else ''}{round(v * 100)}% {k}" for k, v in m.stats(r).items())
     return {
         "id": m.unique_name,
         "name": m.name,
         "rank": r,
         "max_rank": m.max_rank,
-        "owned": None if owned is None else True,
+        "owned": None if owned is None else m.unique_name in owned,
         "exilus": exilus,
-        "why": ", ".join(f"{'+' if v >= 0 else ''}{round(v * 100)}% {k}" for k, v in m.stats(r).items()),
+        "augment": m.augment_for,
+        "why": f"{m.augment_for} augment (your choice): {m.text}" if m.augment_for else why,
     }

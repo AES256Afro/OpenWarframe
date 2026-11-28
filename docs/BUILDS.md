@@ -175,7 +175,7 @@ can score, at full stacks, from the in-game text:
 
 Other weapon arcanes trigger on things the model doesn't track (headshots, ability casts,
 blocking). Pick one in the **Arcane** selector to see the build with it; ones the model can't
-read are shown but not counted. The arcane isn't checked against your inventory.
+read are shown but not counted. With **Only mods I own** on, the build only picks arcanes you own.
 
 ## Warframe builds
 

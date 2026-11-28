@@ -670,3 +670,15 @@ def test_galvanized_damage_per_status_type():
     assert damage.evaluate(g, t).per_shot == pytest.approx(100 * (1 + 1.65 + 2.4))
     t.sums["extra_status"] = 40  # no more than 16 statuses on one enemy
     assert damage.evaluate(g, t).status_types == pytest.approx(16)
+
+
+def test_weapon_arcane_only_from_inventory(tmp_path: Path):
+    from openwarframe.builds.arcanes import Arcane
+
+    g = melee(damage={"slash": 100.0}, crit_chance=0.3, heavy_mult=6.0)
+    g.heavy = True
+    arcs = [
+        Arcane("/A/An", "Melee Animosity", 0, ["+42% Critical Chance on your next Heavy Attack, up to 420%"])
+    ]
+    assert search._pick_arcane(g, arcs, None, [], None, False, None).name == "Melee Animosity"
+    assert search._pick_arcane(g, arcs, None, [], None, False, None, owned={}) is None and g.arcane == {}

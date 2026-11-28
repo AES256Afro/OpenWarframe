@@ -279,7 +279,7 @@ def suggest(
     pool = candidates(gun, mods, owned)
     chosen = search(gun, pool, target, stacks, enemy)
     arcanes = load_weapon_arcanes(conn, gun.slot, gun.holster)
-    picked = _pick_arcane(gun, arcanes, arcane, chosen, target, stacks, enemy)
+    picked = _pick_arcane(gun, arcanes, arcane, chosen, target, stacks, enemy, owned)
     if picked and gun.arcane:
         chosen = search(gun, pool, target, stacks, enemy)  # the arcane can change the best mods
         if not _arcane_triggers(picked, _score(gun, chosen, target, stacks, enemy)[1]):
@@ -473,8 +473,9 @@ def _arcane_triggers(a, result: Result) -> bool:
     return el is None or result.by_type.get(el, 0.0) > 0
 
 
-def _pick_arcane(gun: Gun, arcanes, wanted: str | None, chosen, target, stacks, enemy):
-    """Set ``gun.arcane`` and return the arcane: the one named, or the best scored one."""
+def _pick_arcane(gun: Gun, arcanes, wanted: str | None, chosen, target, stacks, enemy, owned=None):
+    """Set ``gun.arcane`` and return the arcane: the one named, or the best scored one (of the
+    ones you own, when ``owned`` is given)."""
     gun.arcane = {}
     if wanted == "none" or not arcanes:
         return None
@@ -490,6 +491,8 @@ def _pick_arcane(gun: Gun, arcanes, wanted: str | None, chosen, target, stacks, 
     best, best_s = None, base * 1.001
     for a in arcanes:
         if a.name not in WEAPON_SCORED or (a.name in HEAVY_ONLY and not gun.heavy):
+            continue
+        if owned is not None and a.unique_name not in owned:
             continue
         eff = weapon_effect(a)
         if not eff:

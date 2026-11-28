@@ -78,6 +78,10 @@ class Enemy:
     health: float = 0.0  # 0: judge by damage per second only (no time to kill)
     shields: float = 0.0
     unit: str = ""
+    # headshots (wiki Enemy_Body_Parts, read 2026-11-28): head multiplier, and whether crits on
+    # the head get the extra x2 (Corpus humanoids, most Murmur and Techrot don't)
+    head_mult: float = 3.0
+    headcrit: bool = True
 
 
 # reference units (Module:Enemies/data/*): (name, health, shields, armor, base level, health curve)
@@ -91,10 +95,20 @@ UNITS = {
 }
 
 
+# heads that aren't the usual 3x with crit bonus
+HEADS = {
+    "Murmur": (1.5, False),
+    "Techrot": (1.5, False),
+    "Corpus": (3.0, False),
+    "Corpus Amalgam": (3.0, False),
+}
+
+
 def enemy_for(faction: str | None, level_choice: str = "sp", stripped: bool = False) -> Enemy:
     level = LEVELS.get(level_choice, LEVELS["sp"])
+    head_mult, headcrit = HEADS.get(faction or "", (3.0, True))
     if level is None:
-        return Enemy(faction, 0.0, stripped, None)
+        return Enemy(faction, 0.0, stripped, None, head_mult=head_mult, headcrit=headcrit)
     key = "armored" if faction in ARMORED else faction if faction in UNITS else "other"
     name, health, shields, armor, base_level, curve = UNITS[key]
     sp = level_choice == "sp"
@@ -105,4 +119,4 @@ def enemy_for(faction: str | None, level_choice: str = "sp", stripped: bool = Fa
         else 0.0
     )
     ar = scale_armor(armor, base_level, level) if armor else 0.0
-    return Enemy(faction, ar, stripped, level, hp, sh, name)
+    return Enemy(faction, ar, stripped, level, hp, sh, name, head_mult, headcrit)

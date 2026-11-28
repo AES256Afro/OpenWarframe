@@ -3,6 +3,13 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Headshots.** Gun and melee builds have an **Aim** choice. Headshots land every hit on the
+  head: x3 on most enemies (x1.5 on the Murmur and Techrot), crit headshots get x2 on the crit
+  multiplier (not on Corpus humanoids), and Target Acquired, Meticulous Aim, Acuity, the scopes
+  and the Deadhead and Crux arcanes are counted.
+
 ## 0.23.0
 
 - **Damage per status type on guns.** Galvanized Aptitude, Savvy and Shot are counted (on-kill

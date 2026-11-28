@@ -52,6 +52,7 @@ class Gun:
     heavy_mult: float = 0.0  # melee: heavy attack damage / normal hit damage (0: no heavy attack)
     windup: float = 0.0  # melee: heavy attack wind-up, seconds
     heavy: bool = False  # melee: judge heavy attacks instead of normal hits
+    head: bool = False  # every hit lands on the head (weak point)
     arcane: dict[str, float] = field(default_factory=dict)  # the weapon arcane's numbers
 
     @property

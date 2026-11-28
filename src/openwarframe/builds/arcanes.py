@@ -155,9 +155,13 @@ WEAPON_SCORED = {
     "Secondary Merciless",
     "Melee Doughty",
     "Melee Animosity",
+    "Primary Deadhead",
+    "Secondary Deadhead",
+    "Primary Crux",
     *STATUS_TRIGGERED,
 }
 HEAVY_ONLY = {"Melee Animosity"}
+HEAD_ONLY = {"Primary Deadhead", "Secondary Deadhead", "Primary Crux"}  # weak point hits or kills
 
 
 def load_weapon_arcanes(conn: sqlite3.Connection, slot: str, holster: str | None) -> list[Arcane]:
@@ -196,8 +200,17 @@ def weapon_effect(a: Arcane, rank: int | None = None) -> dict[str, float]:
     out: dict[str, float] = {}
     for m in re.finditer(r"(?P<body>[^\n]+?) for [\d.]+s\. Stacks up to (?P<n>\d+)x", text):
         n = int(m["n"])
-        for part in m["body"].split(" and "):
+        body = re.sub(r"^On [^:]+:\s*", "", m["body"])  # "On Weak Point Hit: Gain +30% ..."
+        for part in body.split(" and "):
             got = parse_line(part.strip().removeprefix("Gain "))
             if got:
                 out[got[0]] = out.get(got[0], 0.0) + got[1] * n
+    # lines that always apply ("+30% to Headshot Multiplier", Merciless's reload); the game
+    # data repeats them, so each counts once
+    for line in {x.strip() for x in text.split("\n")}:
+        if "Stacks up to" in line or line.endswith(":"):
+            continue
+        got = parse_line(line)
+        if got and got[0] in ("headshot_bonus", "reload"):
+            out[got[0]] = out.get(got[0], 0.0) + got[1]
     return out

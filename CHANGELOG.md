@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.23.0
 
 - **Damage per status type on guns.** Galvanized Aptitude, Savvy and Shot are counted (on-kill
   stacks at their maximum), using the statuses the weapon keeps up plus **Status types from other

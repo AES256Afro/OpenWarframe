@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.25.0
 
 - **Rivens.** Type your Riven's stats into the gun or melee build panel, one per line as the
   game shows them, plus its drain. The Riven stays in a slot and the build picks the other mods

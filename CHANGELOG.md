@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.19.0
 
 - **Archon Shards in Warframe builds.** Choose None, 5 shards or 5 Tauforged: the build picks
   Crimson (Ability Strength, Duration) and Azure (Health, Shields, Armor) shard stats alongside

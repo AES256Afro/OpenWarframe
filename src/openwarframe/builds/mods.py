@@ -304,3 +304,70 @@ def _named(compat: str, w: WeaponClass) -> bool:
     )
     base = re.sub(r" (Prime|Vandal|Wraith|Prisma)$", "", base)
     return compat.lower() in (w.name.lower(), base.lower())
+
+
+# -- Riven mods: random stats, typed in as the game shows them --------------------------------
+# wiki Riven_Mods (edited 2026-11-24): 2 or 3 positive stats and at most 1 negative; dispositions
+# are retired (every weapon 1.2x), so the numbers on a maxed Riven are its final values.
+RIVEN_MAX_RANK = 8
+RIVEN_LINES = 4
+_RIVEN_ALIASES = {
+    "Rate of Fire": "Fire Rate",
+    "Weakpoint Damage": "Weak Point Damage",
+    "Weakpoint Critical Chance": "Weak Point Critical Chance",
+    "Melee Damage on Heavy Attacks": "Melee Damage on Heavy Attack",
+}
+_PLAIN_TYPES = {v.title(): k for k, v in DAMAGE_TAGS.items()} | {
+    "Heat": "FIRE",
+    "Cold": "FREEZE",
+    "Toxin": "POISON",
+}
+_PCT_FACTION = re.compile(r"^(?P<v>[+-]\d+(?:\.\d+)?)% Damage to (?P<faction>[\w ]+)$")
+
+
+def riven_line(line: str) -> str:
+    """One stat as a player reads it off the Riven ("+120.5% Toxin", "x0.62 Damage to Grineer")
+    -> the shape mod text has in the game data."""
+    line = re.sub(r"\s+", " ", line.strip().replace("−", "-").replace("×", "x").replace(",", "."))
+    m = re.match(r"^(?P<v>[+-]?\d+(?:\.\d+)?)\s*% ?(?P<what>.+)$", line)
+    if m:
+        what = m["what"].strip()
+        what = _RIVEN_ALIASES.get(what, what)
+        bow = re.search(r" (\(x\d+(?:\.\d+)? for (?:Bows|Heavy Attacks)\))$", what)
+        tail = " " + bow[1] if bow else ""
+        core = what[: bow.start()] if bow else what
+        if core in _PLAIN_TYPES:
+            core = f"<DT_{_PLAIN_TYPES[core]}_COLOR>{core}"
+        v = m["v"] if m["v"][0] in "+-" else "+" + m["v"]
+        line = f"{v}% {core}{tail}"
+        f = _PCT_FACTION.match(line)
+        if f:  # "+45% Damage to Corpus" is x1.45
+            return f"x{1 + float(f['v']) / 100:g} Damage to {f['faction']}"
+    m = re.match(r"^(?P<v>\d+(?:\.\d+)?)\s*x (?P<rest>Damage to .+)$", line)  # "1.45x Damage to Corpus"
+    if m:
+        return f"x{m['v']} {m['rest']}"
+    return line
+
+
+def riven_mod(text: str, slot: str, drain: int = 18) -> tuple[GunMod, list[str]] | None:
+    """A Riven from the stat lines a player typed. Returns the mod (at max rank) and the lines
+    the damage model doesn't count (zoom, recoil, range...), or None when nothing was typed."""
+    lines = [x.strip() for x in str(text or "").replace(";", "\n").split("\n") if x.strip()][:RIVEN_LINES]
+    if not lines:
+        return None
+    game = [riven_line(x) for x in lines]
+    unused = [raw for raw, g in zip(lines, game, strict=True) if parse_line(g) is None]
+    drain = max(RIVEN_MAX_RANK, min(RIVEN_MAX_RANK + 18, int(drain)))
+    mod = GunMod(
+        unique_name="riven",
+        name="Riven Mod",
+        compat="",
+        slot=slot,
+        polarity=None,
+        base_drain=drain - RIVEN_MAX_RANK,
+        max_rank=RIVEN_MAX_RANK,
+        rarity="Riven",
+        ranks=[game] * (RIVEN_MAX_RANK + 1),
+        exclusive="Riven Mod",
+    )
+    return mod, unused

@@ -16,7 +16,7 @@ Sustained DPS = per shot x fire rate x mag / (fire rate x reload + mag).
 Against an enemy (see ``_against``): armor and its stripping by Corrosive and Heat, Viral,
 Cold and the damage over time of Slash, Heat, Toxin, Electricity and Gas.
 Melee heavy attacks (``heavy`` in the sums) are judged one attack at a time; see ``evaluate``.
-Not modelled: headshots and weak points, Riven mods, Incarnon forms.
+Not modelled: weak points other than the head, Incarnon forms.
 """
 
 from __future__ import annotations

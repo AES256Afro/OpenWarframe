@@ -3,6 +3,13 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Rivens.** Type your Riven's stats into the gun or melee build panel, one per line as the
+  game shows them, plus its drain. The Riven stays in a slot and the build picks the other mods
+  around it. Faction stats add to Bane and Smite mods; stats the model doesn't use (zoom,
+  recoil, range) are listed as not counted. The page remembers each weapon's Riven.
+
 ## 0.24.0
 
 - **Headshots.** Gun and melee builds have an **Aim** choice. Headshots land every hit on the

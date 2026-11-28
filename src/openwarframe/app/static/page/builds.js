@@ -53,7 +53,7 @@ function onBuildEvent(e){
 $("view").addEventListener("click", onBuildEvent, true);
 $("view").addEventListener("change", onBuildEvent);
 // ---- Warframe builds: balance the stats the abilities you use scale with -----------------------
-var FBUILD={}, FOPTS={surv:"some", abilities:{}};
+var FBUILD={}, FOPTS={surv:"some", abilities:{}, augments:{}, shards:"none"};
 function isFrame(r){ return r.category==="Warframe"; }
 // abilities ticked for a frame: every one from the last build unless you untick it
 function fChosen(id){
@@ -61,12 +61,20 @@ function fChosen(id){
   if(!last||!last.abilities) return [];
   return last.abilities.filter(function(a){ return sel[a.key]!==false; }).map(function(a){ return String(a.key); });
 }
-function fKey(id){ return id+"|"+FOPTS.surv+"|"+(fChosen(id).join(",")||"all")+"|"+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0); }
+function fAugments(id){ var a=FOPTS.augments[id]||{}; return Object.keys(a).filter(function(k){return a[k]}).sort(); }
+function fKey(id){ return [id,FOPTS.surv,fChosen(id).join(",")||"all",BUILD_OPTS.owned&&DATA.meta.inventory?1:0,fAugments(id).join(","),FOPTS.shards].join("|"); }
 function frameBuildPanel(r){
   var inv=!!DATA.meta.inventory, last=FBUILD["last:"+r.id], b=FBUILD[fKey(r.id)]||FBUILD["shown:"+r.id];
   var h='<div class="buildbox"><h3>Suggested build</h3><div class="buildopts">';
   if(last&&last.abilities) h+='<span>Abilities I use:</span>'+last.abilities.map(function(a){ var on=(FOPTS.abilities[r.id]||{})[a.key]; on=on==null?true:on;
     return '<label><input type="checkbox" data-fab="'+esc(r.id)+'" value="'+a.key+'"'+(on?' checked':'')+'> '+esc(a.name)+'</label>'; }).join('');
+  if(last&&last.augments&&last.augments.length){
+    var used={}; last.abilities.forEach(function(a){ if((FOPTS.abilities[r.id]||{})[a.key]!==false) used[a.name]=true; });
+    var augs=last.augments.filter(function(a){ return used[a.ability]; });
+    if(augs.length) h+='<div class="augs"><span>Augments to include:</span>'+augs.map(function(a){ var on=!!(FOPTS.augments[r.id]||{})[a.id];
+      return '<label title="'+esc(a.text)+'"><input type="checkbox" data-faug="'+esc(r.id)+'" value="'+esc(a.id)+'"'+(on?' checked':'')+'> '+esc(a.name)+' <span class="muted">('+esc(a.ability)+(a.owned===false?', not owned':'')+')</span></label>'; }).join('')+'</div>';
+  }
+  h+='<label>Archon Shards <select data-fopt="shards"><option value="none"'+(FOPTS.shards==="none"?' selected':'')+'>None</option><option value="regular"'+(FOPTS.shards==="regular"?' selected':'')+'>5 shards</option><option value="tauforged"'+(FOPTS.shards==="tauforged"?' selected':'')+'>5 Tauforged</option></select></label>';
   h+='<label>Survivability <select data-fopt="surv"><option value="none"'+(FOPTS.surv==="none"?' selected':'')+'>Not needed</option><option value="some"'+(FOPTS.surv==="some"?' selected':'')+'>Some</option><option value="tanky"'+(FOPTS.surv==="tanky"?' selected':'')+'>A lot</option></select></label>'
     +(inv?'<label><input type="checkbox" data-bopt="owned"'+(BUILD_OPTS.owned?' checked':'')+'> Only mods I own</label>':'')
     +'<button class="btn" type="button" data-fbuild="'+esc(r.id)+'">'+(b?'Build again':'Suggest a build')+'</button></div>';
@@ -77,7 +85,10 @@ function frameBuildHtml(b){
   if(b.error) return '<p class="muted">'+esc(b.error)+'</p>';
   var s=b.stats, h='';
   if(b.aura) h+='<p><span class="muted">Aura:</span> <b>'+esc(b.aura.name)+'</b> <span class="muted">rank '+b.aura.rank+'/'+b.aura.max_rank+' · +'+b.aura.capacity+' capacity with a matching polarity'+(b.aura.counts?' · '+esc(b.aura.why):'')+'</span></p>';
-  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li>'+(m.exilus?'<span class="pill p-violet">Exilus</span> ':'')+'<b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
+  h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li>'+(m.exilus?'<span class="pill p-violet">Exilus</span> ':'')+(m.augment?'<span class="pill p-owned">Augment</span> ':'')+'<b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
+  if(b.shards&&b.shards.length){ var shl={strength:"Ability Strength",duration:"Ability Duration",health:"Health",shields:"Shields",armor:"Armor"};
+    h+='<p><span class="muted">Archon Shards:</span> '+b.shards.map(function(x){ return esc((x.tauforged?'Tauforged ':'')+x.color)+' '+esc(shl[x.stat]||x.stat)+' <span class="muted">+'+(x.value<1?Math.round(x.value*100)+'%':num(x.value))+'</span>'; }).join(' · ')+'</p>'; }
+  else if(FOPTS.shards!=="none"&&b.mods) h+='<p class="muted">No Archon Shards you own fit this build.</p>';
   h+='<div class="buildstats"><span>Strength <b>'+pct(s.strength)+'</b></span><span>Duration <b>'+pct(s.duration)+'</b></span><span>Range <b>'+pct(s.range)+'</b></span><span>Efficiency <b>'+pct(s.efficiency)+'</b></span></div>';
   h+='<div class="buildstats"><span>Health <b>'+num(s.health)+'</b></span><span>Shields <b>'+num(s.shields)+'</b></span><span>Armor <b>'+num(s.armor)+'</b> ('+pct(s.damage_reduction)+' less damage)</span><span>Effective health <b>'+num(s.effective_health)+'</b></span><span>Energy <b>'+num(s.energy)+'</b></span></div>';
   h+='<p class="muted">Uses: '+b.abilities.filter(function(a){return a.used}).map(function(a){ var u=[]; if(a.strength) u.push("Strength"); if(a.duration) u.push("Duration"); if(a.range) u.push("Range"); return esc(a.name)+' ('+(u.join(", ")||"no scaling")+(a.channeled?", channeled":"")+')'; }).join(' · ')+'</p>';
@@ -88,13 +99,15 @@ function frameBuildHtml(b){
 function runFrameBuild(id){
   var keys=fChosen(id);
   if(FBUILD["last:"+id] && !keys.length){ toast("Tick at least one ability you use."); return; }
-  var q="/api/frame-build?id="+encodeURIComponent(id)+"&surv="+encodeURIComponent(FOPTS.surv)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+(keys.length?"&abilities="+keys.join(","):"");
+  var augs=fAugments(id);
+  var q="/api/frame-build?id="+encodeURIComponent(id)+"&surv="+encodeURIComponent(FOPTS.surv)+"&shards="+encodeURIComponent(FOPTS.shards)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+(keys.length?"&abilities="+keys.join(","):"")+(augs.length?"&augments="+augs.map(encodeURIComponent).join(","):"");
   var k=fKey(id);
   api(q).then(function(b){ FBUILD[k]=b; FBUILD["shown:"+id]=b; if(!b.error) FBUILD["last:"+id]=b; redrawTable(); }).catch(function(){ FBUILD[k]={error:"Could not work that out. Is OpenWarframe still running?"}; redrawTable(); });
 }
 function onFrameBuildEvent(e){
   var t=e.target; if(!t.closest) return;
   var fo=t.closest("[data-fopt]"); if(fo&&e.type==="change"){ FOPTS[fo.dataset.fopt]=fo.value; return; }
+  var au=t.closest("[data-faug]"); if(au&&e.type==="change"){ var fid=au.dataset.faug; FOPTS.augments[fid]=FOPTS.augments[fid]||{}; FOPTS.augments[fid][au.value]=au.checked; return; }
   var ab=t.closest("[data-fab]"); if(ab&&e.type==="change"){ var id=ab.dataset.fab; FOPTS.abilities[id]=FOPTS.abilities[id]||{}; FOPTS.abilities[id][ab.value]=ab.checked; return; }
   var b=t.closest("[data-fbuild]"); if(b&&e.type==="click"){ e.stopPropagation(); runFrameBuild(b.dataset.fbuild); }
 }

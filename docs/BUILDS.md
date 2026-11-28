@@ -134,12 +134,24 @@ this doesn't calculate kills. It balances the stats the abilities you use scale 
   United: +25% armor; Power Donation costs you 30% Strength); otherwise the one with the most
   capacity. Most auras help the squad in ways this doesn't count (Corrosive Projection, Energy
   Siphon), so any max-rank aura with a matching polarity adds the same capacity.
+- **Augments:** the frame's augment mods come from the game data (`compatName` is the frame; the
+  text names the ability, "Spores Augment: ..."). They change what an ability does, which no
+  single number captures, so the app lists the augments for the abilities you use, with their
+  effect text and whether you own them, and puts in only the ones you tick. The rest of the
+  build is fitted around them; an augment that's exilus-capable may take the Exilus slot.
+- **Archon Shards** (wiki Archon_Shard, edited 2026-11-21): None, 5 shards or 5 Tauforged
+  (x1.5). 5 slots, a stat may repeat. Scored options: Crimson Ability Strength or Duration
+  (+10%, Tauforged +15%, added to the mods' bonuses) and Azure Health, Shields or Armor (+150,
+  Tauforged +225, added after all percentage bonuses). Every combination is tried (126 at most),
+  alternating with the mod search. With an inventory and Only mods I own, only the loose Crimson
+  and Azure shards you have are used; shards already in a frame aren't in the inventory counts.
+  Not scored: Amber (casting speed, orbs) and the Emerald, Topaz and Violet options that raise
+  ability damage against enemies with a status.
 - **Variants** can't be equipped together: Primed, Umbral, Archon and Amalgam versions with their
   base mod (Umbral Fiber with Steel Fiber).
 
 The limit: the data says that an ability uses a stat, not how much it gains from it, so a
 damage ability and a buff count the same. Picking the abilities you actually cast is how to
-steer it. Not counted yet: augment mods, Archon Shards, arcanes and set bonuses (Umbral);
-conditional effects aren't counted. Aura health and armor bonuses are added to the mods' bonuses;
+steer it. Not counted yet: arcanes and set bonuses (Umbral); conditional effects aren't counted. Aura health and armor bonuses are added to the mods' bonuses;
 the wiki doesn't say whether they stack that way or multiply.
 

@@ -456,6 +456,7 @@ class AppState:
         owned_only: bool,
         augments: list[str] | None = None,
         shards: str = "none",
+        arcanes: list[str] | None = None,
     ) -> dict:
         """A suggested mod build for one Warframe (builds.frames)."""
         from ..builds.frames import NotAFrame, suggest_frame
@@ -481,6 +482,7 @@ class AppState:
                     augments=augments,
                     shards=shards,
                     owned_shards=owned_shards,
+                    arcanes=arcanes,
                 )
             except NotAFrame as exc:
                 return {"error": str(exc)}
@@ -989,6 +991,7 @@ def make_handler(state: AppState):
                             owned_only=(q.get("owned") or ["0"])[0] == "1",
                             augments=[a for a in (q.get("augments") or [""])[0].split(",") if a],
                             shards=(q.get("shards") or ["none"])[0],
+                            arcanes=[a for a in (q.get("arcanes") or [""])[0].split(",") if a],
                         )
                     )
                 except Exception as exc:  # noqa: BLE001 - shown in the item details

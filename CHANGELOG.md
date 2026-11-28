@@ -3,6 +3,15 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Umbral set bonus.** Umbral Intensify, Vitality and Fiber now count with their set bonus
+  (Intensify x1.25 / x1.75 with 2 / 3 pieces; Vitality and Fiber x1.30 / x1.80), so builds pick
+  the full set where it pays off, and the mod list shows the boosted value.
+- **Arcanes in Warframe builds.** Two arcane slots. Molt Augmented, Arcane Blessing, Arcane
+  Bellicose and Arcane Intention are scored from their in-game text; other arcanes trigger on
+  something, so pick them in the arcane selectors and the build fills the rest.
+
 ## 0.19.0
 
 - **Archon Shards in Warframe builds.** Choose None, 5 shards or 5 Tauforged: the build picks

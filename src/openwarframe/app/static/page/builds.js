@@ -53,7 +53,7 @@ function onBuildEvent(e){
 $("view").addEventListener("click", onBuildEvent, true);
 $("view").addEventListener("change", onBuildEvent);
 // ---- Warframe builds: balance the stats the abilities you use scale with -----------------------
-var FBUILD={}, FOPTS={surv:"some", abilities:{}, augments:{}, shards:"none"};
+var FBUILD={}, FOPTS={surv:"some", abilities:{}, augments:{}, shards:"none", arcanes:{}};
 function isFrame(r){ return r.category==="Warframe"; }
 // abilities ticked for a frame: every one from the last build unless you untick it
 function fChosen(id){
@@ -62,7 +62,8 @@ function fChosen(id){
   return last.abilities.filter(function(a){ return sel[a.key]!==false; }).map(function(a){ return String(a.key); });
 }
 function fAugments(id){ var a=FOPTS.augments[id]||{}; return Object.keys(a).filter(function(k){return a[k]}).sort(); }
-function fKey(id){ return [id,FOPTS.surv,fChosen(id).join(",")||"all",BUILD_OPTS.owned&&DATA.meta.inventory?1:0,fAugments(id).join(","),FOPTS.shards].join("|"); }
+function fArcanes(id){ return (FOPTS.arcanes[id]||[]).filter(function(x){return x}); }
+function fKey(id){ return [id,FOPTS.surv,fChosen(id).join(",")||"all",BUILD_OPTS.owned&&DATA.meta.inventory?1:0,fAugments(id).join(","),FOPTS.shards,fArcanes(id).join(",")].join("|"); }
 function frameBuildPanel(r){
   var inv=!!DATA.meta.inventory, last=FBUILD["last:"+r.id], b=FBUILD[fKey(r.id)]||FBUILD["shown:"+r.id];
   var h='<div class="buildbox"><h3>Suggested build</h3><div class="buildopts">';
@@ -73,6 +74,10 @@ function frameBuildPanel(r){
     var augs=last.augments.filter(function(a){ return used[a.ability]; });
     if(augs.length) h+='<div class="augs"><span>Augments to include:</span>'+augs.map(function(a){ var on=!!(FOPTS.augments[r.id]||{})[a.id];
       return '<label title="'+esc(a.text)+'"><input type="checkbox" data-faug="'+esc(r.id)+'" value="'+esc(a.id)+'"'+(on?' checked':'')+'> '+esc(a.name)+' <span class="muted">('+esc(a.ability)+(a.owned===false?', not owned':'')+')</span></label>'; }).join('')+'</div>';
+  }
+  if(last&&last.arcane_options){ var cur=FOPTS.arcanes[r.id]||[];
+    var opts=function(i){ return '<option value="">Best scored</option>'+last.arcane_options.map(function(a){ return '<option value="'+esc(a.id)+'"'+(cur[i]===a.id?' selected':'')+' title="'+esc(a.text)+'">'+esc(a.name)+(a.scored?' (scored)':'')+(a.owned===false?' (not owned)':'')+'</option>'; }).join(''); };
+    h+='<label>Arcane 1 <select data-farc="'+esc(r.id)+'" data-slot="0">'+opts(0)+'</select></label><label>Arcane 2 <select data-farc="'+esc(r.id)+'" data-slot="1">'+opts(1)+'</select></label>';
   }
   h+='<label>Archon Shards <select data-fopt="shards"><option value="none"'+(FOPTS.shards==="none"?' selected':'')+'>None</option><option value="regular"'+(FOPTS.shards==="regular"?' selected':'')+'>5 shards</option><option value="tauforged"'+(FOPTS.shards==="tauforged"?' selected':'')+'>5 Tauforged</option></select></label>';
   h+='<label>Survivability <select data-fopt="surv"><option value="none"'+(FOPTS.surv==="none"?' selected':'')+'>Not needed</option><option value="some"'+(FOPTS.surv==="some"?' selected':'')+'>Some</option><option value="tanky"'+(FOPTS.surv==="tanky"?' selected':'')+'>A lot</option></select></label>'
@@ -86,6 +91,9 @@ function frameBuildHtml(b){
   var s=b.stats, h='';
   if(b.aura) h+='<p><span class="muted">Aura:</span> <b>'+esc(b.aura.name)+'</b> <span class="muted">rank '+b.aura.rank+'/'+b.aura.max_rank+' · +'+b.aura.capacity+' capacity with a matching polarity'+(b.aura.counts?' · '+esc(b.aura.why):'')+'</span></p>';
   h+='<ol class="buildmods">'+b.mods.map(function(m){ return '<li>'+(m.exilus?'<span class="pill p-violet">Exilus</span> ':'')+(m.augment?'<span class="pill p-owned">Augment</span> ':'')+'<b>'+esc(m.name)+'</b> <span class="muted">rank '+m.rank+'/'+m.max_rank+'</span><div class="muted">'+esc(m.why)+'</div></li>'; }).join('')+'</ol>';
+  if(b.arcanes&&b.arcanes.length) h+='<p><span class="muted">Arcanes:</span> '+b.arcanes.map(function(a){ var e=a.effect||{}, bits=[];
+      if(e.strength) bits.push('+'+Math.round(e.strength*100)+'% strength'); if(e.health_flat) bits.push('+'+num(e.health_flat)+' health');
+      return '<b>'+esc(a.name)+'</b> <span class="muted">rank '+a.rank+'/'+a.max_rank+(bits.length?' · '+esc(bits.join(', ')):a.scored?'':' · your choice, not scored')+(a.owned===false?' · not owned':'')+'</span>'; }).join(' · ')+'</p>';
   if(b.shards&&b.shards.length){ var shl={strength:"Ability Strength",duration:"Ability Duration",health:"Health",shields:"Shields",armor:"Armor"};
     h+='<p><span class="muted">Archon Shards:</span> '+b.shards.map(function(x){ return esc((x.tauforged?'Tauforged ':'')+x.color)+' '+esc(shl[x.stat]||x.stat)+' <span class="muted">+'+(x.value<1?Math.round(x.value*100)+'%':num(x.value))+'</span>'; }).join(' · ')+'</p>'; }
   else if(FOPTS.shards!=="none"&&b.mods) h+='<p class="muted">No Archon Shards you own fit this build.</p>';
@@ -99,14 +107,16 @@ function frameBuildHtml(b){
 function runFrameBuild(id){
   var keys=fChosen(id);
   if(FBUILD["last:"+id] && !keys.length){ toast("Tick at least one ability you use."); return; }
-  var augs=fAugments(id);
-  var q="/api/frame-build?id="+encodeURIComponent(id)+"&surv="+encodeURIComponent(FOPTS.surv)+"&shards="+encodeURIComponent(FOPTS.shards)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+(keys.length?"&abilities="+keys.join(","):"")+(augs.length?"&augments="+augs.map(encodeURIComponent).join(","):"");
+  var augs=fAugments(id), arcs=fArcanes(id);
+  var q=(arcs.length?"&arcanes="+arcs.map(encodeURIComponent).join(","):"");
+  q="/api/frame-build?id="+encodeURIComponent(id)+q+"&surv="+encodeURIComponent(FOPTS.surv)+"&shards="+encodeURIComponent(FOPTS.shards)+"&owned="+(BUILD_OPTS.owned&&DATA.meta.inventory?1:0)+(keys.length?"&abilities="+keys.join(","):"")+(augs.length?"&augments="+augs.map(encodeURIComponent).join(","):"");
   var k=fKey(id);
   api(q).then(function(b){ FBUILD[k]=b; FBUILD["shown:"+id]=b; if(!b.error) FBUILD["last:"+id]=b; redrawTable(); }).catch(function(){ FBUILD[k]={error:"Could not work that out. Is OpenWarframe still running?"}; redrawTable(); });
 }
 function onFrameBuildEvent(e){
   var t=e.target; if(!t.closest) return;
   var fo=t.closest("[data-fopt]"); if(fo&&e.type==="change"){ FOPTS[fo.dataset.fopt]=fo.value; return; }
+  var fa=t.closest("[data-farc]"); if(fa&&e.type==="change"){ var aid=fa.dataset.farc; FOPTS.arcanes[aid]=FOPTS.arcanes[aid]||["",""]; FOPTS.arcanes[aid][+fa.dataset.slot]=fa.value; return; }
   var au=t.closest("[data-faug]"); if(au&&e.type==="change"){ var fid=au.dataset.faug; FOPTS.augments[fid]=FOPTS.augments[fid]||{}; FOPTS.augments[fid][au.value]=au.checked; return; }
   var ab=t.closest("[data-fab]"); if(ab&&e.type==="change"){ var id=ab.dataset.fab; FOPTS.abilities[id]=FOPTS.abilities[id]||{}; FOPTS.abilities[id][ab.value]=ab.checked; return; }
   var b=t.closest("[data-fbuild]"); if(b&&e.type==="click"){ e.stopPropagation(); runFrameBuild(b.dataset.fbuild); }

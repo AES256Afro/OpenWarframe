@@ -311,3 +311,110 @@ def test_page_has_shards_and_augments():
 
     page = page_source()
     assert 'data-fopt="shards"' in page and "data-faug" in page and "&shards=" in page
+
+
+# -- Umbral set and arcanes (wiki Umbral_*, Molt_Augmented, Arcane_Bellicose/_Blessing/_Intention) --
+
+
+def test_umbral_set_grows_with_pieces():
+    f = frame()
+    ui = (mod("Umbral Intensify", ["+44% Ability Strength"]), 0)
+    uv = (mod("Umbral Vitality", ["+100% Health"]), 0)
+    uf = (mod("Umbral Fiber", ["+100% Armor"]), 0)
+    assert frames.totals(f, [ui])["strength"] == pytest.approx(1.44)
+    assert frames.totals(f, [ui, uv])["strength"] == pytest.approx(1 + 0.44 * 1.25)
+    t = frames.totals(f, [ui, uv, uf])
+    assert t["strength"] == pytest.approx(1 + 0.44 * 1.75)  # 77%
+    assert t["health"] == pytest.approx(300 * (1 + 1.8)) and t["armor"] == pytest.approx(300 * 2.8)
+
+
+def arcane(name, text, max_rank=5):
+    from openwarframe.builds.arcanes import Arcane
+
+    return Arcane("/Arc/" + name, name, max_rank, [text] * (max_rank + 1))
+
+
+def test_scored_arcanes_follow_their_text():
+    from openwarframe.builds import arcanes as arc
+
+    molt = arcane(
+        "Molt Augmented", "On Kill:\r\n+0.24% Ability Strength. Stacks up to 250x.\r\n+1 Arcane Revive"
+    )
+    bless = arcane("Arcane Blessing", "On Health Pickup:\r\n+24 Max Health. Stacks up to 50x.")
+    bell = arcane("Arcane Bellicose", "Gain 6% Ability Strength for every 250 Max Health up to 72%.")
+    intent = arcane("Arcane Intention", "Gain +250 Max Health per active channeled ability.")
+    assert arc.effects([(molt, 5)], 300, 0) == {"strength": pytest.approx(0.6)}
+    assert arc.effects([(bless, 5)], 300, 0) == {"health_flat": 1200}
+    # Bellicose: round(health / 250 x 6)%, capped at 72%; Blessing's health counts first
+    assert arc.effects([(bell, 5)], 1000, 0) == {"strength": pytest.approx(0.24)}
+    assert arc.effects([(bell, 5), (bless, 5)], 1000, 0)["strength"] == pytest.approx(
+        round(2200 / 250 * 6) / 100
+    )
+    assert arc.effects([(bell, 5)], 9000, 0)["strength"] == pytest.approx(0.72)
+    assert arc.effects([(intent, 5)], 300, 0) == {} and arc.effects([(intent, 5)], 300, 2) == {
+        "health_flat": 500
+    }
+    assert molt.text() == "On Kill:\n+0.24% Ability Strength. Stacks up to 250x."  # no "Arcane Revive" line
+
+
+def test_arcanes_in_suggest(tmp_path: Path):
+    from openwarframe.codex.schema import SCHEMA
+
+    con = sqlite3.connect(tmp_path / "c.sqlite")
+    con.executescript(SCHEMA)
+
+    def add(uid, name, lines, category="Mod", kind="WARFRAME", rank=0):
+        d = {
+            "type": kind,
+            "compatName": kind,
+            "baseDrain": 4,
+            "fusionLimit": rank,
+            "levelStats": [{"stats": lines}] * (rank + 1),
+        }
+        con.execute(
+            "INSERT INTO item VALUES (?,?,?,?,?,?,?,?)",
+            (uid, name, category, None, None, None, None, json.dumps(d)),
+        )
+
+    add("/M/Intensify", "Intensify", ["+30% Ability Strength"])
+    add(
+        "/Arc/Molt",
+        "Molt Augmented",
+        ["On Kill:\r\n+0.24% Ability Strength. Stacks up to 250x."],
+        "Arcane",
+        rank=5,
+    )
+    add(
+        "/Arc/Guard",
+        "Arcane Guardian",
+        ["On Damaged:\r\n15% chance for +900 Armor for 20s"],
+        "Arcane",
+        rank=5,
+    )
+    add("/Arc/Rage", "Primary Merciless", ["On Kill:\r\n+30% Damage"], "Arcane", rank=5)  # a weapon arcane
+    b = frames.suggest_frame(con, "/Lotus/Powersuits/Saryn/SarynPrime", survivability="none")
+    assert [a["name"] for a in b["arcanes"]] == ["Molt Augmented"]  # Guardian isn't scored
+    assert {a["name"] for a in b["arcane_options"]} == {"Molt Augmented", "Arcane Guardian"}
+    assert b["stats"]["strength"] == pytest.approx(1.3 + 0.6)
+    b = frames.suggest_frame(con, "/Lotus/Powersuits/Saryn/SarynPrime", arcanes=["/Arc/Guard"])
+    names = [a["name"] for a in b["arcanes"]]
+    assert names[0] == "Arcane Guardian" and "Molt Augmented" in names  # yours, then the best scored
+    assert b["arcanes"][0]["scored"] is False
+
+
+def test_page_has_arcane_selectors():
+    from openwarframe.app.server import page_source
+
+    page = page_source()
+    assert "data-farc" in page and "&arcanes=" in page and "fa.dataset.slot" in page
+
+
+def test_umbral_rows_show_the_set_value():
+    row = frames._mod_row(
+        frames.FrameMod("/u", "Umbral Intensify", 6, 0, [["+44% Ability Strength"]], "Intensify"),
+        0,
+        None,
+        exilus=False,
+        umbral=3,
+    )
+    assert "+77% strength" in row["why"] and "3 pieces" in row["why"]

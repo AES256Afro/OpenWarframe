@@ -1,0 +1,5717 @@
+{
+ "source": "Warframe Wiki (https://wiki.warframe.com), each weapon's page: Incarnon form infobox and Evolution table",
+ "license": "CC BY-NC-SA 3.0; numbers and short paraphrases, see docs/LEGAL.md",
+ "last_verified": "2026-11-28",
+ "weapons": {
+  "Ack & Brunt": {
+   "page": "https://wiki.warframe.com/w/Ack_%26_Brunt",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Ack & Brunt"
+   ],
+   "charge": {
+    "by": "'Reach **6x** Combo and then Heavy Attack to activate Incarnon Form.' Overview: Melee Combo built to 6x, then a Heavy Attack.",
+    "duration": "180 seconds"
+   },
+   "evo1": "Reach 6x Combo, then Heavy Attack, to activate. Sends spectral axes on aerial and slide attacks; +100% Melee Damage, +20% Sprint Speed, +20% Parkour Velocity.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Templar's Wrath",
+     "text": "Increase Base Damage by +150. With Armor Over 450: +70% Heavy Attack Efficiency.",
+     "note": "No page note on scope. Base damage increase is a flat amount.",
+     "effect": {
+      "bd": 150
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Shieldmaiden's Rush",
+     "text": "Increase Base Damage by +150. On Shield Break: +300% Combo Count Chance while Blocking for 11 seconds.",
+     "note": "No page note on scope. Base damage increase is a flat amount.",
+     "effect": {
+      "bd": 150
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+0.7 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Abiding Hold",
+     "text": "Combo Timer pauses when weapon is holstered.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Break",
+     "text": "+70% Heavy Attack Windup Speed",
+     "note": "No page note.",
+     "effect": {
+      "windup_speed": 0.7
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Rogue Readiness",
+     "text": "On Kill: 50% chance for Primary and Secondary weapons instantly reload.",
+     "note": "Kill must be made by the Ack & Brunt. Does not generate ammo; reloaded ammo comes from reserves.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +17%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.17
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Versatile Creed",
+     "text": "Increase Base Critical Chance by +9%. Increase Base Status Chance by +9%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.09,
+      "bsc": 0.09
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Angstrum": {
+   "page": "https://wiki.warframe.com/w/Angstrum",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Angstrum",
+    "Prisma Angstrum"
+   ],
+   "charge": {
+    "by": "direct hits",
+    "full_at": "3 direct hits",
+    "per_charge_rounds": 40,
+    "capacity": 120
+   },
+   "evo1": "Fully automatic Incarnon Form firing small Heat fireballs. Each hit ricochets toward 1 enemy within 20 m of the initial target, and surface hits can bounce up to 2 times. The summary line says 'target-seeking', but the detail says the ricochet has no homing.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Haven Foray",
+     "text": "Increase Base Damage by +50. With Overshields: Increase Base Damage by +50.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": 50
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Paladin Virtue",
+     "text": "Increase Base Damage by +75. With Energy Max Over 700: Increase Base Critical Damage Multiplier by +0.5x.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": 75
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+30% Projectile Speed.",
+     "note": "Stacks additively with Terminal Velocity.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% Reload Speed.",
+     "note": "Stacks additively with reload mods such as Fast Hands.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Hitman's Hoard",
+     "text": "Increase Base Ammo Capacity by +9.",
+     "note": "Page says this does not apply to the Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Critical Damage Multiplier by +0.2x. X = 14% (Angstrum) / X = 10% (Prisma Angstrum)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": [
+       0.14,
+       0.1
+      ],
+      "bcd": 0.2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Status Chance by +Y%. X = 9%, Y = 9% (Angstrum) / X = 6%, Y = 6% (Prisma Angstrum)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": [
+       0.09,
+       0.06
+      ],
+      "bsc": [
+       0.09,
+       0.06
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Fatal Affliction",
+     "text": "+40% Direct Damage per Status Type affecting the target.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "per_status_damage": 0.4
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "heat": 30.0
+    },
+    "radial": {},
+    "crit_chance": 0.18,
+    "crit_multiplier": 1.8,
+    "status_chance": 0.18,
+    "fire_rate": 6.0,
+    "multishot": 1.0,
+    "charges": 120,
+    "trigger": "Auto",
+    "note": "30.00 damage per projectile. Very high accuracy, spread 0.00 degrees, projectile speed 80.0 m/s. Form ammo is not affected by mods. No radial attack."
+   }
+  },
+  "Anku": {
+   "page": "https://wiki.warframe.com/w/Anku",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Anku"
+   ],
+   "charge": {
+    "by": "'Reach **6x** Combo and then Heavy Attack to activate Incarnon Form.' Overview: Melee Combo built to 6x, then a Heavy Attack.",
+    "duration": "180 seconds"
+   },
+   "evo1": "Reach 6x Combo, then Heavy Attack, to activate. Temporarily gains Range and guaranteed Slash on attacks after a successful slide attack; +100% Melee Damage, +20% Sprint Speed, +20% Bullet Jump.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Edge of Justice",
+     "text": "Increase Base Damage by +50. With Melee Weapon Equipped: +40% Attack Speed.",
+     "note": "Attack Speed bonus requires manually equipping the melee (weapon swap key or a melee-only loadout). Does not affect quickswap melee attacks.",
+     "effect": {
+      "bd": 50,
+      "fire_rate": 0.4
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Guardian's Promise",
+     "text": "Increase Base Damage by +50. With Overshields: +80% Heavy Attack Efficiency.",
+     "note": "No page note.",
+     "effect": {
+      "bd": 50
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Standoff",
+     "text": "Combo Timer paused when weapon is holstered.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swordsman's Celerity",
+     "text": "+20% Movement Speed",
+     "note": "Movement Speed bonus applies at all times.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Break",
+     "text": "+60% Heavy Attack Wind Up Speed",
+     "note": "No page note.",
+     "effect": {
+      "windup_speed": 0.6
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Dominion",
+     "text": "Increase Base Status Chance by +20%.",
+     "note": "No page note.",
+     "effect": {
+      "bsc": 0.2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Subtle Force",
+     "text": "Increase Base Critical Chance by +6%. Increase Base Status Chance by +14%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.06,
+      "bsc": 0.14
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +12%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.12
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Atomos": {
+   "page": "https://wiki.warframe.com/w/Atomos",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Atomos"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "21 weak points",
+    "per_charge_rounds": 1,
+    "capacity": 21
+   },
+   "evo1": "Becomes a semi-automatic grenade launcher. Direct hits deal Impact, and the explosion (7.9 m radius, Blast) has much higher base damage, crit, and status, but slower fire rate and linear falloff from 100% to 20%.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Paladin Virtue",
+     "text": "Increase Base Damage by +24. With Energy Max over 700: Increase Base Critical Damage Multiplier by +1x.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": 24
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Hoplite Virtue",
+     "text": "Increase Base Damage by +24. On Shield Break: Increase Base Damage by +30 for 8s.",
+     "note": "Page says this is for personal shield break, not enemy shields.",
+     "effect": {
+      "bd": 24
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Moonrise Velocity",
+     "text": "+7 Range.",
+     "note": "Stacks additively with Ruinous Extension. Page says it has no effect on the Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Mercenary Chamber",
+     "text": "Increase Base Ammo Capacity to 560.",
+     "note": "Page says this does not affect the Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Resonant Restore",
+     "text": "On Reload From Empty: Increase Base Magazine Capacity by +5. Stacks up to 7x.",
+     "note": "Page says this does not affect the Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +20%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bsc": 0.2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +19%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": 0.19
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +10%. Increase Base Status Chance by +10%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": 0.1,
+      "bsc": 0.1
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 100.0
+    },
+    "radial": {
+     "blast": 450.0
+    },
+    "crit_chance": 0.18,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.41,
+    "fire_rate": 1.5,
+    "multishot": 1.0,
+    "charges": 21,
+    "trigger": "Semi-Auto",
+    "note": "100.00 damage per projectile. Very high accuracy, spread 0.00 degrees, projectile speed 50.0 m/s. Radial (AoE) has crit 18.00%, 3.00x, status 41.00%, fire rate 1.50, multishot 1, and no trigger shown."
+   }
+  },
+  "Ballistica": {
+   "page": "https://wiki.warframe.com/w/Ballistica",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Ballistica",
+    "Rakta Ballistica",
+    "Ballistica Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "12 weak points",
+    "per_charge_rounds": 1.5,
+    "capacity": 18
+   },
+   "evo1": "Fires a single X-shaped projectile that punches through enemies. Much higher pure Slash damage, with higher crit, crit multiplier, status, projectile speed, and charge time. Charging becomes automatic.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Headcracker",
+     "text": "Increase Base Damage by +X. On Headshot: +7.5% Fire Rate for 4s. Stacks up to 10x. X = 30 (Ballistica) / X = 10 (Rakta) / X = 3 (Prime)",
+     "note": "Headshot effect has a 50% chance to activate. Fire rate bonus is additive with other sources such as Gunslinger.",
+     "effect": {
+      "bd": [
+       30,
+       10,
+       3
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Prolific Perforation",
+     "text": "Increase Base Damage by +X. On Punch Through Hit: +10% Critical Chance for 3s. Stacks up to 8x. X = 30 (Ballistica) / X = 10 (Rakta) / X = 3 (Prime)",
+     "note": "Crit bonus is additive with other crit sources such as Pistol Gambit.",
+     "effect": {
+      "bd": [
+       30,
+       10,
+       3
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% Reload Speed",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+50% Projectile Speed",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Void's Guidance",
+     "text": "+40% Accuracy -40% Weapon Recoil",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status by +X per projectile. Increase Base Status by +Y for Incarnon Form. X = 20%, Y = 20% (Ballistica) / X = 20%, Y = 20% (Rakta) / X = 18%, Y = 72% (Prime)",
+     "note": "Y is labelled as applying to the Incarnon Form only.",
+     "effect": {
+      "bsc": [
+       0.2,
+       0.2,
+       0.72
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X. Increase Base Status by +Y per projectile. Increase Base Status by +Z for Incarnon Form X = 10%, Y = 10%, Z = 10% (Ballistica) / X = 8%, Y = 8%, Z = 8% (Rakta) / X = 7%, Y = 7%, Z = 28% (Prime)",
+     "note": "Z is labelled as applying to the Incarnon Form only.",
+     "effect": {
+      "bcc": [
+       0.1,
+       0.08,
+       0.07
+      ],
+      "bsc": [
+       0.1,
+       0.08,
+       0.28
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +X. Increase Base Critical Damage Multiplier by +Y. X = 15%, Y = 1.0x (Ballistica) / X = 14%, Y = 1.0x (Rakta) / X = 12%, Y = 1.0x (Prime)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": [
+       0.15,
+       0.14,
+       0.12
+      ],
+      "bcd": 1.0
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "slash": 640.0
+    },
+    "radial": {},
+    "crit_chance": 0.2,
+    "crit_multiplier": 2.0,
+    "status_chance": 0.2,
+    "fire_rate": 3.33,
+    "multishot": 1.0,
+    "charges": 18,
+    "trigger": "Charge",
+    "note": "640.00 damage per projectile. Charge time 0.40 s, range 80.0 m, spread 0.00 degrees, projectile speed 80.0 m/s, very high accuracy, silent. EVO1 text says charging is automatic."
+   }
+  },
+  "Bo": {
+   "page": "https://wiki.warframe.com/w/Bo",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Bo",
+    "MK1-Bo",
+    "Bo Prime"
+   ],
+   "charge": {
+    "by": "'Reach **6x** Combo and then Heavy Attack to activate Incarnon Form.' Overview: Melee Combo built to 6x, then a Heavy Attack.",
+    "duration": "180 seconds"
+   },
+   "evo1": "Reach 6x Combo, then Heavy Attack, to activate. Increases Range and Heavy Attack Efficiency; +100% Melee Damage, +4 Range, +50% Heavy Attack Efficiency, +20% Sprint Speed, +20% Bullet Jump.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Stalwart Oak",
+     "text": "Increase Base Damage by +X. With Armor over 450: +30 Parry Angle +300% Combo Count Chance while Blocking. X = 110 X = 90 X = 34",
+     "note": "X values are per variant (Bo, Mk1-Bo, Bo Prime order, inferred). Parry Angle bonus is not affected by the percentage increase from Riven Mods.",
+     "effect": {
+      "bd": [
+       110,
+       90,
+       34
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Swordsman's Flourish",
+     "text": "Increase Base Damage by +X. With Melee Weapon Equipped: +100% Combo Count Chance. X = 100 X = 85 X = 30",
+     "note": "Combo Count Chance bonus requires manually equipping the melee. Does not affect quickswap melee attacks.",
+     "effect": {
+      "bd": [
+       100,
+       85,
+       30
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+0.5 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Overhand",
+     "text": "Base Heavy Attack Efficiency set at 20%",
+     "note": "Page says 'set at', not an added percentage.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swordsman's Celerity",
+     "text": "+20% Movement Speed",
+     "note": "Movement Speed bonus applies at all times.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Flashing Bleed",
+     "text": "+40% chance of Slash Status on Impact Status Effect.",
+     "note": "On knocked-down enemies, Impact effects do not apply but the bleed still does.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Subtle Force",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Status Chance by +Y%. X = 12%  Y = 12% X = 15%  Y = 15% X = 6%  Y = 6%",
+     "note": "Per-variant values (inferred order Bo, Mk1-Bo, Bo Prime).",
+     "effect": {
+      "bcc": [
+       0.12,
+       0.15,
+       0.06
+      ],
+      "bsc": [
+       0.12,
+       0.15,
+       0.06
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Dominion",
+     "text": "Increase Base Status Chance by +X%. X = 34% X = 38% X = 30%",
+     "note": "Per-variant values (inferred order Bo, Mk1-Bo, Bo Prime).",
+     "effect": {
+      "bsc": [
+       0.34,
+       0.38,
+       0.3
+      ]
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Boar": {
+   "page": "https://wiki.warframe.com/w/Boar",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Boar",
+    "Boar Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "50 weakpoint hits",
+    "per_charge_rounds": 3,
+    "capacity": 150
+   },
+   "evo1": "Incarnon Form: continuous beam weapon firing up to 3 beams. Pure Heat damage with higher crit chance, crit multiplier and fire rate. Reduced damage and Zoom. Main beam max range 20 m.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Reified Bane",
+     "text": "Increase Base Damage by +10. On Reload From Empty: Increase Base Damage by +14.",
+     "note": "Scope not stated. Flat add to base damage. Page says the in-game reload-from-empty text (+10) is incorrect; the bonus is +14. Bonus lasts until a manual reload with ammo in the magazine.",
+     "effect": {
+      "bd": 10
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Fortress Salvo",
+     "text": "Increase Base Damage by +16. With Armor Over 450: +4 Punch Through",
+     "note": "Scope not stated. Flat adds to base damage and Punch Through.",
+     "effect": {
+      "bd": 16
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Ready Retaliation",
+     "text": "On Reload From Empty: +100% Reload Speed.",
+     "note": "Scope not stated. Applies only at the end of the first reload from empty, so it does not boost that reload. Stacks additively with reload mods such as Tactical Pump.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Mercenary Chamber",
+     "text": "Increase Base Ammo Capacity to 195.",
+     "note": "Scope not stated. Sets base ammo capacity.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Practiced Grip",
+     "text": "Increase Accuracy by +50%.",
+     "note": "Scope not stated. Percentage increase to accuracy.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +12% per projectile. Increase Base Status Chance by +96% for Incarnon Form.",
+     "note": "Both modes: normal attack +12% per projectile; Incarnon Form +96%. Flat % adds to base status chance.",
+     "effect": {
+      "bsc": 0.96
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +20%. Increase Base Critical Damage Multiplier by +0.5x.",
+     "note": "Scope not stated. Flat adds to base crit chance and crit multiplier.",
+     "effect": {
+      "bcc": 0.2,
+      "bcd": 0.5
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +10%. Increase Base Status Chance by +6% per projectile. Increase Base Status Chance by +48% for Incarnon Form.",
+     "note": "Crit +10% base. Normal attack status +6% per projectile. Incarnon Form status +48%.",
+     "effect": {
+      "bcc": 0.1,
+      "bsc": 0.48
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "heat": 20.0
+    },
+    "radial": {},
+    "crit_chance": 0.18,
+    "crit_multiplier": 1.8,
+    "status_chance": 0.2,
+    "fire_rate": 7.5,
+    "multishot": 1.0,
+    "charges": 150,
+    "trigger": "Held",
+    "note": "Spread 0.00°, range 20.0 m. Continuous beam: up to 3 beams auto-target within 10° of reticle; each chains to up to 2 enemies within 10 m, each chain at 80% of the previous hit's damage. Charges are rounds: 3 per charge, max 150. Incarnon magazine is not affected by mods."
+   }
+  },
+  "Boltor": {
+   "page": "https://wiki.warframe.com/w/Boltor",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Boltor",
+    "Telos Boltor",
+    "Boltor Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "20 weakpoint hits",
+    "per_charge_rounds": 8,
+    "capacity": 160
+   },
+   "evo1": "Incarnon Form: rapid-fire pseudo-shotgun with 3 base multishot, higher overall damage, added Slash damage, slightly faster fire rate, lower accuracy. Prioritize Slash and gain Multishot.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Hunter's Mantra",
+     "text": "Increase Base Damage by +X. With Channeled Ability active: Punch Through +4 and +40% Accuracy.",
+     "note": "X by variant (Boltor / Telos / Prime): 18 / 4 / 4. Scope not stated.",
+     "effect": {
+      "bd": [
+       18,
+       4,
+       4
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Crimson Overture",
+     "text": "Increase Base Damage by +X. On Kill: +25% Ammo Efficiency for 5s. Stacks up to 3x.",
+     "note": "X by variant (Boltor / Telos / Prime): 12 / 0 / 0. Scope not stated.",
+     "effect": {
+      "bd": [
+       12,
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+60% Projectile Speed.",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +20.",
+     "note": "Scope not stated.",
+     "effect": {
+      "bmag": 20
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+60% Reload Speed.",
+     "note": "Scope not stated.",
+     "effect": {
+      "reload": 0.6
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +X%",
+     "note": "X by variant (Boltor / Telos / Prime): 20% / 20% / 18%. Flat % add to base status chance.",
+     "effect": {
+      "bsc": [
+       0.2,
+       0.2,
+       0.18
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X% Increase Base Status Chance by +Y%",
+     "note": "X/Y by variant: Boltor 8%/8%, Telos 4%/4%, Prime 10%/10%. Scope not stated.",
+     "effect": {
+      "bcc": [
+       0.08,
+       0.04,
+       0.1
+      ],
+      "bsc": [
+       0.08,
+       0.04,
+       0.1
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +X%",
+     "note": "X by variant (Boltor / Telos / Prime): 12% / 6% / 14%. Scope not stated.",
+     "effect": {
+      "bcc": [
+       0.12,
+       0.06,
+       0.14
+      ]
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 0.4,
+     "puncture": 1.2,
+     "slash": 2.4
+    },
+    "radial": {},
+    "crit_chance": 0.22,
+    "crit_multiplier": 2.8,
+    "status_chance": 0.0933,
+    "fire_rate": 10.0,
+    "multishot": 3.0,
+    "charges": 160,
+    "trigger": "Auto",
+    "note": "Multishot 3 at 4.00 damage per projectile. Spread 10.00° (8.00° min, 12.00° max). Punch Through 0.6 m. Projectile speed 85.0 m/s. Charges are rounds: 8 per charge, max 160. Incarnon magazine is not affected by mods."
+   }
+  },
+  "Braton": {
+   "page": "https://wiki.warframe.com/w/Braton",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Braton",
+    "MK1-Braton",
+    "Braton Vandal",
+    "Braton Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "20 weakpoints",
+    "per_charge_rounds": 10,
+    "capacity": 200
+   },
+   "evo1": "Incarnon Form: gains a 3 m AoE that deals pure Heat damage with much higher crit chance, crit multiplier and status chance. Fire rate is reduced and the explosion falls off from 100% to 90%.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Daring Reverie",
+     "text": "Increase Base Damage by +X. With Channeled Ability active: Increase Base Damage by +Y. +50% Ammo Efficiency",
+     "note": "X/Y by variant (Braton / Mk1 / Vandal / Prime): 24/30, 28/22, 12/34, 4/38. Scope not stated.",
+     "effect": {
+      "bd": [
+       24,
+       28,
+       12,
+       4
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Munitions Grit",
+     "text": "Increase Base Damage by +X. Multishot consumes ammo directly from Capacity and does +Y Damage. +20% Multishot.",
+     "note": "X/Y by variant (Braton / Mk1 / Vandal / Prime): X 14/20/8/2, Y 60%/48%/58%/54%. Page: affects both modes (Incarnon pulls from its magazine). Multishot-only damage bonus, multiplicative with other damage buffs. Multishot bonus stacks additively with Split Chamber.",
+     "effect": {
+      "bd": [
+       14,
+       20,
+       8,
+       2
+      ],
+      "multishot": 0.2
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Mercenary Chamber",
+     "text": "Increase Base Ammo Capacity to X.",
+     "note": "X by variant (Braton / Mk1 / Vandal / Prime): 675 / 600 / 750 / 1125. Page: does not apply to the Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Void's Guidance",
+     "text": "+60% Accuracy -60% Recoil",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Gunsmoke Pick Up",
+     "text": "On Punch Through Hit: 20% chance for 10% Ammo restored.",
+     "note": "Page: does not apply to the Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +X. Increase Base Critical Damage Multiplier by +Y.",
+     "note": "X/Y by variant (Braton / Mk1 / Vandal / Prime): 16%/0.4x, 18%/0.5x, 16%/0.4x, 18%/0.2x. Scope not stated.",
+     "effect": {
+      "bcc": [
+       0.16,
+       0.18,
+       0.16,
+       0.18
+      ],
+      "bcd": [
+       0.4,
+       0.5,
+       0.4,
+       0.2
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Prelude of Might",
+     "text": "With Critical Chance Below 50%: Increase Base Critical Damage Multiplier by +X.",
+     "note": "X by variant (Braton / Mk1 / Vandal / Prime): 3.4x / 3.3x / 3.0x / 3.0x. Added as base crit damage, so mods affect it. Condition counts crit-chance boosts such as Harrow's Covenant and Galvanized Scope.",
+     "effect": {
+      "lowcrit": [
+       0.5,
+       [
+        3.4,
+        3.3,
+        3.0,
+        3.0
+       ]
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X. Increase Base Status Chance by +Y.",
+     "note": "X/Y by variant (Braton / Mk1 / Vandal / Prime): 10%/12%, 12%/12%, 10%/12%, 10%/14%. Scope not stated.",
+     "effect": {
+      "bcc": [
+       0.1,
+       0.12,
+       0.1,
+       0.1
+      ],
+      "bsc": [
+       0.12,
+       0.12,
+       0.12,
+       0.14
+      ]
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 20.0,
+     "puncture": 2.0,
+     "slash": 28.0
+    },
+    "radial": {
+     "heat": 50.0
+    },
+    "crit_chance": 0.3,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.12,
+    "fire_rate": 5.0,
+    "multishot": 1.0,
+    "charges": 200,
+    "trigger": "Auto",
+    "note": "Spread 0.50° (0.30° min, 0.70° max), range 300.0 m. Radial (Incarnon Form AoE block): crit 30.00%, 3.00x, status 12.00%, fire rate 5.00. Radial is pure Heat; with Punch Through it occurs at the first object struck. Charges are rounds: 10 per charge, max 200. Switching to normal mode wastes remaining charges."
+   }
+  },
+  "Bronco": {
+   "page": "https://wiki.warframe.com/w/Bronco",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Bronco",
+    "Bronco Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "40 weak points",
+    "per_charge_rounds": 0.5,
+    "capacity": 20
+   },
+   "evo1": "Incarnon Form adds increased range and ricochet. Pellets ricochet once to enemies within 6 m (8 m for Prime) of the main target, with a 50% chance for Bronco. Crit, crit multiplier, status, and falloff range are much higher, while base damage and fire rate are lower. Void status prevents ricochets.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Speeding Bullet",
+     "text": "Increase Base Damage by +X. With Sprint Speed 1.2 or Higher: +60% Projectile Speed. X = 36 (Bronco) / X = 30 (Prime)",
+     "note": "Projectile speed bonus stacks additively with mods such as Lethal Momentum.",
+     "effect": {
+      "bd": [
+       36,
+       30
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Infused Shots",
+     "text": "Increase Base Damage by +X. On 50 Energy Spent: Increase Base Damage by +Y for 10s. Stacks up to 4x. X = 20, Y = 10 (Bronco) / X = 16, Y = 9 (Prime)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": [
+       20,
+       16
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Kinetic Battle",
+     "text": "-50% Weapon Recoil.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Practised Grip",
+     "text": "Increase Accuracy by +30%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +2.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bmag": 2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Enough for Everyone",
+     "text": "+75% Ammo efficiency when 6 enemies are within 6m.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +20%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": 0.2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Rain of Lead",
+     "text": "+2 Base Multishot.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bms": 2
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 13.2,
+     "puncture": 2.2,
+     "slash": 6.6
+    },
+    "radial": {},
+    "crit_chance": 0.2,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.1886,
+    "fire_rate": 2.5,
+    "multishot": 7.0,
+    "charges": 20,
+    "trigger": null,
+    "note": "22.00 damage per pellet (7 pellets). No falloff below 14.0 m, linear to 45.45% at 28.0 m. Range 300.0 m, spread 27.00 degrees (18.00 min, 36.00 max), accuracy very low. Infobox gives no form trigger; weapon-level Trigger Type is Semi-Auto."
+   }
+  },
+  "Burston": {
+   "page": "https://wiki.warframe.com/w/Burston",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Burston",
+    "Burston Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "20 weakpoints hits",
+    "per_charge_rounds": 30,
+    "capacity": 600
+   },
+   "evo1": "Incarnon Form: fully automatic, pure Heat shots exploding in a 2 m AoE, with much higher crit chance, crit multiplier and fire rate and much lower base damage. Explosion falls off from 100% to 0%. Reduced Zoom.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Forceful Finality",
+     "text": "Increase Base Damage by +42. +5 Base Multishot on final magazine burst.",
+     "note": "Page: multishot bonus is added before mods, so mod bonuses multiply it. Multishot bonus does not affect the Incarnon form.",
+     "effect": {
+      "bd": 42
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Fortress Salvo",
+     "text": "Increase Base Damage by +42. With Armor Over 450: +2 Punch Through.",
+     "note": "Scope not stated.",
+     "effect": {
+      "bd": 42
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +21.",
+     "note": "Scope not stated.",
+     "effect": {
+      "bmag": 21
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Ready Retaliation",
+     "text": "On Reload From Empty: +100% Reload Speed.",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Kinetic Battle",
+     "text": "-50% Weapon Recoil.",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Reaver's Rapture",
+     "text": "On Full Burst Hit: +20% Damage, resets on Reload.",
+     "note": "Caps at 5x for +100%, additive with base damage mods such as Serration. Resets when Incarnon is activated; cannot stack in Incarnon form (per page).",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +22%.",
+     "note": "Scope not stated.",
+     "effect": {
+      "bcc": 0.22
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Fatal Affliction",
+     "text": "+40% Direct Damage per Status Type affecting the target.",
+     "note": "Scope not stated.",
+     "effect": {
+      "per_status_damage": 0.4
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "heat": 3.0
+    },
+    "radial": {
+     "heat": 3.0
+    },
+    "crit_chance": 0.3,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.3,
+    "fire_rate": 20.0,
+    "multishot": 1.0,
+    "charges": 600,
+    "trigger": "Auto",
+    "note": "Fully automatic, replacing the normal 3-round burst. Spread 3.50° (2.00° min, 5.00° max), range 300.0 m. Radial: 2.0 m AoE, crit 30.00% / 3.00x, status 30.00%, 20.00 attacks/sec, headshot multiplier 1x, no multishot bonus. Charges are rounds: 30 per charge, max 600."
+   }
+  },
+  "Ceramic Dagger": {
+   "page": "https://wiki.warframe.com/w/Ceramic_Dagger",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Ceramic Dagger"
+   ],
+   "charge": {
+    "by": "'Reach **6x** Combo and then Heavy Attack to activate Incarnon Form.' Overview: Melee Combo built to 6x, then a Heavy Attack.",
+    "duration": "180 seconds"
+   },
+   "evo1": "Reach 6x Combo, then Heavy Attack, to activate. Heavy Attacks fire 2 spectral daggers that explode on impact; +100% Melee Damage, +25% Sprint Speed, +25% Parkour Velocity.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Gun and Blade",
+     "text": "Increase Base Damage by +100. On Primary Kill: +1 Initial Combo. Stacks up to 100x.",
+     "note": "Stacks show as a buff lasting the mission, lost on death. Max stacks let the dagger enter Incarnon without extra combo.",
+     "effect": {
+      "bd": 100
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Breacher's Opportunity",
+     "text": "Increase Base Damage by +120. On Shield Break: Increase Base Damage by +80 for 8s.",
+     "note": "No page note.",
+     "effect": {
+      "bd": 120
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+1 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Adept Reflexes",
+     "text": "+20 Initial Combo",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Rogue Readiness",
+     "text": "On Kill: 40% chance for Instantly Reload Primary and Secondary weapons.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Red Right Hand",
+     "text": "On First Attack With Primary Equipped: Increase Base Critical Damage Multiplier by +2x.",
+     "note": "Applies to the first attack from quickswap melee.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Dominion",
+     "text": "Increase Base Status Chance by +30%.",
+     "note": "No page note.",
+     "effect": {
+      "bsc": 0.3
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +30%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.3
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Cestra": {
+   "page": "https://wiki.warframe.com/w/Cestra",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Cestra"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "15 weak points",
+    "per_charge_rounds": 10,
+    "capacity": 150
+   },
+   "evo1": "Crit chance rises with uninterrupted shots while the trigger is held, up to +200%. Damage, crit chance, crit multiplier, and status are increased, while fire rate is lowered. The crit bonus is additive with Pistol Gambit and similar bonuses.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Steadfast Grit",
+     "text": "Increase Base Damage by +10. On Shield/Overguard break: x3 Critical Damage for 6s.",
+     "note": "Page says this is for personal shield break, not enemy shields.",
+     "effect": {
+      "bd": 10
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Fortress Salvo",
+     "text": "Increase Base Damage by +10. With Armor Over 450: +80% Multishot.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": 10
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% Reload Speed.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Slayer's Nerve",
+     "text": "On Hit: +6% Accuracy and -6% Weapon Recoil for 6s. Stacks up to 10x.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+50% Projectile Speed.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +18%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": 0.18
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Deathtrap Trigger",
+     "text": "Increase Base Critical Damage Multiplier by +2x.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcd": 2.0
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Wiseman's Regard",
+     "text": "Increase Base Status Chance by 30% of current Critical Chance, up to 40%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 10.0,
+     "puncture": 40.0
+    },
+    "radial": {},
+    "crit_chance": 0.5,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.18,
+    "fire_rate": 6.67,
+    "multishot": 1.0,
+    "charges": 150,
+    "trigger": "Auto",
+    "note": "50.00 damage per projectile (80% Puncture). Spread 3.00 degrees (1.00 min, 5.00 max), projectile speed 100.0 m/s, very high accuracy."
+   }
+  },
+  "Dera": {
+   "page": "https://wiki.warframe.com/w/Dera",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Dera",
+    "Dera Vandal"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "25 weakpoints hits",
+    "per_charge_rounds": 2,
+    "capacity": 50
+   },
+   "evo1": "Incarnon Form: fires lasers dealing Magnetic damage. Gains 3 Punch Through, with higher crit chance and crit multiplier, but lower status chance and fire rate. Not a beam weapon.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Crimson Overture",
+     "text": "Increase Base Damage by +X. On Kill: +25% Ammo Efficiency for 5s. Stacks up to 3x.",
+     "note": "X by variant (Dera / Vandal): 8 / 6. Scope not stated.",
+     "effect": {
+      "bd": [
+       8,
+       6
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Paragon Essence",
+     "text": "Increase Base Damage by +X. On Status Effect: +5% Fire Rate for 5s. Stacks up to 6x.",
+     "note": "X by variant (Dera / Vandal): 6 / 4. Fire rate bonus stacks additively with Speed Trigger.",
+     "effect": {
+      "bd": [
+       6,
+       4
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+50% Projectile Speed",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +X",
+     "note": "X by variant (Dera / Vandal): 22 / 30. Page: does not affect Incarnon form.",
+     "effect": {
+      "bmag": [
+       22,
+       30
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Evolved Autoloader",
+     "text": "+50% Magazine Reloaded per second when Holstered.",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Deathtrap Trigger",
+     "text": "Increase Base Critical Chance by +14% Increase Base Critical Damage Multiplier by +X",
+     "note": "X by variant (Dera / Vandal): 0.6x / 0.4x. Scope not stated.",
+     "effect": {
+      "bcc": 0.14,
+      "bcd": [
+       0.6,
+       0.4
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "High Ground",
+     "text": "Increase Base Critical Chance by 25% of current Status Chance, up to 35%.",
+     "note": "Scope not stated. Page gives status needed to max the bonus: 536.4% for Incarnon Dera (366.7% for non-Incarnon Vandal).",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +X%",
+     "note": "X by variant (Dera / Vandal): 18% / 14%. Scope not stated.",
+     "effect": {
+      "bsc": [
+       0.18,
+       0.14
+      ]
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 40.0,
+     "puncture": 130.0,
+     "slash": 80.0,
+     "magnetic": 80.0
+    },
+    "radial": {},
+    "crit_chance": 0.22,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.18,
+    "fire_rate": 2.0,
+    "multishot": 1.0,
+    "charges": 50,
+    "trigger": null,
+    "note": "Total 330 per shot. Punch Through 3.0 m. Spread 0.90° (0.80° min, 1.00° max), range 300.0 m. The Incarnon block lists no trigger; the top-level infobox trigger is Auto. Charges are rounds: 2 per charge, max 50. Incarnon magazine is not affected by mods."
+   }
+  },
+  "Despair": {
+   "page": "https://wiki.warframe.com/w/Despair",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Despair"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "4 weak points",
+    "per_charge_rounds": 5,
+    "capacity": 20
+   },
+   "evo1": "Gains embedding projectiles that explode with Heat damage. Page says the explosion has a 4.9 m radius after a 0.5 s embed delay, for 150 Heat. Fire rate is slightly lower and accuracy much lower. Explosion is affected by radius mods such as Fulmination.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Fatal Affliction",
+     "text": "Increase Damage by +50. +40% Direct Damage per Status Type affecting the target.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": 50,
+      "per_status_damage": 0.4
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Stalker's Vendetta",
+     "text": "Increase Damage by +60. With Dread and Hate equipped: Multishot consumes ammo directly from Capacity and increases Damage by +100%. +30% Multishot.",
+     "note": "Damage bonus is multiplicative with other damage buffs and applies only to multishot-generated shots. The multishot bonus stacks additively with mods such as Barrel Diffusion.",
+     "effect": {
+      "bd": 60
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Focus",
+     "text": "-30% Zoom.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+50% Projectile Speed.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+100% Reload Speed.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "reload": 1.0
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Status Chance by +24%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bsc": 0.24
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Critical Chance by +12% Increase Status Chance by +12%",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": 0.12,
+      "bsc": 0.12
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +18% Increase Base Critical Damage Multiplier by +0.4x",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": 0.18,
+      "bcd": 0.4
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 3.0,
+     "puncture": 48.0,
+     "slash": 9.0
+    },
+    "radial": {
+     "heat": 160.0
+    },
+    "crit_chance": 0.3,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.2,
+    "fire_rate": 3.0,
+    "multishot": 1.0,
+    "charges": 20,
+    "trigger": "Auto",
+    "note": "60.00 damage per projectile (80% Puncture). Accuracy Medium, spread 10.00 degrees (5.00 min, 15.00 max), projectile speed 50.0 m/s. Radial (AoE): crit 30.00%, 3.00x, status 30.00%, fire rate 3.00, multishot 1. CONFLICT: EVO1 text describes the explosion as 150 Heat, 4.9 m radius, after a 0.5 s embed delay, which differs from the infobox radial (160 Heat, 4.0 m)."
+   }
+  },
+  "Destreza": {
+   "page": "https://wiki.warframe.com/w/Destreza",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Destreza",
+    "Destreza Prime"
+   ],
+   "charge": {
+    "by": "Overview: Melee Combo built to 6x, then a Heavy Attack, a Slam Attack or a Heavy Slam Attack. Page also notes non-heavy slams can activate it and do not reduce Melee Combo.",
+    "duration": "180 seconds"
+   },
+   "evo1": "Reach 6x Combo, then Heavy Attack, to activate. Heavy Attacks summon 5 spectral rapiers that fly forward for 2 seconds; +100% Melee Damage, +20% Sprint Speed, +20% Parkour Velocity, and +10% Puncture damage per Heavy Attack kill (up to 300%).",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Weighted Impetus",
+     "text": "Increase Base Damage by +X On Heavy Attack Kill: +100% Heavy Attack Wind Up Speed for 8s X = 50 X = 40",
+     "note": "Wind-up bonus is additive with other wind-up sources such as Killing Blow. Bonus base damage is not applied to the melee or the spectral rapiers. X values inferred as Destreza, Destreza Prime.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Piercing Stature",
+     "text": "Increase Base Damage by +X On Puncture Status Effect: Gain +20% Status Chance for 6 seconds. Stacks 5x X = 50 X = 40",
+     "note": "Status bonus is additive with other status sources. Stacks have independent timers; the oldest is replaced at 5 stacks. Bonus base damage not applied to melee or spectral rapiers. X inferred as Destreza, Destreza Prime.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+1 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Overhand",
+     "text": "Base Heavy Attack Efficiency set at 30%",
+     "note": "Page says 'set at', not an added percentage.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Adept Reflexes",
+     "text": "+20 Initial Combo",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Dominion",
+     "text": "Increase Base Status Chance by +X X = 20% X = 16%",
+     "note": "X inferred as Destreza, Destreza Prime.",
+     "effect": {
+      "bsc": [
+       0.2,
+       0.16
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Forte",
+     "text": "Increase Base Critical Multiplier by +X X = 1.2x X = 0.6x",
+     "note": "X inferred as Destreza, Destreza Prime.",
+     "effect": {
+      "bcd": [
+       1.2,
+       0.6
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Decisive Stature",
+     "text": "Increase Base Critical Chance by 25% of current Status Chance, up to 35%",
+     "note": "Max effect at 140% status chance. Destreza needs +900% status for max (63% base crit); Destreza Prime needs +600% (67% base crit).",
+     "effect": {}
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Dread": {
+   "page": "https://wiki.warframe.com/w/Dread",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Dread"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "4 weakpoints hits",
+    "per_charge_rounds": 5,
+    "capacity": 20
+   },
+   "evo1": "Incarnon Form: wide projectile dealing Heat damage with increased base damage, crit multiplier and status chance, plus infinite body Punch Through. Loses Puncture and silence; headshot multiplier 1x; slower charge; cannot fire from partial charge.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Hitman's Opportunity",
+     "text": "Increase Base Damage by +70. +100% Damage to enemies below half Health",
+     "note": "Scope not stated. Page: the conditional bonus ignores the same perk's base increase, the 2x charged-shot bonus (Primary Fire only) and Galvanized Aptitude's bonus.",
+     "effect": {
+      "bd": 70
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Stalker's Resentment",
+     "text": "Increase Base Damage by +50. With Hate and Despair Equipped: Hits increase Base Damage by +10 and Fire Rate by +10%, stacks up to 5x. Resets on missed shot.",
+     "note": "Page: affects both regular and Incarnon forms. Flat base damage adds plus per-hit stacking.",
+     "effect": {
+      "bd": 50
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+30% Projectile Speed",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Focus",
+     "text": "-30% Zoom",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Hitman's Hoard",
+     "text": "Increase Base Ammo Capacity to 144",
+     "note": "Page: does not affect the Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +10% Increase Base Status Chance by +10%",
+     "note": "Scope not stated.",
+     "effect": {
+      "bcc": 0.1,
+      "bsc": 0.1
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +24%",
+     "note": "Scope not stated.",
+     "effect": {
+      "bsc": 0.24
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Zeroed In",
+     "text": "Increase Base Critical Damage Multiplier by +1x",
+     "note": "Scope not stated.",
+     "effect": {
+      "bcd": 1.0
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 100.0,
+     "slash": 100.0,
+     "heat": 200.0
+    },
+    "radial": {},
+    "crit_chance": 0.5,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.3,
+    "fire_rate": 1.5,
+    "multishot": 1.0,
+    "charges": 20,
+    "trigger": "Charge",
+    "note": "Charge time 0.60 s. Spread 6.00° (0.00° min, 12.00° max). Projectile speed 90.0 m/s. Noise ALARMING. Infinite-body Punch Through per the EVO1 text (no Punch Through value in the block). Charges are rounds: 5 per charge, max 20. Page: the hidden combo damage multiplier does not apply in Incarnon form."
+   }
+  },
+  "Dual Ichor": {
+   "page": "https://wiki.warframe.com/w/Dual_Ichor",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Dual Ichor"
+   ],
+   "charge": {
+    "by": "'Reach **6x** Combo and then Heavy Attack to activate Incarnon Form.' Overview: Melee Combo built to 6x, then a Heavy Attack.",
+    "duration": "180 seconds"
+   },
+   "evo1": "Reach 6x Combo, then Heavy Attack, to activate. Kills leave Toxin damage fields; +100% Melee Damage, +20% Sprint Speed, +20% Parkour Velocity.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Alchemist's Wrath",
+     "text": "Increase Base Damage by +90. 5 additional Combos on targets affected by Toxin.",
+     "note": "Toxin fields also award the 5 bonus combo on Toxin-affected enemies. Toxic Lash and Xata's Whisper also work; with both active, 15 bonus combo total.",
+     "effect": {
+      "bd": 90
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Ronin's Rush",
+     "text": "Increase Base Damage by +90. On striking target with final move of Neutral Combo: +30% Attack Speed for 33s.",
+     "note": "No page note.",
+     "effect": {
+      "bd": 90
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+0.6 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Resolute Force",
+     "text": "+7s Combo Duration.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Break",
+     "text": "+100% Heavy Attack Windup Speed",
+     "note": "No page note.",
+     "effect": {
+      "windup_speed": 1.0
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Status Chance by +34%.",
+     "note": "No page note.",
+     "effect": {
+      "bsc": 0.34
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Poison Parasite",
+     "text": "On killing an enemy with 3+ Toxin Stacks: +33 Heal Regen/s for 9s.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Universal Readiness",
+     "text": "Collecting ammo grants 5 Melee Combo counter.",
+     "note": "No page note.",
+     "effect": {}
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Dual Toxocyst": {
+   "page": "https://wiki.warframe.com/w/Dual_Toxocyst",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Dual Toxocyst"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "9 weak points",
+    "per_charge_rounds": 30,
+    "capacity": 270
+   },
+   "evo1": "Becomes fully automatic with Ricochet. Higher crit, crit multiplier, status, and fire rate, with much less recoil. Each shot ricochets to 1 enemy within 5 m of the main target. Ricochet can headshot and trigger Frenzy.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Carnage Reign",
+     "text": "Increase Base Damage by +60. +33% Direct Damage per Status Type affecting the target.",
+     "note": "Page notes an unlisted requirement of energy max of at least 200 for the damage-per-status bonus.",
+     "effect": {
+      "bd": 60,
+      "per_status_damage": 0.33
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Fevered Frenzy",
+     "text": "Increase Base Damage by +50. On Ability Cast: +5% Multishot. Stacks up to 20x.",
+     "note": "Multishot bonus stacks additively with mods such as Barrel Diffusion. Effect lasts until the end of the mission.",
+     "effect": {
+      "bd": 50,
+      "stacks": {
+       "multishot": 1.0
+      }
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Ready Retaliation",
+     "text": "On Reload from Empty: +100% Reload Speed.",
+     "note": "Page says this currently does not work.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Evolved Autoloader",
+     "text": "+50% Magazine Reloaded/s when holstered.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Hand",
+     "text": "-50% Weapon Recoil.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +20%.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": 0.2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Neurotoxin",
+     "text": "On Headshot: +70% Toxin for 3s.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Ripper Rounds",
+     "text": "On Kill: +3 Punch Through for 7s.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 15.0,
+     "puncture": 37.5,
+     "slash": 22.5
+    },
+    "radial": {},
+    "crit_chance": 0.11,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.43,
+    "fire_rate": 4.5,
+    "multishot": 1.0,
+    "charges": 270,
+    "trigger": "Auto",
+    "note": "75.00 damage per projectile (50% Puncture). Range 1000.0 m, spread 6.25 degrees (0.50 min, 12.00 max), very high accuracy. The headshot Frenzy buff is a base-weapon mechanic, not part of the Incarnon infobox."
+   }
+  },
+  "Felarx": {
+   "page": "https://wiki.warframe.com/w/Felarx",
+   "slot": "PRIMARY",
+   "genesis": false,
+   "variants": [
+    "Felarx"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "30 weakpoint hits",
+    "per_charge_rounds": 2,
+    "capacity": 60
+   },
+   "evo1": "Weakpoint hits charge; Alt Fire transmutes. Switches to semi-auto large energy shots with higher accuracy and crit multiplier, 0.5 m punch through and 20% status per shot; Radiation and Impact replace Puncture and Slash; base multishot 1; lower fire rate and total damage; no radial damage.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Attuned Accuracy",
+     "text": "+40% accuracy when aiming.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Kinetic Baffle",
+     "text": "-50% weapon recoil.",
+     "note": "Only applies while aiming.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Frictionless Flight",
+     "text": "+50% projectile speed.",
+     "note": "Only applies while aiming.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Dual-Mode Chamber",
+     "text": "Each reloaded shell toggles between +100% projectile speed and +4 m punch through.",
+     "note": "Holster-reload effects toggle it; Blood Forge and Cyte-09 Resupply do not. Affects Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Evolved Autoloader",
+     "text": "+50% magazine reloaded per second while holstered.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Mounting Momentum",
+     "text": "Each shell reloaded: +10% fire rate, up to 99 stacks (+990%).",
+     "note": "Resets on reload; holstering resets stacks. Blood Forge does not reset or build; Resupply builds 1 stack. Affects Incarnon form: activating adds 1 stack, and missing rounds at activation add stacks on exit.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Brutal Edge",
+     "text": "+10% base crit chance. +10% base status chance.",
+     "note": "Added after mods as a flat value. Status bonus is divided by base multishot 4, so +2.5% per pellet.",
+     "effect": {
+      "fcc": 0.1,
+      "fsc": 0.1
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Incarnon Catalyst",
+     "text": "Headshots build +50% more Incarnon transmutation charge. Headshots to full charge reduced to 20.",
+     "note": "Each headshot bullet generates 3 charge, up from 2.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Racking Wrath",
+     "text": "+20% base status chance. -10% base crit chance.",
+     "note": "Added after mods as a flat value. Status bonus divided by 4, so +5% per pellet.",
+     "effect": {
+      "fcc": -0.1,
+      "fsc": 0.2
+     }
+    },
+    {
+     "tier": 5,
+     "name": "Devastating Attrition",
+     "text": "50% chance to deal +2000% damage on non-critical hits.",
+     "note": "Affects both forms. Multiplicative with Serration-type base damage bonuses.",
+     "effect": {
+      "noncrit": 10.0
+     }
+    },
+    {
+     "tier": 5,
+     "name": "Ruptured Plentitude",
+     "text": "On punch-through of 3 enemies: +70% ammo efficiency for 20 s.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Agile Executor",
+     "text": "+50% ammo efficiency while aim gliding and sliding.",
+     "note": "No note on page.",
+     "effect": {}
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 200.0,
+     "radiation": 400.0
+    },
+    "radial": {},
+    "crit_chance": 0.2,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.2,
+    "fire_rate": 1.5,
+    "multishot": 1.0,
+    "charges": 60,
+    "trigger": "Semi-Auto",
+    "note": "Total 600 per shot. Range 56.0 m; spread 11.00° (6.00° min, 16.00° max); projectile speed 100.0 m/s; accuracy Medium. EVO1 text: 0.5 m punch through; page says no radial damage despite the explosive look. Each charge gives 2 rounds, max 60. Charges do not come from most MOA backpacks, Sonar/Detect spots that are not weakpoints, or corpses; individual multishot bullets do count."
+   }
+  },
+  "Furax": {
+   "page": "https://wiki.warframe.com/w/Furax",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Furax",
+    "MK1-Furax",
+    "Furax Wraith"
+   ],
+   "charge": {
+    "by": "'Reach **6x** Combo and then Heavy Attack to activate Incarnon Form.' Overview: Melee Combo built to 6x, then a Heavy Attack.",
+    "duration": "180 seconds"
+   },
+   "evo1": "Reach 6x Combo, then Heavy Attack, to activate. Heavy Slams gain 90% Heavy Slam Efficiency and leave Heat damage fields; +100% Melee Damage, +25% Sprint Speed, +25% Bullet Jump.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Swordsman's Flourish",
+     "text": "Increase Base Damage by +X. With Melee Weapon Equipped: +100% Combo Count Chance X = 110 X = 100 X = 65",
+     "note": "Combo Count Chance bonus requires manually equipping the melee. Does not affect quickswap melee attacks. X values inferred as Furax, Mk1-Furax, Furax Wraith.",
+     "effect": {
+      "bd": [
+       110,
+       100,
+       65
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Kill Joy",
+     "text": "Increase Base Damage by +X. +10% Attack Speed per enemy within 6m, stacks up to 5x. X = 90 X = 80 X = 55",
+     "note": "X values inferred as Furax, Mk1-Furax, Furax Wraith.",
+     "effect": {
+      "bd": [
+       90,
+       80,
+       55
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Moonrise Velocity",
+     "text": "+1 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Overhand",
+     "text": "Heavy Attack Efficiency set at 20%",
+     "note": "Does not negatively impact the 90% Heavy Slam Efficiency from Incarnon Form. Page says 'set at', not an added percentage.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Standoff",
+     "text": "Combo Timer pauses when weapon is holstered.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Flashing Bleed",
+     "text": "+40% chance of Bleed on Impact Status Effect.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Kinetic Killer",
+     "text": "Increase Base Critical Damage Multiplier to 4x on Slide Attacks.",
+     "note": "Can apply to any attack, including Heavy attacks and Heavy Slams, if the user is sliding at the time of the strike.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Dominion",
+     "text": "Increase Base Status Chance by +X%. X = 24% X = 22% X = 14%",
+     "note": "X values inferred as Furax, Mk1-Furax, Furax Wraith.",
+     "effect": {
+      "bsc": [
+       0.24,
+       0.22,
+       0.14
+      ]
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Furis": {
+   "page": "https://wiki.warframe.com/w/Furis",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Furis",
+    "MK1-Furis"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "20 weak points",
+    "per_charge_rounds": 14,
+    "capacity": 280
+   },
+   "evo1": "Fires a wide Heat beam, similar to the Klamora Prism. Much higher base damage, crit, crit multiplier, status, and fire rate. Linear falloff from 100% to 80% between 10 m and 16 m, maximum range 16 m, and no innate punch-through.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Haven Foray",
+     "text": "Increase Base Damage by +X. With Overshields: Increase Base Damage by +30. X = 28 (Furis) / X = 34 (Mk1-Furis)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": [
+       28,
+       34
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Stormburst",
+     "text": "Increase Base Damage by +X. On hitting enemies affected by Electricity Status: +0.4 Multishot for 2s. Stacks up to 3x. X = 28 (Furis) / X = 34 (Mk1-Furis)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": [
+       28,
+       34
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Practiced Grip",
+     "text": "Increase Accuracy by +50%",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +25.",
+     "note": "Page says this does not apply to the Incarnon form.",
+     "effect": {
+      "bmag": 25
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Executioner's Fortune",
+     "text": "On Headshot: 10% chance for Instant Reload",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Headcracker",
+     "text": "On Headshot: +5% Fire Rate for 2s. Stacks up to 10x.",
+     "note": "Effect has a 50% chance to activate.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Prelude of Might",
+     "text": "With Critical Chance below 40%: Increase Base Critical Damage Multiplier by +3x.",
+     "note": "Condition is affected by the crit chance increase from Puncture status.",
+     "effect": {
+      "lowcrit": [
+       0.4,
+       3.0
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +X%. X = 28% (Furis) / X = 39% (Mk1-Furis)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bsc": [
+       0.28,
+       0.39
+      ]
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "heat": 100.0
+    },
+    "radial": {},
+    "crit_chance": 0.26,
+    "crit_multiplier": 3.4,
+    "status_chance": 0.24,
+    "fire_rate": 12.0,
+    "multishot": 1.0,
+    "charges": 280,
+    "trigger": "Held",
+    "note": "100.00 damage per projectile. No falloff below 10.0 m, linear to 52% at 16.0 m (52 damage beyond). Range 16.0 m, spread 10.00 degrees (5.00 min, 15.00 max), medium accuracy."
+   }
+  },
+  "Gammacor": {
+   "page": "https://wiki.warframe.com/w/Gammacor",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Gammacor",
+    "Synoid Gammacor"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "15 weak points",
+    "per_charge_rounds": 1,
+    "capacity": 15
+   },
+   "evo1": "Semi-automatic projectiles with a guaranteed Impact proc. They pull and stagger enemies within 5 m for 1.2 s, then explode for Cold damage with a guaranteed Cold proc. Fire rate is much slower, and explosion falloff runs from 100% to 70%.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Sage's Resolve",
+     "text": "Increase Base Damage by +10. With Channeled Ability Active: +25% Multishot.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bd": 10
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Infused Shots",
+     "text": "Increase Base Damage by +6. On 50 Energy Spent: Increase Base Damage by +5 for 10s. Stacks up to 4x.",
+     "note": "All stacks are removed when the most recent one expires. Gaining a stack refreshes all stacks.",
+     "effect": {
+      "bd": 6
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Evolved Autoloader",
+     "text": "+50% Magazine Reloaded/s when Holstered",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Moonrise Velocity",
+     "text": "+8 Range",
+     "note": "No scope or mod-style note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +40.",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bmag": 40
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Critical Damage Multiplier by +0.2x. X = 20% (Gammacor) / X = 10% (Synoid Gammacor)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": [
+       0.2,
+       0.1
+      ],
+      "bcd": 0.2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Status Chance by +Y%. X = 12%, Y = 10% (Gammacor) / X = 6%, Y = 6% (Synoid Gammacor)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bcc": [
+       0.12,
+       0.06
+      ],
+      "bsc": [
+       0.1,
+       0.06
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +X%. X = 20% (Gammacor) / X = 10% (Synoid Gammacor)",
+     "note": "No scope or mod-style note on page.",
+     "effect": {
+      "bsc": [
+       0.2,
+       0.1
+      ]
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 80.0
+    },
+    "radial": {
+     "cold": 660.0
+    },
+    "crit_chance": 0.14,
+    "crit_multiplier": 1.8,
+    "status_chance": 0.22,
+    "fire_rate": 1.0,
+    "multishot": 1.0,
+    "charges": 15,
+    "trigger": "Semi-Auto",
+    "note": "80.00 damage per projectile, spread 0.00 degrees, projectile speed listed as 0.0 m/s, very high accuracy. Radial (AoE): explosion delay 1.20 s, forced Cold proc, crit 14.00%, 1.80x, status 22.00%, fire rate 1.00, multishot 1. CONFLICT: EVO1 text gives the explosion as pure 760 Cold, while the infobox radial shows 660."
+   }
+  },
+  "Gorgon": {
+   "page": "https://wiki.warframe.com/w/Gorgon",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Gorgon",
+    "Gorgon Wraith",
+    "Prisma Gorgon"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": null,
+    "per_charge_rounds": null,
+    "capacity": 20
+   },
+   "evo1": "Incarnon Form: fires time-delayed explosive projectiles that deal Impact, Puncture and Slash on impact, then detonate with a 5 m radius of guaranteed-Heat-status Heat damage, falling off 100% to 90%.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Hunter's Mantra",
+     "text": "Increase Base Damage by +X. With Channeled Ability Active: +3 Punch Through, +40% Accuracy.",
+     "note": "X by variant (Gorgon / Wraith / Prisma): 10 / 5 / 5. Channeled Abilities must drain energy to count (Desecrate, Haven, Gloom with no enemies do not).",
+     "effect": {
+      "bd": [
+       10,
+       5,
+       5
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Hoplite Virtue",
+     "text": "Increase Base Damage by +X. On Shield Break: Increase Base Damage by +Y for 8s.",
+     "note": "X/Y by variant (Gorgon / Wraith / Prisma): X 10/5/5, Y 13/8/8. Page: refers to the wielder's personal shield breaking, not enemy shields.",
+     "effect": {
+      "bd": [
+       10,
+       5,
+       5
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Resonant Restore",
+     "text": "On Reload From Empty: Increase Base Magazine Capacity by +15. Stacks up to 3x.",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% Reload Speed",
+     "note": "Scope not stated.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Void's Guidance",
+     "text": "-50% Weapon Recoil.",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X Increase Base Status Chance by +Y",
+     "note": "X/Y by variant (Gorgon / Wraith / Prisma): X 8%/8%/2%, Y 9%/6%/6%. Scope not stated.",
+     "effect": {
+      "bcc": [
+       0.08,
+       0.08,
+       0.02
+      ],
+      "bsc": [
+       0.09,
+       0.06,
+       0.06
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +X",
+     "note": "X by variant (Gorgon / Wraith / Prisma): 16% / 14% / 12%. Scope not stated.",
+     "effect": {
+      "bsc": [
+       0.16,
+       0.14,
+       0.12
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +X",
+     "note": "X by variant (Gorgon / Wraith / Prisma): 14% / 14% / 6%. Scope not stated.",
+     "effect": {
+      "bcc": [
+       0.14,
+       0.14,
+       0.06
+      ]
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 20.0,
+     "puncture": 60.0,
+     "slash": 20.0
+    },
+    "radial": {
+     "heat": 750.0
+    },
+    "crit_chance": 0.21,
+    "crit_multiplier": 1.9,
+    "status_chance": 0.19,
+    "fire_rate": 0.83,
+    "multishot": 1.0,
+    "charges": 20,
+    "trigger": "Auto-Charge",
+    "note": "Projectile speed 120.0 m/s; spread 4.00° (2.00° min, 6.00° max). The projectile deals Impact, Puncture and Slash on impact, then explodes after a 1.10 s delay. Radial crit 21.00% / 1.90x, status 19.00%, fire rate 0.83. Infobox shows 'Incarnon Charges 20'; the page gives no rounds-per-charge or full-gauge count."
+   }
+  },
+  "Hate": {
+   "page": "https://wiki.warframe.com/w/Hate",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Hate"
+   ],
+   "charge": {
+    "by": "'Reach **6x** Combo and then Heavy Attack to activate Incarnon Form.' Overview: Melee Combo built to 6x, then a Heavy Attack.",
+    "duration": "180 seconds"
+   },
+   "evo1": "Reach 6x Combo, then Heavy Attack, to activate. Forward and Neutral Combos launch a spectral blade that explodes after impact; +100% Melee Damage, +20% Sprint Speed, +20% Parkour Velocity.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Swordsman's Flourish",
+     "text": "Increase Base Damage by +30. With Melee Weapon Equipped: +100% Combo Count Chance",
+     "note": "Combo Count Chance bonus requires manually equipping the melee. Does not affect quickswap melee attacks.",
+     "effect": {
+      "bd": 30
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Stalker's Legacy",
+     "text": "Increase Base Damage by +30. With Dread and Despair equipped: +30 Initial Combo.",
+     "note": "No page note.",
+     "effect": {
+      "bd": 30
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+0.8 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Break",
+     "text": "+60% Heavy Attack Wind Up Speed",
+     "note": "No page note.",
+     "effect": {
+      "windup_speed": 0.6
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Resolute Force",
+     "text": "+10s Combo Duration",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +10%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.1
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Dominion",
+     "text": "Increase Base Status Chance by +20%.",
+     "note": "No page note.",
+     "effect": {
+      "bsc": 0.2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Subtle Force",
+     "text": "Increase Base Critical Chance by +6%. Increase Base Status Chance by +10%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.06,
+      "bsc": 0.1
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Innodem": {
+   "page": "https://wiki.warframe.com/w/Innodem",
+   "slot": "MELEE",
+   "genesis": false,
+   "variants": [
+    "Innodem"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 5x, then using a Heavy Attack.'",
+    "duration": "90 seconds ('Incarnon Form lasts for 90 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Orokin Reach",
+     "text": "+0.5 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Bladed Harmony",
+     "text": "+25% Attack Speed",
+     "note": "No page note.",
+     "effect": {
+      "fire_rate": 0.25
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Striking Swiftness",
+     "text": "+30% Sprint Speed",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Hawk Momentum",
+     "text": "Gain 5 Combo for every 10m of continuous slide",
+     "note": "Page: only counts slide distance while grounded; weapon must be in hand.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Skyborne Hunter",
+     "text": "Increase range of aerial melee attacks by +0.5m.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Blade Twister",
+     "text": "+60% Finisher Damage",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Incarnon Imago",
+     "text": "Reach 3x Combo and Heavy Attack to activate Incarnon Form",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Swooping Lunge",
+     "text": "On Airborne Melee Kill: +50% Melee Damage for 10s. Stacks up to 3x.",
+     "note": "Page: stacks additively with Pressure Point and similar. Incarnon projectile and Slash, Heat, and Toxin status kills while airborne count toward stacks.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Protracted Execution",
+     "text": "On Finisher: 20 Combo on Finisher",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Blood Anointed",
+     "text": "On Finisher: +40% Heavy Attack Efficiency for 40s",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Stunning Brutality",
+     "text": "On Finisher: Stun aware enemies in a 10m Radius",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Armed Inspiration",
+     "text": "Collecting ammo grants 5 Melee Combo counter",
+     "note": "No page note.",
+     "effect": {}
+    }
+   ],
+   "melee_form": {
+    "fire_rate": 0.4
+   }
+  },
+  "Kunai": {
+   "page": "https://wiki.warframe.com/w/Kunai",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Kunai",
+    "MK1-Kunai"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "4 weakpoint hits",
+    "per_charge_rounds": 5,
+    "capacity": 20
+   },
+   "evo1": "Incarnon Form: weakpoint hits charge the gauge, Alt Fire transmutes. Projectiles seek headshots and have increased multishot (2).",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Swift Conclusion",
+     "text": "Increase Damage by +X. Increase Damage by +200% if enemy has less than half health. X = 70 (Kunai), X = 80 (Mk1-Kunai)",
+     "note": "Page note: the under-half-health bonus is additive with Hornet Strike in normal form and multiplicative in Incarnon form; additive with Galvanized Shot in both forms.",
+     "effect": {
+      "bd": [
+       70,
+       80
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Sage's Resolve",
+     "text": "Increase Base Damage by +X With Channeled Ability active: +100% Multishot. X = 80 (Kunai), X = 70 (Mk1-Kunai)",
+     "note": "No page note.",
+     "effect": {
+      "bd": [
+       80,
+       70
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+60% Projectile Speed.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +10.",
+     "note": "No page note.",
+     "effect": {
+      "bmag": 10
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% Reload Speed.",
+     "note": "Page note: stacks additively with reload speed mods such as Quickdraw.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Deathtrap Trigger",
+     "text": "On equip from Primary: Increase Base Critical Chance by +X% for 4s. Increase Base Critical Damage Multiplier by +Y for 4s. X = 40%, Y = 1.4x (Kunai); X = 42%, Y = 1x (Mk1-Kunai)",
+     "note": "Page bug: shown as permanent in the Arsenal but only applies during the 4 s buff.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Accelerating Volley",
+     "text": "On Fire: +20% Fire Rate for 0.5s. Stacks up to 5x.",
+     "note": "Page note: stacks additively with fire rate mods such as Gunslinger.",
+     "effect": {
+      "stacks": {
+       "fire_rate": 1.0
+      }
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +12%. Increase Base Status Chance by +12%.",
+     "note": "Page note: the status increase is divided among the 2 projectiles in Incarnon mode, giving +6% per projectile. Described as base-stat increases.",
+     "effect": {
+      "bcc": 0.12,
+      "bsc": 0.12
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 8.0,
+     "puncture": 14.0,
+     "slash": 18.0
+    },
+    "radial": {},
+    "crit_chance": 0.18,
+    "crit_multiplier": 2.0,
+    "status_chance": 0.16,
+    "fire_rate": 3.33,
+    "multishot": 2.0,
+    "charges": 20,
+    "trigger": "Auto (general Trigger Type row; no Incarnon trigger row)",
+    "note": "Infobox total 80 (45.00% Slash); 40.00 damage per projectile; spread 10.00° (5.00° min, 15.00° max); projectile speed 70.0 m/s. Projectiles seek headshots and gain multishot (EVO1). Sonar or Detect Vulnerability weakpoints also charge; Crystallize growths do not."
+   }
+  },
+  "Laetum": {
+   "page": "https://wiki.warframe.com/w/Laetum",
+   "slot": "SECONDARY",
+   "genesis": false,
+   "variants": [
+    "Laetum"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "12 weakpoint hits",
+    "per_charge_rounds": 18,
+    "capacity": 216
+   },
+   "evo1": "Incarnon Form (EVO1): semi-auto becomes full-auto with higher fire rate and lower recoil; direct shots deal Impact instead of Slash; shots explode in a 2 m radius for Radiation.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Marksman's Hand",
+     "text": "-40% Recoil",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Rapid Wrath",
+     "text": "+20% Fire Rate",
+     "note": "No page note.",
+     "effect": {
+      "fire_rate": 0.2
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Raptor's Chase",
+     "text": "+50% Movement Speed while Aiming",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Lethal Rearmament",
+     "text": "On Headshot: +30% Reload Speed for 12 seconds. Stacks up to 3 times.",
+     "note": "Page note: affects untransformed Laetum and Incarnon mode switching; stacks decay one at a time, resetting duration.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Awakened Readiness",
+     "text": "30% Magazine Reloaded per second while Holstered",
+     "note": "Page note: only affects untransformed Laetum.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Feather of Justice",
+     "text": "Gain 60% Ammo Efficiency while Aim Gliding or Sliding.",
+     "note": "Page note: does not affect Incarnon Form.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Caput Mortuum",
+     "text": "+50% Headshot damage",
+     "note": "Page note: affects both modes.",
+     "effect": {
+      "headshot_bonus": 0.5
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Incarnon Efficiency",
+     "text": "Headshots Build +50% more Incarnon Transmutation charge.",
+     "note": "Page note: reduces weakpoint hits needed to fully charge to 8; each weakpoint hit gives 27 charge, up from 18.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Excess",
+     "text": "+20% Status Chance -10% Critical Chance",
+     "note": "Page note: bonuses are added after mods as a flat value.",
+     "effect": {
+      "fcc": -0.1,
+      "fsc": 0.2
+     }
+    },
+    {
+     "tier": 5,
+     "name": "Devouring Attrition",
+     "text": "50% chance to deal +2000% damage on non-critical hits",
+     "note": "Page note: affects both forms; multiplicative with base damage bonuses such as Hornet Strike.",
+     "effect": {
+      "noncrit": 10.0
+     }
+    },
+    {
+     "tier": 5,
+     "name": "Reaper's Plenty",
+     "text": "On Headshot: +40% Ammo Efficiency for 6 seconds.",
+     "note": "Page note: does not affect Incarnon Form.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Overwhelming Attrition",
+     "text": "On Hit that is neither Critical nor applies a Status Effect: +400% damage for 10 seconds. Stacks up to 3 times.",
+     "note": "Page note: additive with base damage bonuses such as Hornet Strike; one stack lost per timeout, duration resets.",
+     "effect": {}
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 100.0
+    },
+    "radial": {
+     "radiation": 300.0
+    },
+    "crit_chance": 0.22,
+    "crit_multiplier": 2.2,
+    "status_chance": 0.22,
+    "fire_rate": 6.67,
+    "multishot": 1.0,
+    "charges": 216,
+    "trigger": "Auto",
+    "note": "Attack: Incarnon Form. Infobox total 100 (100% Impact); 100.00 per projectile; spread 25.00° (0.00° min, 50.00° max); projectile speed 40.0 m/s; Punch Through 0.0 m. Page: direct hits do pure Impact and the shot explodes in a 2 m radius for Radiation (see radial entry). Charges do not generate on some MOA backpacks."
+   }
+  },
+  "Lato": {
+   "page": "https://wiki.warframe.com/w/Lato",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Lato",
+    "Lato Vandal",
+    "Lato Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "6 weakpoint hits",
+    "per_charge_rounds": 4,
+    "capacity": 24
+   },
+   "evo1": "Incarnon Form: weakpoint hits charge the gauge, Alt Fire transmutes. Gains Punch Through and Ricochet; higher base damage, crit and status; innate multishot 2; slower fire rate; higher recoil.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Haven Foray",
+     "text": "Increase Base Damage by +X. With Overshields: Increase Base Damage by +Y. X = 40, Y = 40 (Lato); X = 22, Y = 40 (Vandal); X = 2, Y = 34 (Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bd": [
+       40,
+       22,
+       2
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Reified Bane",
+     "text": "Increase Base Damage by +X. On Reload from Empty Magazine: Increase Base Damage by +Y. X = 30, Y = 30 (Lato); X = 12, Y = 30 (Vandal); X = 2, Y = 24 (Prime)",
+     "note": "Page note: once earned, the bonus is lost only by manually reloading a non-empty magazine; it is kept through Incarnon transformations.",
+     "effect": {
+      "bd": [
+       30,
+       12,
+       2
+      ],
+      "stacks": {
+       "bd": [
+        30,
+        30,
+        24
+       ]
+      }
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Void's Guidance",
+     "text": "+50% Accuracy -50% Recoil",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Gain",
+     "text": "On Headshot: 20% chance for +50% Ammo Efficiency for 6s.",
+     "note": "Page note: can be refreshed by later headshots; does not affect Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Exact Penance",
+     "text": "On Kill: 50% chance for Instant Reload.",
+     "note": "Page note: kills from status effects can also trigger it; does not affect Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Status Chance by +Y%. X = 20%, Y = 12% (Lato); X = 6%, Y = 12% (Vandal); X = 4%, Y = 10% (Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.2,
+       0.06,
+       0.04
+      ],
+      "bsc": [
+       0.12,
+       0.12,
+       0.1
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Deathtrap Trigger",
+     "text": "On Equip from Primary: Increase Base Critical Chance by +X% for 4s. Increase Base Critical Damage Multiplier by +Y for 4s. X = 50%, Y = 3.2x (Lato); X = 38%, Y = 2.6x (Vandal); X = 30%, Y = 2.3x (Prime)",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Carnage Reign",
+     "text": "+40% Direct Damage per Status Type affecting the target.",
+     "note": "No page note.",
+     "effect": {
+      "per_status_damage": 0.4
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 16.0,
+     "puncture": 16.0,
+     "slash": 32.0
+    },
+    "radial": {},
+    "crit_chance": 0.16,
+    "crit_multiplier": 2.6,
+    "status_chance": 0.06,
+    "fire_rate": 3.5,
+    "multishot": 2.0,
+    "charges": 24,
+    "trigger": "Semi-Auto (general Trigger Type row)",
+    "note": "Infobox total 128 (50.00% Slash); 64.00 damage per projectile; spread 0.00°; Punch Through shown as 0.4 m in the infobox but 0.8 m in the EVO1 note (conflict, reported as-is). EVO1 text says Incarnon status chance rises, but the infobox shows 6.00% in both forms. Ricochet to 1 enemy within 10 m (12 m Prime). Void status prevents ricochets. Slower fire rate and much higher recoil."
+   }
+  },
+  "Latron": {
+   "page": "https://wiki.warframe.com/w/Latron",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Latron",
+    "Latron Wraith",
+    "Latron Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "8 weakpoints",
+    "per_charge_rounds": 5,
+    "capacity": 40
+   },
+   "evo1": "Incarnon Form: fires Heat energy waves that ricochet off enemies and terrain, exploding up to 6 times with a 4 m radius. No recoil; higher total damage, crit and status; no Slash; lower fire rate.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Riddled Target",
+     "text": "Increase Base Damage by +X. On Puncture Status Effect: +25% Multishot for 8s. Stacks up to 4x.",
+     "note": "X by variant (Latron / Wraith / Prime): 48 / 12 / 6. Multishot bonus stacks additively with Split Chamber. Scope not stated.",
+     "effect": {
+      "bd": [
+       48,
+       12,
+       6
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Swift Punishment",
+     "text": "Increase Base Damage by +X. With Sprint Speed 1.2 or Higher: +30% Direct Damage per Status Type affecting the target.",
+     "note": "X by variant (Latron / Wraith / Prime): 48 / 12 / 6. Page: the effect actually needs only 1.1 or higher sprint speed. Amalgam Serration can reach the threshold.",
+     "effect": {
+      "bd": [
+       48,
+       12,
+       6
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Hand",
+     "text": "-60% Weapon Recoil.",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +15.",
+     "note": "Scope not stated.",
+     "effect": {
+      "bmag": 15
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Focus",
+     "text": "-30% Zoom.",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Flensing Spikes",
+     "text": "Remove 20% of enemy Armor per Puncture Status.",
+     "note": "Page: no effect on enemies immune to armor removal (Exploiter Orb, Archons). Can fully strip Acolytes' armor, though they cannot hold more than four Puncture stacks.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Deadhead",
+     "text": "+100% Headshot Damage.",
+     "note": "Stacks additively with other headshot bonuses such as the Primary Deadhead passive.",
+     "effect": {
+      "headshot_bonus": 1.0
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Critical Damage Multiplier by +Yx.",
+     "note": "X/Y by variant (Latron / Wraith / Prime): 30%/0.6x, 24%/0.2x, 24%/0.2x. Scope not stated.",
+     "effect": {
+      "bcc": [
+       0.3,
+       0.24,
+       0.24
+      ],
+      "bcd": [
+       0.6,
+       0.2,
+       0.2
+      ]
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 50.0
+    },
+    "radial": {
+     "puncture": 40.0,
+     "heat": 40.0
+    },
+    "crit_chance": 0.32,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.24,
+    "fire_rate": 3.33,
+    "multishot": 1.0,
+    "charges": 40,
+    "trigger": "Semi-Auto",
+    "note": "Spread 3.50° (0.00° min, 7.00° max); projectile speed 120.0 m/s. EVO1 text: the projectile ricochets up to 6 times with a 4 m explosion. Collisions deal Impact with a guaranteed Impact proc; explosions deal Puncture and Heat. Radial crit 32.00% / 3.00x, status 24.00%. Charges are rounds: 5 per charge, max 40. Punch Through does not affect the projectile."
+   }
+  },
+  "Lex": {
+   "page": "https://wiki.warframe.com/w/Lex",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Lex",
+    "Lex Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "10 weakpoint hits",
+    "per_charge_rounds": 2,
+    "capacity": 20
+   },
+   "evo1": "Incarnon Form: weakpoint hits charge the gauge, Alt Fire transmutes. Fires a wide Radiation projectile with guaranteed Impact procs and 1.4 m Punch Through; loses Puncture and Slash; much slower fire rate.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Hoplite Virtue",
+     "text": "Increase Base Damage by +X. On Shield Break: Increase Base Damage by +80 for 8 seconds. X = 80 (Lex), X = 20 (Lex Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bd": [
+       80,
+       20
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Trusty Sidearm",
+     "text": "Increase Base Damage by +X. With Channeled Ability active: +60% Ammo Efficiency. X = 80 (Lex), X = 20 (Lex Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bd": [
+       80,
+       20
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Lex Talionis",
+     "text": "On Headshot: -20% Weapon Recoil and +20% Accuracy for 4s. Stacks up to 4x.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +10.",
+     "note": "No page note.",
+     "effect": {
+      "bmag": 10
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Ready Retaliation",
+     "text": "On Reload From Empty: +100% Reload Speed.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Executioner's Dawn",
+     "text": "On Equip: +100% Headshot Damage for 4s.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "Increase Base Status Chance by +X%. X = 40% (Lex), X = 30% (Lex Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bsc": [
+       0.4,
+       0.3
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Critical Damage Multiplier by +0.4x. X = 20% (Lex), X = 19% (Lex Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.2,
+       0.19
+      ],
+      "bcd": 0.4
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 300.0,
+     "radiation": 700.0
+    },
+    "radial": {},
+    "crit_chance": 0.3,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.22,
+    "fire_rate": 0.67,
+    "multishot": 1.0,
+    "charges": 20,
+    "trigger": "Semi-Auto",
+    "note": "Infobox total 1,000 (70.00% Radiation); 1000.00 per projectile; Punch Through 1.4 m; spread 6.25° (0.50° min, 12.00° max); projectile speed 120.0 m/s. EVO1 (paraphrased): wide Radiation projectile that guarantees Impact procs; no Puncture or Slash; 1x headshot multiplier; linear falloff from 100% to 66.67% between 10 m and 18 m; 28 m limited range; travel time."
+   }
+  },
+  "Magistar": {
+   "page": "https://wiki.warframe.com/w/Magistar",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Magistar",
+    "Sancti Magistar"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 6x, then using a Heavy Attack.'",
+    "duration": "180 seconds ('the Incarnon form lasts for 180 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Crushing Verdict",
+     "text": "Increase Base Damage by +X. With Channeled Ability active: Increase Follow Through by +40%. X = 100 / X = 20",
+     "note": "No page note on normal attack vs Incarnon form, or on %/mod handling.",
+     "effect": {
+      "bd": [
+       100,
+       20
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Edge Of Justice",
+     "text": "Increase Base Damage by +X. With Melee Weapon Equipped: +40% Attack Speed. X = 100 / X = 20",
+     "note": "No page note on normal attack vs Incarnon form, or on %/mod handling.",
+     "effect": {
+      "bd": [
+       100,
+       20
+      ],
+      "fire_rate": 0.4
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Seismic Slam",
+     "text": "+100% Slam Radius.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+1.4 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Break",
+     "text": "+30% Heavy Attack Wind Up Speed.",
+     "note": "No page note.",
+     "effect": {
+      "windup_speed": 0.3
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Flashing Bleed",
+     "text": "+50% Chance of Bleed on Impact Status Effect.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Subtle Force",
+     "text": "Increase Base Critical Chance by +8%. Increase Base Status Chance by +8%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.08,
+      "bsc": 0.08
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Critical Damage Multiplier by +Y. X = 16%, Y = 1x / X = 12%, Y = 0.2x",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.16,
+       0.12
+      ],
+      "bcd": [
+       1.0,
+       0.2
+      ]
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0,
+    "windup_speed": 0.5
+   }
+  },
+  "Miter": {
+   "page": "https://wiki.warframe.com/w/Miter",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Miter"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "4 weakpoints hits",
+    "per_charge_rounds": 5,
+    "capacity": 20
+   },
+   "evo1": "Incarnon Form: fully automatic. Projectiles gain slight homing, bounce and home into nearby enemies, and explode twice in a 3 m AoE of Heat damage. Higher crit chance, crit multiplier, status chance and fire rate.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Swift Sawblades",
+     "text": "Increase Base Damage by +77. With Channeled Ability active: +70% Fire Rate.",
+     "note": "Scope not stated.",
+     "effect": {
+      "bd": 77
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Plentiful Mayhem",
+     "text": "Increase Base Damage by +57. Multishot consumes ammo directly from Capacity and increases Damage by +20.",
+     "note": "Page: affects both modes (Incarnon pulls from its magazine). Flat +20 bonus for multishot-generated shots only, not affected by base damage mods but affected by physical and elemental mods and crits.",
+     "effect": {
+      "bd": 57
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+50% Projectile Speed",
+     "note": "Scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Ready Retaliation",
+     "text": "On Reload from Empty: +100% Reload Speed",
+     "note": "Page Bugs section: this perk does not work and grants no reload speed.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Mercenary Chamber",
+     "text": "Increase Base Ammo Capacity to 160",
+     "note": "Page: does not affect the Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Sawblade Storm",
+     "text": "Hold charged shot for 1s to increase area of effect.",
+     "note": "Page: does not affect the Incarnon form. Each bounce explodes for 1400 Blast in a 5 m AoE. The 1 s delay is not affected by mods. Inflicts self-stagger.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +22%",
+     "note": "Scope not stated.",
+     "effect": {
+      "bcc": 0.22
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "Increase Base Critical Chance by +12% Increase Base Status Chance by +12%",
+     "note": "Scope not stated.",
+     "effect": {
+      "bcc": 0.12,
+      "bsc": 0.12
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 12.0,
+     "puncture": 6.0,
+     "slash": 42.0
+    },
+    "radial": {
+     "heat": 80.0
+    },
+    "crit_chance": 0.2,
+    "crit_multiplier": 3.3,
+    "status_chance": 0.56,
+    "fire_rate": 3.33,
+    "multishot": 1.0,
+    "charges": null,
+    "trigger": "Auto",
+    "note": "Total 60 per projectile. Spread 5.00° (2.00° min, 8.00° max); projectile speed 48.0 m/s. The Incarnon block has no 'Incarnon Charges' line; the overview gives 5 rounds per charge, max 20. Radial: range 3.0 m, crit 20.00% / 3.30x, status 56.00%. EVO1: projectiles home and bounce, exploding twice in a 3 m AoE."
+   }
+  },
+  "Nami Solo": {
+   "page": "https://wiki.warframe.com/w/Nami_Solo",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Nami Solo"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 6x, then using a Heavy Attack.'",
+    "duration": "180 seconds ('the Incarnon form lasts for 180 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Brigand's Frenzy",
+     "text": "Increase Base Damage by +80. On Equip: +30% Attack Speed for 4s.",
+     "note": "No page note on normal attack vs Incarnon form, or on %/mod handling.",
+     "effect": {
+      "bd": 80
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Master's Flourish",
+     "text": "Increase Base Damage by +80. On Finisher Kill: +40 Health per second for 10s.",
+     "note": "Page note: triggers on Mercy kills even while using an Exalted Melee such as Exalted Blade.",
+     "effect": {
+      "bd": 80
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Lone Blade",
+     "text": "With Melee Weapon Equipped: Increase Base Follow Through by +60%",
+     "note": "Page: needs the melee equipped manually (weapon-swap key or melee-only loadout); does not apply to quickswap melee.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Break",
+     "text": "+50% Heavy Attack Windup Speed",
+     "note": "No page note.",
+     "effect": {
+      "windup_speed": 0.5
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Resolute Force",
+     "text": "+6s Combo Duration",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +21%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.21
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Versatile Creed",
+     "text": "Increase Base Critical Chance by +14%. Increase Base Status Chance by +14%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.14,
+      "bsc": 0.14
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Dominion",
+     "text": "Increase Base Status Chance by +30%.",
+     "note": "No page note.",
+     "effect": {
+      "bsc": 0.3
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Obex": {
+   "page": "https://wiki.warframe.com/w/Obex",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Obex",
+    "Prisma Obex"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 6x, then using a Heavy Attack, a Slam Attack or a Heavy Slam Attack.'",
+    "duration": "90 seconds ('the Incarnon form lasts for 90 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Balanced Stagger",
+     "text": "Increase Base Damage by +X 20% chance to stun enemies hit by a Neutral Combo, opening them to finishers. X = 50 / X = 10",
+     "note": "Page note: 'Bonus base damage does not function.'",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Armored Finisher",
+     "text": "Increase Base Damage by +X With Armor over 450: +80% Finisher Damage. X = 50 / X = 10",
+     "note": "Page note: bonus base damage does not function. Finisher bonus is additive with other Finisher damage sources.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Conclusion",
+     "text": "On Finisher Kill: +2.5% Parkour Velocity. Stacks up to 16x.",
+     "note": "Page: bonus lasts until death.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+1.2 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Standoff",
+     "text": "Combo Timer pauses when weapon is holstered.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Subtle Force",
+     "text": "Increase Base Critical Chance by +10% Increase Base Status Chance by +X X = 18% / X = 12%",
+     "note": "No page note on normal vs Incarnon, or on %/mod handling.",
+     "effect": {
+      "bcc": 0.1,
+      "bsc": [
+       0.18,
+       0.12
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Dominion",
+     "text": "Increase Base Status Chance by +X X = 28% / X = 20%",
+     "note": "No page note.",
+     "effect": {
+      "bsc": [
+       0.28,
+       0.2
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Coefficient",
+     "text": "Increase Base Critical Damage Multiplier by +0.6x. Effect doubles in Incarnon Form.",
+     "note": "Page states the Incarnon doubling directly; no other note.",
+     "effect": {
+      "bcd": 0.6,
+      "double_in_form": 1
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Okina": {
+   "page": "https://wiki.warframe.com/w/Okina",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Okina",
+    "Okina Prime"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 6x, then using a Heavy Attack.'",
+    "duration": "180 seconds ('the Incarnon form lasts for 180 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Seeing Red",
+     "text": "Increase Base Damage by +X. 5 additional Combos on targets affected by Slash Status X = 60 / X = 20",
+     "note": "No page note.",
+     "effect": {
+      "bd": [
+       60,
+       20
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Synergist Surety",
+     "text": "Increase Base Damage by +X. On Critical Hit: +Y% Status Damage for 10s. Stacks up to 5x. X = 60, Y = 8% / X = 20, Y = 6%",
+     "note": "Page note: when the Status Damage buff expires, one stack is lost and the duration resets.",
+     "effect": {
+      "bd": [
+       60,
+       20
+      ],
+      "stacks": {
+       "status_damage": [
+        0.4,
+        0.3
+       ]
+      }
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+1 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Standoff",
+     "text": "Combo Timer pauses when weapon is holstered",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swordsman's Celerity",
+     "text": "+30% Movement Speed",
+     "note": "Page note: bonus applies at all times.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +X%. X = 12% / X = 6%",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.12,
+       0.06
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Alchemy of War",
+     "text": "Increase Base Status Chance by +X%. +25% Status Duration X = 16% / X = 12%",
+     "note": "No page note.",
+     "effect": {
+      "bsc": [
+       0.16,
+       0.12
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X Increase Base Status Chance by +Y% X = 6%, Y = 10% / X = 2%, Y = 8%",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.06,
+       0.02
+      ],
+      "bsc": [
+       0.1,
+       0.08
+      ]
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Onos": {
+   "page": "https://wiki.warframe.com/w/Onos",
+   "slot": "SECONDARY",
+   "genesis": false,
+   "variants": [
+    "Onos"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "12 weakpoint hits",
+    "per_charge_rounds": 30,
+    "capacity": 350
+   },
+   "evo1": "Incarnon Form (EVO1): hand cannon becomes a charging Arm-Cannon. Holding fire releases a Radiation beam that narrows and scales up to 2.5x; a full charge fires a guaranteed-status Heat shot with 5 m Punch Through and a 3 m explosion.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Marksman's Hand",
+     "text": "-30% Recoil",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Rapid Wrath",
+     "text": "+25% Fire Rate",
+     "note": "No page note.",
+     "effect": {
+      "fire_rate": 0.25
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Swift Deliverance",
+     "text": "+50% Projectile Speed",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "+10 Base Magazine Capacity",
+     "note": "Page note: only affects untransformed Onos.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+30% Reload Speed",
+     "note": "Page note: affects untransformed Onos and transformation into Incarnon mode.",
+     "effect": {
+      "reload": 0.3
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Hunter's Rearmament",
+     "text": "On Kill: 10% chance to replenish 10 Ammo",
+     "note": "Page note: only affects untransformed Onos; ammo goes to the reserve pool, not the magazine.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Lethal Lance",
+     "text": "On Kill: +2.5 Punch Through for 20s",
+     "note": "Page note: affects both modes.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Incarnon Efficiency",
+     "text": "Headshots Build +50% more Incarnon Transmutation charge.",
+     "note": "Page note: reduces weakpoint hits needed to fully charge to 8; each weakpoint hit gives 75 charge, up from 50.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Excess",
+     "text": "+20% Status Chance -10% Critical Chance",
+     "note": "Page note: bonuses are added after mods as a flat value.",
+     "effect": {
+      "fcc": -0.1,
+      "fsc": 0.2
+     }
+    },
+    {
+     "tier": 5,
+     "name": "Sequential Skullbuster",
+     "text": "On Consecutive Weakpoint Hits: +30% Headshot Damage. Stacks up to 4x",
+     "note": "Page bug: does not affect Incarnon mode.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Impaler's Ferocity",
+     "text": "On Punch Through Hit: +200% Damage for 10s.",
+     "note": "Page note: additive with base damage mods such as Hornet Strike; fixed amount, does not stack.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Devastation Cascade",
+     "text": "(paraphrased) Hits in Incarnon form add +5% Crit Chance and Crit Damage to the full-charge blast, up to 50 stacks.",
+     "note": "Page note: bonuses are additive to mods; also triggers from DoT status from the beam, including Gas clouds.",
+     "effect": {}
+    }
+   ],
+   "form": {
+    "damage": {
+     "heat": 2200.0
+    },
+    "radial": {
+     "heat": 1100.0
+    },
+    "crit_chance": 0.38,
+    "crit_multiplier": 3.2,
+    "status_chance": 0.26,
+    "fire_rate": 0.25,
+    "multishot": 1.0,
+    "charges": null,
+    "trigger": "Charge",
+    "note": "Attack: Incarnon Form Charge Attack (full-charge shot). Infobox total 2,200 (100% Heat); 2200.00 per projectile; 5 m Punch Through (overview). Shares the Incarnon magazine (charges not shown on this attack)."
+   }
+  },
+  "Paris": {
+   "page": "https://wiki.warframe.com/w/Paris",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Paris",
+    "MK1-Paris",
+    "Paris Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "4 weakpoint hits",
+    "per_charge_rounds": 5,
+    "capacity": 20
+   },
+   "evo1": "Weakpoint hits charge the Incarnon gauge; Alt Fire transmutes. Trades silence for a wider Heat-damage projectile with much higher base damage, crit chance and crit multiplier; Puncture and Slash are dropped; charge time slightly slower.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Deadly Pace",
+     "text": "Base damage +X (X = 40 Paris / 50 Mk1 / 20 Prime). With sprint speed 1.2 or higher: +80% fire rate.",
+     "note": "Fire-rate bonus stacks additively with fire-rate mods (e.g., Speed Trigger) but does not apply twice. Page does not say whether base damage affects normal or Incarnon form.",
+     "effect": {
+      "bd": [
+       40,
+       50,
+       20
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Guardian's Might",
+     "text": "Base damage +X (40 / 50 / 20). With overshields: base damage +Y (52 / 40 / 74).",
+     "note": "No note on page; form scope not stated.",
+     "effect": {
+      "bd": [
+       40,
+       50,
+       20
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Ardent Trigger",
+     "text": "On punch-through hit: +40% fire rate for 6 s.",
+     "note": "Stacks additively with fire-rate mods, not twice. Applies on multi-enemy and through-obstacle hits. Form scope not stated.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Markman's Focus",
+     "text": "-30% zoom.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+60% projectile speed.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Vicious Promise",
+     "text": "+40% base crit chance on undamaged enemies. +2x base crit damage multiplier on undamaged enemies.",
+     "note": "Enemies count as undamaged until health or shield is hit; overguard is ignored.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "+60% base status chance.",
+     "note": "No note on page.",
+     "effect": {
+      "bsc": 0.6
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Striking Succession",
+     "text": "On hit: +15 base damage for 3 s, up to 4 stacks.",
+     "note": "When a stack's buff times out, one stack is lost and the duration resets.",
+     "effect": {
+      "stacks": {
+       "bd": 60
+      }
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 95.0,
+     "heat": 365.0
+    },
+    "radial": {},
+    "crit_chance": 0.4,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.2,
+    "fire_rate": 1.0,
+    "multishot": 1.0,
+    "charges": 20,
+    "trigger": "Charge",
+    "note": "Total 460 per shot. Charge time 0.80 s; spread 6.00° (0.00° min, 12.00° max); projectile speed 85.0 m/s. Form has no Puncture or Slash. Each charge gives 5 rounds, max 20. Sonar or Detect Vulnerability weakpoints also charge."
+   }
+  },
+  "Phenmor": {
+   "page": "https://wiki.warframe.com/w/Phenmor",
+   "slot": "PRIMARY",
+   "genesis": false,
+   "variants": [
+    "Phenmor"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "12 weakpoints",
+    "per_charge_rounds": 34,
+    "capacity": 408
+   },
+   "evo1": "Weakpoint hits charge; Alt Fire transmutes. Changes from semi-auto to full-auto with higher fire rate, 3 m punch through and reduced recoil; Radiation and Slash replace Puncture; fire rate falls from 100% to 60% over 51 shots while held.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Void's Guidance",
+     "text": "+50% accuracy while aiming. +50% less recoil while aiming.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Rapid Wrath",
+     "text": "+20% fire rate.",
+     "note": "No note on page.",
+     "effect": {
+      "fire_rate": 0.2
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Swift Deliverance",
+     "text": "+80% projectile speed.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Retribution's Vessel",
+     "text": "+50% magazine capacity.",
+     "note": "Does not affect Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Ready Retaliation",
+     "text": "On reload from empty: +100% reload speed for 6 s.",
+     "note": "Affects the untransformed weapon; a well-timed manual reload can carry it into Incarnon. Does not affect the return to base form.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Executioner's Fortune",
+     "text": "On headshot kill: 20% chance to instantly reload.",
+     "note": "Does not affect Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "+10% base crit chance. +10% base status chance.",
+     "note": "Added after mods as a flat value.",
+     "effect": {
+      "fcc": 0.1,
+      "fsc": 0.1
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Incarnon Efficiency",
+     "text": "Headshots build +50% more transmutation charge. Weakpoint hits to full charge reduced to 8.",
+     "note": "Each weakpoint hit generates 51 charge, up from 34.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Excess",
+     "text": "+20% base status chance. -10% base crit chance.",
+     "note": "Added after mods as a flat value.",
+     "effect": {
+      "fcc": -0.1,
+      "fsc": 0.2
+     }
+    },
+    {
+     "tier": 5,
+     "name": "Devouring Attrition",
+     "text": "50% chance to deal +2000% damage on non-critical hits.",
+     "note": "Affects both forms. Multiplicative with base damage bonuses such as Serration.",
+     "effect": {
+      "noncrit": 10.0
+     }
+    },
+    {
+     "tier": 5,
+     "name": "Spiteful Defilement",
+     "text": "Enemies with fewer than 3 status effects take +100% crit damage.",
+     "note": "Page: actual bonus is a flat +1x crit damage applied after percentage mods (like Tenacious Bond). Same status type is not counted twice.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Lingering Judgement",
+     "text": "On 2 headshots within 2 s: +50% headshot damage for 8 s.",
+     "note": "Stacks additively with Primary Deadhead's headshot bonus.",
+     "effect": {}
+    }
+   ],
+   "form": {
+    "damage": {
+     "slash": 80.0,
+     "radiation": 60.0
+    },
+    "radial": {},
+    "crit_chance": 0.2,
+    "crit_multiplier": 2.0,
+    "status_chance": 0.2,
+    "fire_rate": 13.33,
+    "multishot": 1.0,
+    "charges": 408,
+    "trigger": "Auto",
+    "note": "Total 140 per shot. Projectile speed 80.0 m/s; spread 7.00° (6.00° min, 8.00° max); punch through 3.0 m. Per page, fire rate falls from 100% to 60% over 51 shots while trigger held and resets when firing stops, so 13.33 is the listed value. Each charge gives 34 rounds, max 408. Uses Archgun animations."
+   }
+  },
+  "Praedos": {
+   "page": "https://wiki.warframe.com/w/Praedos",
+   "slot": "MELEE",
+   "genesis": false,
+   "variants": [
+    "Praedos"
+   ],
+   "charge": {
+    "by": "other (Melee Combo of 5x, then a Heavy Attack; 3x with Swift Transmute)",
+    "full_at": "5x Melee Combo",
+    "per_charge_rounds": null,
+    "capacity": null
+   },
+   "evo1": "Reach a 5x Melee Combo, then Heavy Attack, to activate Incarnon: +3 Range and +40% Attack Speed for 90 s.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Seismic Slam",
+     "text": "+50% slam radius.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Whirling Flurry",
+     "text": "+20% attack speed.",
+     "note": "No note on page.",
+     "effect": {
+      "fire_rate": 0.2
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Drifting Grace",
+     "text": "+20% sprint speed. +20% slide.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Shockwave Synergy",
+     "text": "Each enemy hit by the slam radius: +4 combo count.",
+     "note": "True Punishment doubles this to 8 per enemy (page tip).",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Reaching Lunge",
+     "text": "+1.5 m slide attack range.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Adept Reflexes",
+     "text": "+20 initial combo.",
+     "note": "Raised from 15 to 20 in Update 39 so the perk gives at least a full 2x damage.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Swift Transmute",
+     "text": "Reach 3x combo, then Heavy Attack, to activate Incarnon.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Evolved Ascension",
+     "text": "+30% parkour velocity.",
+     "note": "Passive; does not require the weapon to be held.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Vaulting Leap",
+     "text": "+100% double jump strength.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Transfigured Momentum",
+     "text": "On slide kill: +50% heavy attack efficiency for 30 s.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Kinetic Harmony",
+     "text": "+100% heavy attack wind-up speed.",
+     "note": "No note on page.",
+     "effect": {
+      "windup_speed": 1.0
+     }
+    },
+    {
+     "tier": 5,
+     "name": "Universal Readiness",
+     "text": "Collecting ammo grants 5 melee combo counter.",
+     "note": "Page tip (not perk text): an Exalted weapon negates the Evo V challenge; Genesis weapons count toward it.",
+     "effect": {}
+    }
+   ],
+   "melee_form": {
+    "fire_rate": 0.4
+   }
+  },
+  "Ruvox": {
+   "page": "https://wiki.warframe.com/w/Ruvox",
+   "slot": "MELEE",
+   "genesis": false,
+   "variants": [
+    "Ruvox"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 6x, then using a Heavy Attack.'",
+    "duration": "90 seconds ('Incarnon form lasts for 90 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Orokin Reach",
+     "text": "+1 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Lethal Impetus",
+     "text": "On Kill: +15% Attack Speed for 15s. Stacks up to 3x.",
+     "note": "No page note.",
+     "effect": {
+      "stacks": {
+       "fire_rate": 0.45
+      }
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Gathering Momentum",
+     "text": "Gain +5% Movement Speed per Melee Combo Multiplier",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Shockwave Synergy",
+     "text": "For each enemy hit by Slam radius, gain 4 Combo Count.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Seismic Slam",
+     "text": "+60% Slam Radius",
+     "note": "Page: does not affect the impale radius from Heavy Slam attacks.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Adept Reflexes",
+     "text": "+20 Initial Combo",
+     "note": "Page patch history: raised from 15 to 20 in Update 39.0.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Swift Transmute",
+     "text": "Reach 3x Combo and Heavy Attack to activate Incarnon Form",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Ternary Vault",
+     "text": "Gain +1 mid-air jumps",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Inspiring Execution",
+     "text": "+30% Combo Count Chance on Finishers for 20s",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Brutal Efficiency",
+     "text": "Gain +40% Heavy Attack Efficiency for 20s when impaling 5 or more enemies.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Vulnerability Serum",
+     "text": "Impaled enemies are +35% more vulnerable to Status Chance",
+     "note": "Page: flat +35% applied after other status bonuses. Any damage source can benefit, including status procs.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Permanent Perforation",
+     "text": "Enemies suffer 5 Puncture Status while impaled",
+     "note": "No page note.",
+     "effect": {}
+    }
+   ],
+   "melee_form": {}
+  },
+  "Sibear": {
+   "page": "https://wiki.warframe.com/w/Sibear",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Sibear"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 6x, then using a Heavy Attack.'",
+    "duration": "180 seconds ('the Incarnon form lasts for 180 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Master's Shatter",
+     "text": "Increase Base Damage by +20. 10 additional Combo on targets affected by Cold Status.",
+     "note": "No page note.",
+     "effect": {
+      "bd": 20
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Thane's Wrath",
+     "text": "Increase Base Damage by +20. With Armor Over 450: Increase Base Damage by +40.",
+     "note": "No page note.",
+     "effect": {
+      "bd": 20
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+1 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Kinetic Harmony",
+     "text": "+60% Heavy Attack Wind Up Speed",
+     "note": "No page note.",
+     "effect": {
+      "windup_speed": 0.6
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Resolute Force",
+     "text": "+6s Combo Duration",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Mounting Avalanche",
+     "text": "On Killing Enemy With 3+ Cold Stacks: +15 Initial Combo for 10s. Stacks up to 4x.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +25%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.25
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Red Right Hand",
+     "text": "On First Attack With Primary Equipped: Increase Base Critical Damage Multiplier by +2x.",
+     "note": "Page note: first attack from quickswap melee deals bonus critical damage.",
+     "effect": {}
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0,
+    "windup_speed": 0.5
+   }
+  },
+  "Sicarus": {
+   "page": "https://wiki.warframe.com/w/Sicarus",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Sicarus",
+    "Sicarus Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "12 weakpoints (or 4 bursts)",
+    "per_charge_rounds": 10,
+    "capacity": 120
+   },
+   "evo1": "Incarnon Form: weakpoint hits charge the gauge, Alt Fire transmutes. Bullets ricochet to 1 nearby enemy within 6 m; higher base damage, crit, crit multiplier and status chance.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Feigned Retreat",
+     "text": "Increase Base Damage by +X. +40% Damage to enemies below half Health. X = 50 (Sicarus), X = 40 (Prime)",
+     "note": "Page note: the bonus is additive with Hornet Strike but does not count the base damage increase from this perk.",
+     "effect": {
+      "bd": [
+       50,
+       40
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "King's Gambit",
+     "text": "Increase Base Damage by +X. x0 Critical Chance on Bodyshots, +150% Critical Chance on Weakpoint Hits. X = 50 (Sicarus), X = 40 (Prime)",
+     "note": "Page note: the bodyshot modifier is multiplicative with all crit sources (Crystallize excepted), making non-headshot crits effectively impossible; the weakpoint modifier is additive with Pistol Gambit.",
+     "effect": {
+      "bd": [
+       50,
+       40
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Void's Guidance",
+     "text": "+40% Accuracy.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% Reload Speed.",
+     "note": "No page note.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +X. X = 9 (Sicarus), X = 12 (Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bmag": [
+       9,
+       12
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +X%. X = 18 (Sicarus), X = 14 (Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.18,
+       0.14
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by X%. Increase Base Status Chance to Y%. X = 12, Y = 12 (Sicarus); X = 9, Y = 9 (Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.12,
+       0.09
+      ],
+      "bsc": [
+       0.12,
+       0.09
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Wiseman's Regard",
+     "text": "Increase Base Status Chance by 30% of current Critical Chance, up to 40%",
+     "note": "Page note: maximum reached at 134% crit chance. Incarnon status uses its own crit in-mission (Arsenal shows normal-form crit). Not affected by King's Gambit, Cascadia Accuracy, Crystallize or Shadow Haze.",
+     "effect": {}
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 28.0,
+     "puncture": 6.0,
+     "slash": 6.0
+    },
+    "radial": {},
+    "crit_chance": 0.2,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.2,
+    "fire_rate": 3.5,
+    "multishot": 1.0,
+    "charges": 120,
+    "trigger": "Burst",
+    "note": "Infobox total 40 (70.00% Impact); 40.00 damage per projectile; 3-round burst, burst delay 0.0400 s; spread 5.00° (0.00° min, 10.00° max); range 300.0 m. EVO1: bullets ricochet to 1 enemy within 6 m of the main target, and to subsequent targets struck by punch through; ricochets can hit weakpoints but not reliably."
+   }
+  },
+  "Skana": {
+   "page": "https://wiki.warframe.com/w/Skana",
+   "slot": "MELEE",
+   "genesis": true,
+   "variants": [
+    "Skana",
+    "Prisma Skana",
+    "Skana Prime"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 6x, then using a Heavy Attack.'",
+    "duration": "180 seconds ('the Incarnon form lasts for 180 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Guardian's Promise",
+     "text": "Increase Base Damage by +X. With Overshields: +80% Heavy Attack Efficiency. X = 100 / X = 100 / X = 10",
+     "note": "No page note.",
+     "effect": {
+      "bd": [
+       100,
+       100,
+       10
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Wartime Nerve",
+     "text": "Increase Base Damage by +X. +9 Combo Count on undamaged enemies. X = 90 / X = 90 / X = 10",
+     "note": "Page note: enemies count as undamaged until health and shield are damaged. Damaging Overguard does not count.",
+     "effect": {
+      "bd": [
+       90,
+       90,
+       10
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Orokin Reach",
+     "text": "+0.4 Range",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Resolute Force",
+     "text": "+6s Combo Duration",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Break",
+     "text": "+50% Heavy Attack Wind Up Speed.",
+     "note": "No page note.",
+     "effect": {
+      "windup_speed": 0.5
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Status Chance by +Y%. X = 12%, Y = 10% / X = 12%, Y = 10% / X = 2%, Y = 4%",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.12,
+       0.12,
+       0.02
+      ],
+      "bsc": [
+       0.1,
+       0.1,
+       0.04
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Excess",
+     "text": "Increase Base Status Chance by +X%. X = 20% / X = 20% / X = 10%",
+     "note": "No page note.",
+     "effect": {
+      "bsc": [
+       0.2,
+       0.2,
+       0.1
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Absolute Valor",
+     "text": "Increase Base Critical Chance by +X%. X = 25% / X = 25% / X = 4%",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.25,
+       0.25,
+       0.04
+      ]
+     }
+    }
+   ],
+   "melee_form": {
+    "damage": 1.0
+   }
+  },
+  "Soma": {
+   "page": "https://wiki.warframe.com/w/Soma",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Soma",
+    "Soma Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "20 weakpoint hits",
+    "per_charge_rounds": 10,
+    "capacity": 200
+   },
+   "evo1": "Weakpoint hits charge; Alt Fire transmutes. Becomes a full-auto 8-pellet fire with tight spread weighted to Slash; more base damage, crit multiplier and status overall, but lower crit chance, fire rate and per-pellet status. Multishot rises while fire rate slows.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Fortress Salvo",
+     "text": "Base damage +12 (per pellet). With armor over 450: +4 punch through.",
+     "note": "Page gives total +96 for Incarnon form from the per-pellet increase. Form scope not stated.",
+     "effect": {
+      "bd": 12
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Fortifying Bloodshed",
+     "text": "Base damage +10 (per pellet). On slash status kill: +100 overshield.",
+     "note": "Total +80 for Incarnon form. Slash status kills grant shields, which can be overshields.",
+     "effect": {
+      "bd": 10
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Kinetic Battle",
+     "text": "-50% weapon recoil.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Practiced Grip",
+     "text": "+50% accuracy.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% reload speed.",
+     "note": "No note on page.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Fresh Havoc",
+     "text": "On reload from empty: +6 base damage (per pellet), up to 2 stacks.",
+     "note": "Lasts the mission, lost on death. Switching to Incarnon from empty triggers it. Total max +96 for Incarnon form.",
+     "effect": {
+      "bd": 12
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Fatal Affliction",
+     "text": "+40% direct damage per status type affecting the target.",
+     "note": "No note on page.",
+     "effect": {
+      "per_status_damage": 0.4
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Zeroed In",
+     "text": "+0.6x base crit damage multiplier.",
+     "note": "No note on page.",
+     "effect": {
+      "bcd": 0.6
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 0.48,
+     "puncture": 2.24,
+     "slash": 5.28
+    },
+    "radial": {},
+    "crit_chance": 0.1,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.025,
+    "fire_rate": 7.0,
+    "multishot": 8.0,
+    "charges": 200,
+    "trigger": null,
+    "note": "Damage is per pellet (8 pellets, 64 total). No damage falloff. Range 300.0 m; punch through 0.8 m; spread 12.50° (5.00° min, 20.00° max). Infobox has no trigger for this form; EVO1 text calls it full-auto. Each charge gives 10 rounds, max 200."
+   },
+   "form_variants": {
+    "Soma Prime": {
+     "status_chance": 0.03
+    }
+   }
+  },
+  "Strun": {
+   "page": "https://wiki.warframe.com/w/Strun",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Strun",
+    "MK1-Strun",
+    "Strun Wraith",
+    "Strun Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "40 weakpoint hits",
+    "per_charge_rounds": 1,
+    "capacity": 40
+   },
+   "evo1": "Weakpoint hits charge; Alt Fire transmutes. Fires explosive shots with a 4 m AoE (mostly Blast), with higher crit, crit multiplier and status; loses shotgun multishot (base 1); lower fire rate and much lower base damage; explosions fall off to 80% from centre; staggering.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Tenno Targeting",
+     "text": "Base damage +X (54 Strun / 68 Mk-1 / 24 Wraith / 2 Prime), per pellet. With channeled ability active: +4 punch through.",
+     "note": "Form scope not stated.",
+     "effect": {
+      "bd": [
+       54,
+       68,
+       24,
+       2
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Blazing Barrel",
+     "text": "Base damage +X (54 / 68 / 24 / 2), per pellet. On firing: +0.05 base multishot, up to 5 stacks.",
+     "note": "Page: in-game +5 description is wrong; full stack adds 0.25 pellets to both forms. Resets on reload (Blood Forge bypasses it). Entering Incarnon counts as a reload; exiting does not.",
+     "effect": {
+      "bd": [
+       54,
+       68,
+       24,
+       2
+      ],
+      "stacks": {
+       "bms": 0.25
+      }
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+60% reload speed.",
+     "note": "Stacks additively with mods such as Tactical Pump.",
+     "effect": {
+      "reload": 0.6
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Galvanic Reload",
+     "text": "On hitting a target with Electricity status: 40% chance to restore 1 round from the ammo pool.",
+     "note": "Status can come from any source; once per enemy hit. Does not affect Incarnon form.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+30% projectile speed.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "+X% base status chance (X = 11 / 11 / 10 / 11.3). +Y% base status chance for Incarnon Form (Y = 132 / 110 / 100 / 136).",
+     "note": "Y applies to Incarnon form only. Page does not say whether the flat % is added like mods.",
+     "effect": {
+      "bsc": [
+       1.32,
+       1.1,
+       1.0,
+       1.36
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "+X% base crit chance (X = 16 / 10 / 12 / 12).",
+     "note": "No note on page.",
+     "effect": {
+      "bcc": [
+       0.16,
+       0.1,
+       0.12,
+       0.12
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Brutal Edge",
+     "text": "+X% base crit chance (X = 4 / 2 / 4 / 4). +Y% base status chance (Y = 4 / 2 / 4.8 / 4). +Z% base status chance for Incarnon Form (Z = 48 / 20 / 48 / 48).",
+     "note": "Z is Incarnon only. Page does not say whether the % is added like mods.",
+     "effect": {
+      "bcc": [
+       0.04,
+       0.02,
+       0.04,
+       0.04
+      ],
+      "bsc": [
+       0.48,
+       0.2,
+       0.48,
+       0.48
+      ]
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 100.0
+    },
+    "radial": {
+     "puncture": 30.0,
+     "slash": 80.0,
+     "blast": 60.0
+    },
+    "crit_chance": 0.44,
+    "crit_multiplier": 2.8,
+    "status_chance": 0.4,
+    "fire_rate": 2.0,
+    "multishot": 1.0,
+    "charges": 40,
+    "trigger": null,
+    "note": "Direct projectile: 200.0 m/s, no spread, 0.0 m punch through. Radial is the separate Incarnon Form AoE attack (projectile type AoE, range 4.0 m, 1 multishot, 170 per projectile, same crit/status/fire rate). Each charge gives 1 round, max 40."
+   }
+  },
+  "Stug": {
+   "page": "https://wiki.warframe.com/w/Stug",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Stug"
+   ],
+   "charge": {
+    "by": "direct hits",
+    "full_at": "30 direct hits",
+    "per_charge_rounds": 4,
+    "capacity": 120
+   },
+   "evo1": "Incarnon Form: direct hits charge the gauge, Alt Fire transmutes. Fires embedding Corrosive shots that explode after 1.5 s or at max stacks; the explosion releases bouncing secondary blobs (up to 3 bounces).",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Blazing Barrel",
+     "text": "Increase Base Damage by +175. On Firing: +5% Multishot. Stacks up to 10x",
+     "note": "Page note (paraphrased): the +175 applies once to embed DoT and explosion regardless of stacks. Incarnon embed DoT 50-200 becomes 225-375; Incarnon explosion 200 becomes 375. Stacking does not need hits; resets on reload (Blood Forge bypasses).",
+     "effect": {
+      "bd": 175,
+      "stacks": {
+       "multishot": 0.5
+      }
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Overcharge Blast",
+     "text": "Increase Base Damage by +300. With Energy Max above 700: +50% Blast Radius",
+     "note": "Page note (paraphrased): the +300 applies once to embed DoT and explosion. Incarnon embed DoT becomes 350-500; Incarnon explosion 200 becomes 500. Blast radius is additive with Fulmination and Primed Fulmination.",
+     "effect": {
+      "bd": 300
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% Reload Speed",
+     "note": "No page note.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+50% Projectile Speed.",
+     "note": "Page note: the projectile speed bonus does not apply to bouncing blobs, only the initial shot.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Resonant Restore",
+     "text": "On Reload From Empty: Increase Base Magazine Capacity by +10. Stacks up to 3x.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +15%. Increase Base Status Chance by +15%.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.15,
+      "bsc": 0.15
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Deathtrap Trigger",
+     "text": "Increase Base Critical Chance by +25%. Increase Base Critical Damage Multiplier by +1.5x.",
+     "note": "No page note.",
+     "effect": {
+      "bcc": 0.25,
+      "bcd": 1.5
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Dominance",
+     "text": "Increase Base Status Chance by +20%. Effect doubles in Incarnon Form.",
+     "note": "Page line itself states the doubling in Incarnon Form.",
+     "effect": {
+      "bsc": 0.2,
+      "double_in_form": 1
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "corrosive": 200.0
+    },
+    "radial": {},
+    "crit_chance": 0.15,
+    "crit_multiplier": 2.0,
+    "status_chance": 0.2,
+    "fire_rate": 4.0,
+    "multishot": 1.0,
+    "charges": null,
+    "trigger": null,
+    "note": "Attack: Incarnon Form Blob Explosion. Explosion Delay 1.50 s. Explosion triggers at 1.5 s or at max stacks."
+   }
+  },
+  "Sybaris": {
+   "page": "https://wiki.warframe.com/w/Sybaris",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Sybaris",
+    "Dex Sybaris",
+    "Sybaris Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "25 weakpoints (or 13 bursts)",
+    "per_charge_rounds": 8,
+    "capacity": 200
+   },
+   "evo1": "Weakpoint hits charge; Alt Fire transmutes. Fires 4-round bursts with a guaranteed Blast proc; damage, crit multiplier and status increase, crit chance decreases.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Well Rehearsed",
+     "text": "Base damage +X (20 Sybaris / 15 Dex / 15 Prime). On consecutive weakpoint hits: +5 base damage, up to 3 stacks.",
+     "note": "Resets on reload (Blood Forge bypasses; holster-reload effects do not). Also resets on a bodyshot and on Blast status detonation. Form scope not stated.",
+     "effect": {
+      "bd": [
+       20,
+       15,
+       15
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Blazing Barrel",
+     "text": "Base damage +X (20 / 15 / 15). On firing: +5% multishot, up to 10 stacks.",
+     "note": "Stacks without needing hits. Additive with other multishot sources such as Split Chamber. Resets on reload as above.",
+     "effect": {
+      "bd": [
+       20,
+       15,
+       15
+      ],
+      "stacks": {
+       "multishot": 0.5
+      }
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Base magazine capacity +X (8 Sybaris / 10 Dex / 12 Prime).",
+     "note": "No note on page.",
+     "effect": {
+      "bmag": [
+       8,
+       10,
+       12
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Ready Retaliation",
+     "text": "On reload from empty: +60% reload speed.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Hand",
+     "text": "-60% weapon recoil.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Dominance",
+     "text": "Base status chance +X (15% / 15% / 8%). Status bonus doubles in Incarnon form.",
+     "note": "Page: Sybaris Prime gets +23% status in Incarnon form instead of the expected +16%.",
+     "effect": {
+      "bsc": [
+       0.15,
+       0.15,
+       0.08
+      ],
+      "double_in_form": 1
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Reaver's Rapture",
+     "text": "On full burst hit: +20% damage, up to 4 stacks; resets on reload.",
+     "note": "Additive with other base damage sources such as Serration. Blood Forge bypasses the reset; holster-reload effects do not.",
+     "effect": {
+      "stacks": {
+       "damage": 0.8
+      }
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "+5% crit chance. +10% status chance.",
+     "note": "No note on page.",
+     "effect": {
+      "bcc": 0.05,
+      "bsc": 0.1
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 29.7,
+     "puncture": 29.7,
+     "slash": 30.6
+    },
+    "radial": {},
+    "crit_chance": 0.2,
+    "crit_multiplier": 3.0,
+    "status_chance": 0.2,
+    "fire_rate": 3.33,
+    "multishot": 1.0,
+    "charges": 200,
+    "trigger": "Burst (weapon trigger type; Incarnon Burst Count 4, Burst Delay 0.1010 s)",
+    "note": "Total 90 per shot. Range 300.0 m; spread 3.50° (2.00° min, 5.00° max); 0.0 m punch through. Normal form is a 2-shot burst; Incarnon fires 4-round bursts. Each charge gives 8 rounds, max 200."
+   }
+  },
+  "Thalys": {
+   "page": "https://wiki.warframe.com/w/Thalys",
+   "slot": "MELEE",
+   "genesis": false,
+   "variants": [
+    "Thalys"
+   ],
+   "charge": {
+    "by": "'Incarnon Form is charged by building Melee Combo to 6x, then using a Heavy Attack, a Slam Attack or a Heavy Slam Attack.'",
+    "duration": "90 seconds ('the Incarnon form lasts for 90 seconds')"
+   },
+   "evo1": "",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Dreadful Reach",
+     "text": "On Weapon Status Effect: +0.1 Range for 8 seconds. Stacks 20x",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 2,
+     "name": "Whirling Flurry",
+     "text": "+20% Attack Speed",
+     "note": "No page note.",
+     "effect": {
+      "fire_rate": 0.2
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Raging Drift",
+     "text": "+80% Attack Speed while sliding +20% Slide",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Nimble Scythe",
+     "text": "For each enemy hit by Slide Attack, gain +5 Combo Count",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Echoes of Rage",
+     "text": "+1 Combo Count on Shard Damage",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Adept Reflexes",
+     "text": "+20 Initial Combo",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Swift Transmute",
+     "text": "Reach 3x Combo and Heavy Attack to activate Incarnon Form",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Vaulting Leap",
+     "text": "+100% Jump and Double Jump Height",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Devastating Mercy",
+     "text": "Ground Finishers knock enemies down in 6m radius",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Explosive Growth",
+     "text": "Shards grow when a new shard is created, up to 3 times. Fully grown shards erupt out of the embedded enemy, dealing x2 damage and impaling them on the spot.",
+     "note": "Page: impale damage is 2x shard trigger damage. Impaled enemies stunned 5s. Condition Overload affects impale but not shard damage (page: likely a bug).",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Chain Shatter",
+     "text": "Heavy attacks detonate shards. Shards caught within the blast radius will also detonate Detonated shards deal 200% of Thalys's base damage (420 Slash and 180 Puncture) to their host. Has a damaging radius of only about ~1m with ?% falloff. Has 24% status chance, 0% crit chance, and a 1x critical multiplier.",
+     "note": "Page: detonations within about 5 m chain to other shards; combo multiplier applies only to host and 1 m radius. Affected by base damage, IPS, and elemental bonuses; not faction bonuses.",
+     "effect": {}
+    },
+    {
+     "tier": 5,
+     "name": "Void Splinters",
+     "text": "Shard duration is increased to 30s. Shards become weak spots that have +100% Critical Chance when damaged. Shard damage is reduced by -50%.",
+     "note": "Page: crit bonus is additive with Point Strike, Pistol Gambit, and True Steel.",
+     "effect": {}
+    }
+   ],
+   "melee_form": {
+    "fire_rate": 0.4
+   }
+  },
+  "Torid": {
+   "page": "https://wiki.warframe.com/w/Torid",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Torid"
+   ],
+   "charge": {
+    "by": "direct hits",
+    "full_at": "5 direct hits",
+    "per_charge_rounds": 34,
+    "capacity": 170
+   },
+   "evo1": "Direct hits charge; Alt Fire transmutes. Becomes a continuous long-range Toxin beam: 37 m range, 2.3 m radius at impact, chaining to up to 5 enemies within 7 m at 75% damage each; base damage, crit and status rise; zoom is reduced.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Final Fusillade",
+     "text": "Base damage +51. +3 multishot on last shot in magazine.",
+     "note": "No note on page.",
+     "effect": {
+      "bd": 51
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Plentiful Mayhem",
+     "text": "Base damage +31. Multishot consumes ammo from capacity and raises damage by +60%.",
+     "note": "Multiplicative with base damage bonuses like Serration. Affects both forms; in Incarnon, all multishot bonuses rise by 60% instead of extra projectile damage.",
+     "effect": {
+      "bd": 31
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Swift Deliverance",
+     "text": "+50% projectile speed.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Renewed Horror",
+     "text": "On reload from empty: lingering damage field lasts twice as long on the first shot.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Base magazine capacity +9.",
+     "note": "Does not apply to the Incarnon magazine.",
+     "effect": {
+      "bmag": 9
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "+20% base crit chance.",
+     "note": "No note on page.",
+     "effect": {
+      "bcc": 0.2
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "+15% base crit chance. +15% base status chance.",
+     "note": "No note on page.",
+     "effect": {
+      "bcc": 0.15,
+      "bsc": 0.15
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Elemental Balance",
+     "text": "+34% base status chance.",
+     "note": "No note on page.",
+     "effect": {
+      "bsc": 0.34
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "toxin": 51.0
+    },
+    "radial": {},
+    "crit_chance": 0.29,
+    "crit_multiplier": 3.1,
+    "status_chance": 0.39,
+    "fire_rate": 8.0,
+    "multishot": 1.0,
+    "charges": 170,
+    "trigger": "Held",
+    "note": "Beam: range 37.0 m; spread 1.25° (1.00° min, 1.50° max); accuracy Very High. EVO1 text: 2.3 m damage radius at impact; beam chains to up to 5 enemies within 7 m, each chain at 75% of the previous chain's damage. Radius damage is not given. Poison cloud does not build charges; individual multishot bullets do. Each charge gives 34 rounds, max 170."
+   }
+  },
+  "Vasto": {
+   "page": "https://wiki.warframe.com/w/Vasto",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Vasto",
+    "Vasto Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "8 weakpoint hits",
+    "per_charge_rounds": 3,
+    "capacity": 24
+   },
+   "evo1": "Incarnon Form: weakpoint hits charge the gauge, Alt Fire transmutes. Rapidly fires a 6-round burst with 6 base multishot; higher crit and crit multiplier; higher recoil; no zoom.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Lone Gun",
+     "text": "Increase Base Damage by +X. With No Primary Equipped: Increase Base Damage by +40 and Increase Base Magazine Capacity by +14. X = 66 (Vasto), X = 24 (Prime)",
+     "note": "Page note: magazine increase does not affect Incarnon form; base damage increase is applied per pellet in Incarnon form.",
+     "effect": {
+      "bd": [
+       66,
+       24
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Deathtrap Trigger",
+     "text": "Increase Base Damage by +X. On Equip From Primary: Increase Base Critical Chance by +30% for 3s. Increase Base Critical Damage Multiplier by +Y for 3s. X = 66, Y = 2.2x (Vasto); X = 24, Y = 0.8x (Prime)",
+     "note": "Page note: base damage increase is applied per pellet in Incarnon form.",
+     "effect": {
+      "bd": [
+       66,
+       24
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +6.",
+     "note": "Page note: does not affect Incarnon form.",
+     "effect": {
+      "bmag": 6
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Hand",
+     "text": "-50% Weapon Recoil.",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Awakened Readiness",
+     "text": "+20% Magazine Reloaded per second when Holstered.",
+     "note": "Page note: does not apply to Incarnon Form's magazine.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +X%. X = 16% (Vasto), X = 18% (Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.16,
+       0.18
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +10%. Increase Base Status Chance by +10%.",
+     "note": "Page note: the Incarnon status increase is divided by the innate multishot.",
+     "effect": {
+      "bcc": 0.1,
+      "bsc": 0.1
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Reaper's Plenty",
+     "text": "On Headshot: Infinite Ammo for 2s.",
+     "note": "Page note: does not apply to Incarnon Form.",
+     "effect": {}
+    }
+   ],
+   "form": {
+    "damage": {
+     "impact": 7.5,
+     "puncture": 7.5,
+     "slash": 15.0
+    },
+    "radial": {},
+    "crit_chance": 0.3,
+    "crit_multiplier": 2.8,
+    "status_chance": 0.026699999999999998,
+    "fire_rate": 2.5,
+    "multishot": 6.0,
+    "charges": 24,
+    "trigger": "Burst",
+    "note": "Infobox total 180 (50.00% Slash); 30.00 damage per projectile; 6-round burst, burst delay 0.1000 s; spread 25.00° (15.00° min, 35.00° max); accuracy 4. Falloff: no falloff below 16.0 m, linear from 16.0 m to 32.0 m (100% - 3.33%). EVO1: 6 base multishot, higher recoil, cannot Zoom; reduced base damage and status per bullet."
+   }
+  },
+  "Vectis": {
+   "page": "https://wiki.warframe.com/w/Vectis",
+   "slot": "PRIMARY",
+   "genesis": true,
+   "variants": [
+    "Vectis",
+    "Vectis Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "5 weakpoint hits",
+    "per_charge_rounds": 10,
+    "capacity": 45
+   },
+   "evo1": "Weakpoint hits charge; Alt Fire transmutes. Fires slowing projectiles that explode on headshot: a Cold direct hit, then an embedded orb with AoE; headshots trigger a larger Cold AoE. Higher crit chance; lower fire rate; no punch through.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Inciting Incident",
+     "text": "Base damage +X (100 Vectis / 200 Prime). With channeled ability active: +2 punch through.",
+     "note": "Punch through is locked to 0 in Incarnon form, so this applies only to the base form.",
+     "effect": {
+      "bd": [
+       100,
+       200
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Lone Enforcer",
+     "text": "Base damage +X (75 / 150). +25% multishot if no enemies are within 5 m.",
+     "note": "Additive with Split Chamber and similar multishot bonuses.",
+     "effect": {
+      "bd": [
+       75,
+       150
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+60% reload speed.",
+     "note": "No note on page.",
+     "effect": {
+      "reload": 0.6
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Marksman's Hand",
+     "text": "-60% recoil.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 3,
+     "name": "Silent Running",
+     "text": "Reduces the chance an enemy hears gunfire by 100%.",
+     "note": "No note on page.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Deadhead",
+     "text": "+25% headshot damage.",
+     "note": "Additive with the scope headshot bonus, Target Acquired, Primary Deadhead, and similar.",
+     "effect": {
+      "headshot_bonus": 0.25
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Critical Parallel",
+     "text": "+X% base crit chance (10 Vectis / 8 Prime). +0.5x base crit damage multiplier.",
+     "note": "No note on page.",
+     "effect": {
+      "bcc": [
+       0.1,
+       0.08
+      ],
+      "bcd": 0.5
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Base status chance +30% of current crit chance, up to +40%.",
+     "note": "Maximum reached at 134% total crit chance (needs +345% crit). Primary Acuity crit does not count; Galvanized Scope does.",
+     "effect": {}
+    }
+   ],
+   "form_skip": "the wiki's infobox (5 Cold) and its Incarnon text (150 Cold) disagree"
+  },
+  "Zylok": {
+   "page": "https://wiki.warframe.com/w/Zylok",
+   "slot": "SECONDARY",
+   "genesis": true,
+   "variants": [
+    "Zylok",
+    "Zylok Prime"
+   ],
+   "charge": {
+    "by": "weak point hits",
+    "full_at": "12 weakpoint hits",
+    "per_charge_rounds": 1,
+    "capacity": 12
+   },
+   "evo1": "Incarnon Form: weakpoint hits charge the gauge, Alt Fire transmutes. Charged explosive laser (0.6 s charge) with pure Heat explosion in a 6 m radius, higher base damage, crit and status; significantly slower fire rate.",
+   "perks": [
+    {
+     "tier": 2,
+     "name": "Precision's Payoff",
+     "text": "Increase Base Damage by +X. On Burst Headshots: Increase Base Damage by +20. Stacks up to 3x. X = 76 (Zylok), X = 30 (Prime)",
+     "note": "Page note: stacks need both shots of a hold-and-release to be headshots. Stacks are lost on reload or on switching to Incarnon form. Incarnon's Charge trigger cannot trigger burst headshots.",
+     "effect": {
+      "bd": [
+       76,
+       30
+      ]
+     }
+    },
+    {
+     "tier": 2,
+     "name": "Mauler's Magazine",
+     "text": "Increase Base Damage by +X. On Reload From Empty: Increase Base Critical Damage Multiplier by +1x. Stacks up to 2x. X = 76 (Zylok), X = 30 (Prime)",
+     "note": "Page note: stacks are lost when reloading from a partial magazine or on death.",
+     "effect": {
+      "bd": [
+       76,
+       30
+      ],
+      "stacks": {
+       "bcd": 2.0
+      }
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Extended Volley",
+     "text": "Increase Base Magazine Capacity by +X. X = 12 (Zylok), X = 18 (Prime)",
+     "note": "Page note: does not affect Incarnon form.",
+     "effect": {
+      "bmag": [
+       12,
+       18
+      ]
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Rapid Reinforcement",
+     "text": "+50% Reload Speed.",
+     "note": "No page note.",
+     "effect": {
+      "reload": 0.5
+     }
+    },
+    {
+     "tier": 3,
+     "name": "Void's Guidance",
+     "text": "+60% Accuracy -60% Recoil",
+     "note": "No page note.",
+     "effect": {}
+    },
+    {
+     "tier": 4,
+     "name": "Survivor's Edge",
+     "text": "Increase Base Critical Chance by +X%. Increase Base Status Chance by +Y%. X = 20%, Y = 20% (Zylok); X = 22%, Y = 16% (Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.2,
+       0.22
+      ],
+      "bsc": [
+       0.2,
+       0.16
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Commodore's Fortune",
+     "text": "Increase Base Critical Chance by +X%. X = 32% (Zylok), X = 30% (Prime)",
+     "note": "No page note.",
+     "effect": {
+      "bcc": [
+       0.32,
+       0.3
+      ]
+     }
+    },
+    {
+     "tier": 4,
+     "name": "Fatal Affliction",
+     "text": "+40% Direct Damage per Status Type affecting the target.",
+     "note": "No page note.",
+     "effect": {
+      "per_status_damage": 0.4
+     }
+    }
+   ],
+   "form": {
+    "damage": {
+     "puncture": 240.0,
+     "impact": 160.0
+    },
+    "radial": {
+     "heat": 600.0
+    },
+    "crit_chance": 0.2,
+    "crit_multiplier": 2.0,
+    "status_chance": 0.4,
+    "fire_rate": 1.0,
+    "multishot": 1.0,
+    "charges": 12,
+    "trigger": "Charge",
+    "note": "Attack: Incarnon Form (charged shot). Charge Time 0.60 s; infobox total 400 (60.00% Puncture); spread 0.00°; Punch Through 0.0 m. EVO1 (paraphrased): trigger must be fully charged to fire; direct hits no longer deal Slash."
+   }
+  }
+ }
+}

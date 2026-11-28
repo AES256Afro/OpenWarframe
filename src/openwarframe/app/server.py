@@ -425,6 +425,8 @@ class AppState:
         aim: str = "body",
         riven: str = "",
         riven_drain: int = 18,
+        incarnon: str | None = None,
+        perks: dict[int, str] | None = None,
     ) -> dict:
         """A suggested mod build for one gun or melee weapon (builds.search)."""
         from ..builds.search import suggest
@@ -456,6 +458,8 @@ class AppState:
                     aim=aim,
                     riven=riven,
                     riven_drain=riven_drain,
+                    incarnon=incarnon,
+                    perks=perks,
                 )
             except NotAGun as exc:
                 return {"error": str(exc)}
@@ -888,6 +892,16 @@ class AppState:
         return self.build(force=True)
 
 
+def _perks(v: str) -> dict[int, str]:
+    """ "2:Daring Reverie|4:Critical Parallel" -> {2: "Daring Reverie", 4: "Critical Parallel"}."""
+    out = {}
+    for part in v[:600].split("|"):
+        tier, _, name = part.partition(":")
+        if tier.strip().isdigit() and name.strip():
+            out[int(tier)] = name.strip()[:80]
+    return out
+
+
 def _float(v: str, default: float) -> float:
     try:
         return float(v)
@@ -1049,6 +1063,8 @@ def make_handler(state: AppState):
                             aim="head" if (q.get("aim") or [""])[0] == "head" else "body",
                             riven=(q.get("riven") or [""])[0][:400],
                             riven_drain=int(_float((q.get("rdrain") or ["18"])[0], 18.0)),
+                            incarnon=(q.get("incarnon") or [""])[0] or None,
+                            perks=_perks((q.get("perks") or [""])[0]),
                         )
                     )
                 except Exception as exc:  # noqa: BLE001 - shown in the item details

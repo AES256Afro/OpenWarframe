@@ -3,6 +3,14 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
+## Unreleased
+
+- **Incarnon.** Gun and melee builds for the 53 weapons with an Incarnon form choose between no
+  Incarnon, evolutions on the normal attack, and the Incarnon form, and pick the best perk for
+  each Evolution tier (or the one you choose). Form stats and perks come from the wiki's weapon
+  pages, saved in `kb/builds/incarnon.json`; the app doesn't fetch the wiki. Genesis weapons
+  start with no Incarnon, weapons born Incarnon start on the form.
+
 ## 0.25.0
 
 - **Rivens.** Type your Riven's stats into the gun or melee build panel, one per line as the

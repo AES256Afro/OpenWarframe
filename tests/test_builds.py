@@ -828,3 +828,153 @@ def test_page_offers_riven_input():
 
     page = page_source()
     assert "data-briven=" in page and "&riven=" in page and "owf-rivens" in page
+
+
+# -- Incarnon (kb/builds/incarnon.json from wiki weapon pages, read 2026-11-28) ------------------
+
+
+def test_incarnon_data_covers_every_genesis_in_the_game_data():
+    from openwarframe.builds import incarnon as inc
+
+    ws = inc._weapons()
+    assert len(ws) == 53 and sum(w["genesis"] for w in ws.values()) == 45
+    keys = {
+        "bd",
+        "bcc",
+        "bcd",
+        "bsc",
+        "fcc",
+        "fsc",
+        "bms",
+        "bmag",
+        "noncrit",
+        "lowcrit",
+        "double_in_form",
+        "stacks",
+    }
+    keys |= set(damage.NUMERIC)
+    for name, w in ws.items():
+        assert w["perks"], name
+        for p in w["perks"]:
+            assert set(p["effect"]) <= keys, (name, p["name"])
+            for k, v in [*p["effect"].items(), *p["effect"].get("stacks", {}).items()]:
+                if isinstance(v, list) and k != "lowcrit":  # per-variant: one per variant column
+                    assert len(v) == len(w["variants"]), (name, p["name"], k)
+        if w["slot"] != "MELEE" and "form_skip" not in w:
+            f = w["form"]
+            assert (
+                f["damage"] and 0 < f["crit_chance"] < 1 and f["crit_multiplier"] >= 1 and f["fire_rate"] > 0
+            ), name
+    assert inc.lookup("Braton Vandal")[2] == 2 and inc.lookup("MK1-Braton")[2] == 1
+    assert inc.lookup("Rubico Prime") is None and inc.lookup("Dex Furis") is None
+    assert inc.lookup("Braton Prime")[0] == "Braton" and inc.lookup("Felarx")[1]["genesis"] is False
+
+
+def _inc_entry(**form):
+    return {
+        "slot": "PRIMARY",
+        "genesis": True,
+        "variants": ["Testgun", "Testgun Prime"],
+        "page": "",
+        "form": {
+            "damage": {"impact": 50.0},
+            "radial": {"heat": 50.0},
+            "crit_chance": 0.3,
+            "crit_multiplier": 3.0,
+            "status_chance": 0.4,
+            "fire_rate": 5.0,
+            "multishot": 2.0,
+            "charges": 200,
+            **form,
+        },
+        "perks": [
+            {"tier": 2, "name": "Big", "text": "", "effect": {"bd": [20, 10]}},
+            {"tier": 2, "name": "Small", "text": "", "effect": {"bd": [5, 5]}},
+            {"tier": 4, "name": "Crit", "text": "", "effect": {"bcc": 0.2, "bcd": 0.5}},
+            {"tier": 4, "name": "Status", "text": "", "effect": {"bsc": 0.4, "double_in_form": 1}},
+            {"tier": 4, "name": "Flat", "text": "", "effect": {"fcc": 0.1, "fsc": 0.2}},
+            {"tier": 5, "name": "Cond", "text": "On shield break: stuff", "effect": {}},
+        ],
+    }
+
+
+def test_incarnon_form_and_perks():
+    from openwarframe.builds import incarnon as inc
+
+    e = _inc_entry()
+    g0 = gun(
+        damage={"impact": 100.0}, crit_chance=0.1, multishot=1.0, fire_rate=10.0, magazine=30, reload=2.0
+    )
+    p = {x["name"]: x for x in e["perks"]}
+    g = inc.apply(g0, e, 0, form=True, perks=[], stacks=True)
+    # the form replaces the attack: direct + area part, its own crit, status, multishot, no reload
+    assert g.damage == {"impact": 50.0, "heat": 50.0} and g.multishot == 2.0 and g.reload == 0.0
+    assert g0.damage == {"impact": 100.0}  # a copy
+    # base damage per projectile, spread over the types; variant 1 gets its own column
+    g = inc.apply(g0, e, 1, form=True, perks=[p["Big"]], stacks=True)
+    assert sum(g.damage.values()) == pytest.approx(110)
+    # base status: the Incarnon total split over the base multishot, doubled in the form
+    g = inc.apply(g0, e, 0, form=True, perks=[p["Status"]], stacks=True)
+    assert g.status_chance == pytest.approx(0.4 + 0.8 / 2)
+    g = inc.apply(g0, e, 0, form=False, perks=[p["Status"]], stacks=True)
+    assert g.status_chance == pytest.approx(0.1 + 0.4)
+    # after-mods crit and status go to the bonus sums
+    g = inc.apply(g0, e, 0, form=True, perks=[p["Flat"]], stacks=True)
+    assert g.bonus == {"flat_crit_chance": 0.1, "flat_status_chance": 0.1}
+    t = damage.add_up([eff(crit_chance=1.0)], stacks=False)
+    t.sums.update(g.bonus)
+    assert damage.evaluate(g, t).crit_chance == pytest.approx(0.3 * 2 + 0.1)
+
+
+def test_attrition_and_prelude_of_might():
+    g = gun(damage={"impact": 100.0}, crit_chance=0.2, crit_multiplier=2.0, multishot=1.0)
+    t = damage.add_up([], stacks=False)
+    base = damage.evaluate(g, t).per_shot
+    t.sums["noncrit"] = 10.0  # 50% chance for +2000% on non-crits
+    assert damage.evaluate(g, t).per_shot == pytest.approx(base * (1 + 0.2 * 1 + 0.8 * 10) / 1.2)
+    t = damage.add_up([], stacks=False)
+    t.sums.update(lowcrit_below=0.5, lowcrit_cd=3.0)
+    assert damage.evaluate(g, t).crit_multiplier == pytest.approx(5.0)
+    t = damage.add_up([eff(crit_chance=2.0, crit_damage=1.0)], stacks=False)
+    t.sums.update(lowcrit_below=0.5, lowcrit_cd=3.0)
+    assert damage.evaluate(g, t).crit_multiplier == pytest.approx(4.0)  # 60% crit: no bonus
+
+
+def test_incarnon_suggest(tmp_path: Path, monkeypatch):
+    from openwarframe.builds import incarnon as inc
+
+    con = _db(tmp_path)
+    monkeypatch.setattr(inc, "_weapons", lambda: {"Testgun": _inc_entry()})
+    b = search.suggest(con, "/G", target="Grineer")
+    assert b["incarnon"]["mode"] == "off" and b["incarnon"]["genesis"]  # Genesis: not assumed installed
+    off = b["stats"]["per_shot"]
+    b = search.suggest(con, "/G", target="Grineer", incarnon="form")
+    tiers = {t["tier"]: t for t in b["incarnon"]["tiers"]}
+    assert tiers[2]["chosen"] == "Big" and tiers[2]["auto"] and tiers[5]["chosen"] is None
+    assert b["stats"]["multishot"] > 2 and b["stats"]["per_shot"] > off
+    assert any("Incarnon form" in n for n in b["notes"])
+    b = search.suggest(con, "/G", target="Grineer", incarnon="form", perks={2: "Small", 5: "Cond"})
+    tiers = {t["tier"]: t for t in b["incarnon"]["tiers"]}
+    assert tiers[2]["chosen"] == "Small" and not tiers[2]["auto"]
+    assert any("not counted: Cond" in n for n in b["notes"])
+
+
+def test_page_offers_incarnon():
+    from openwarframe.app.server import _perks, page_source
+
+    page = page_source()
+    assert "data-binc=" in page and "&incarnon=" in page and "&perks=" in page
+    assert _perks("2:Daring Reverie|4:Critical Parallel|x:y|5:") == {
+        2: "Daring Reverie",
+        4: "Critical Parallel",
+    }
+
+
+def test_incarnon_perk_description():
+    from openwarframe.builds import incarnon as inc
+
+    w = inc._weapons()["Braton"]
+    p = next(x for x in w["perks"] if x["name"] == "Munitions Grit")
+    assert inc.describe(inc.perk_effect(p, 3)) == "+2 base damage per projectile, +20% multishot"
+    p = next(x for x in w["perks"] if x["name"] == "Prelude of Might")
+    assert inc.describe(inc.perk_effect(p, 0)) == "+3.4x base crit multiplier below 50% crit chance"

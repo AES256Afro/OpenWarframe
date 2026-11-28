@@ -141,6 +141,41 @@ keeps what you typed for each weapon in this browser.
 - The wiki doesn't give a Riven's drain, so the field defaults to 18. Enter the number on your
   mod.
 
+## Incarnon
+
+53 weapons have an Incarnon form: 45 through an Incarnon Genesis adapter, 8 built in (Felarx,
+Innodem, Laetum, Phenmor, Praedos, Onos, Ruvox, Thalys). The game data has no Incarnon stats,
+so they come from each weapon's wiki page (infobox "Incarnon Form" attack and Evolution table,
+read 2026-11-28) into `kb/builds/incarnon.json`, built by `tools/incarnon.py`. The app never
+fetches the wiki.
+
+The build panel's **Incarnon** choice: not installed (Genesis weapons start here, since you may
+not own the adapter), evolutions on the normal attack, or the Incarnon form. Weapons born
+Incarnon start on the form. Each Evolution tier picks the perk that scores best unless you choose
+one.
+
+- **Gun form.** The form's damage, crit, status, fire rate and multishot replace the weapon's;
+  mods apply as usual. It fires its charges without reloading. An area part of the attack
+  (Braton's Heat burst, Latron's explosions) is added to the hit at full strength, with one status
+  roll; falloff, chains, ricochets and bounces are not counted.
+- **Melee form.** The weapon's own attack plus Evolution I's bonus, counted as always up: +100%
+  melee damage on Genesis weapons (added like Pressure Point), attack speed on Praedos, Innodem
+  and Thalys. Spectral projectiles and fields are not counted.
+- **Perks.** Only effects that hold in steady fighting count; conditional ones (on shield break,
+  while sliding, below half health) are listed as not counted.
+  - "Increase Base Damage by +X" adds X per projectile, in both forms.
+  - Base crit chance, crit multiplier and status chance are added before mods. A status bonus is
+    the Incarnon-form total and is split over the base multishot (Boar: +96% in the form, +12%
+    per pellet on 8 pellets; Strun, Kunai, Vasto and Felarx pages say the same).
+  - Zariman perks ("+10% Critical Chance") are added after mods, as their pages say.
+  - Devastating and Devouring Attrition (50% chance for +2000% on non-critical hits) count as
+    their expected value, x11 on non-critical hits.
+  - Prelude of Might adds its crit multiplier while crit chance is below the threshold.
+  - "Effect doubles in Incarnon Form" doubles in the form.
+  - Stacking perks (Blazing Barrel, Reaver's Rapture) count at full stacks with on-kill stacks.
+- Vectis's form is not scored: its infobox (5 Cold) and Incarnon text (150 Cold) disagree.
+- Destreza's and Obex's Evolution II base damage is left out: the wiki says it doesn't work.
+
 ## Not counted yet
 
 - Shield regeneration between bursts, the Magnetic shield-break burst, overguard, and the
@@ -150,7 +185,8 @@ keeps what you typed for each weapon in this browser.
 - Heat's growing stacks in long fights (each Heat proc refreshes them all; counted per proc).
   The reference kills take 1 to 3 seconds, and the growth only shows after about 6, so it's left
   out. Heat's 2-second ramp, Electricity and Gas hitting nearby enemies, Blast and Puncture effects.
-- Weak points other than the head (Acuity's bonus is 1.0x there, not 1.5x), Incarnon forms.
+- Weak points other than the head (Acuity's bonus is 1.0x there, not 1.5x).
+- Incarnon projectiles, chains, ricochets and fields (Torid's chaining beam, Okina's daggers, Thalys's shards).
 - Charge and burst timing.
 - Archguns and companion weapons.
 

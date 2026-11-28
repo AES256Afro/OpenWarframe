@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.26.0
 
 - **Incarnon.** Gun and melee builds for the 53 weapons with an Incarnon form choose between no
   Incarnon, evolutions on the normal attack, and the Incarnon form, and pick the best perk for

@@ -1,3 +1,3 @@
 """OpenWarframe: export, explain and plan your Warframe account."""
 
-__version__ = "0.25.0"
+__version__ = "0.26.0"

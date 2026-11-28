@@ -3,7 +3,7 @@
 What changed in each release, newest first. Releases are on
 [GitHub](https://github.com/AES256Afro/OpenWarframe/releases).
 
-## Unreleased
+## 0.24.0
 
 - **Headshots.** Gun and melee builds have an **Aim** choice. Headshots land every hit on the
   head: x3 on most enemies (x1.5 on the Murmur and Techrot), crit headshots get x2 on the crit
